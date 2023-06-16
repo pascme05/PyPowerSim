@@ -12,8 +12,8 @@ available source code. The toolkit is obviously not complete; thus, suggestions 
 always welcome.
 
 # Version
-v.0.1: (01.04.2023) Initial version of PyPowerSim
-v.0.1: (16.06.2023) Major Update and housekeeping
+1) v.0.1: (01.04.2023) Initial version of PyPowerSim
+2) v.0.1: (16.06.2023) Major Update and housekeeping
     - Adding MOSFET devices
     - Revising switching loss calculation
     - Adding output control
