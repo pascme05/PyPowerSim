@@ -11,12 +11,6 @@ of commercial software but will hopefully provide a better understanding due to 
 available source code. The toolkit is obviously not complete; thus, suggestions are 
 always welcome.
 
-# Version
-1) v.0.1: (01.04.2023) Initial version of PyPowerSim
-2) v.0.1: (16.06.2023) Major Update and housekeeping
-    - Adding MOSFET devices
-    - Revising switching loss calculation
-    - Adding output control
     
 # Publication
 The PyPowerSim toolkit is part of the following survey paper and tries to replicate 
@@ -79,6 +73,12 @@ toolkit or spotted any mistake, please contact me via: p.schirmer@herts.ac.uk
 # License
 The software framework is provided under the MIT license.
 
+# Version History
+1) v.0.1: (01.04.2023) Initial version of PyPowerSim
+2) v.0.1: (16.06.2023) Major Update and housekeeping
+    - Adding MOSFET devices
+    - Revising switching loss calculation
+    - Adding output control
 
 # References
 [1] Holmes, D. Grahame, and Thomas A. Lipo. Pulse width modulation for power converters: principles and practice. 
