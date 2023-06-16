@@ -28,7 +28,7 @@ from scipy import interpolate, integrate
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupTopo):
+def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupExp):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
@@ -36,6 +36,7 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupTopo):
     # Parameters
     # ==============================================================================
     fs = setupPara['PWM']['fs']
+    nInt = setupExp['int']
 
     # ==============================================================================
     # Variables
@@ -43,10 +44,13 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupTopo):
     Eon = np.zeros(np.size(i_T))
     Eoff = np.zeros(np.size(i_T))
     Erec = np.zeros(np.size(i_T))
-    V_int = np.linspace(0,int(np.max(para['Swi']['Elec']['tab']['Vf'].values)), 100)
-    Ciss_int, Eiss_2d = np.zeros((len(para['Swi']['Elec']['tab']['Tj']),len(V_int)))
-    Coss_int, Eoss_2d = np.zeros((len(para['Swi']['Elec']['tab']['Tj']),len(V_int)))
-    Crss_int, Erss_2d = np.zeros((len(para['Swi']['Elec']['tab']['Tj']),len(V_int)))
+    tf = np.zeros(np.size(i_T))
+    tr = np.zeros(np.size(i_T))
+    V_int = np.linspace(0,int(np.max(para['Swi']['Elec']['vec']['Vf'].values)), nInt)
+    Coss_int = np.zeros((len(para['Swi']['Elec']['vec']['Tj']),len(V_int)))
+    Crss_int = np.zeros((len(para['Swi']['Elec']['vec']['Tj']),len(V_int)))
+    Eoss_2d = np.zeros((len(para['Swi']['Elec']['vec']['Tj']),len(V_int)))
+    Erss_2d = np.zeros((len(para['Swi']['Elec']['vec']['Tj']),len(V_int)))
     
     # ==============================================================================
     # Output
@@ -65,15 +69,15 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupTopo):
     if setupPara['Elec']['SwiMdl'] == "con":
         # IGBT
         if setupPara['Elec']['SwiType'] == "IGBT":  
-            Eon  = para['Swi']['Elec']['con']['Eon'] * np.ones(np.size(i_T))
-            Eoff = para['Swi']['Elec']['con']['Eoff'] * np.ones(np.size(i_T))
-            Erec = para['Swi']['Elec']['con']['Erec'] * np.ones(np.size(i_T))
+            Eon  = para['Swi']['Elec']['con']['Eon']  * np.ones(np.size(i_T)) * np.max(np.abs(i_T)) / para['Swi']['Elec']['con']['Imax'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vmax']
+            Eoff = para['Swi']['Elec']['con']['Eoff'] * np.ones(np.size(i_T)) * np.max(np.abs(i_T)) / para['Swi']['Elec']['con']['Imax'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vmax']
+            Erec = para['Swi']['Elec']['con']['Erec'] * np.ones(np.size(i_T)) * np.max(np.abs(i_T)) / para['Swi']['Elec']['con']['Imax'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vmax']
 
         # MOSFET
         if setupPara['Elec']['SwiType'] == "MOSFET": 
-            Eon  = 0.5 * para['Swi']['Elec']['con']['Ciss'] * np.max(np.abs(v_T))**2 * np.ones(np.size(i_T))
-            Eoff = 0.5 * para['Swi']['Elec']['con']['Coss'] * np.max(np.abs(v_T))**2 * np.ones(np.size(i_T))
-            Erec = 0.5 * para['Swi']['Elec']['con']['Crss'] * np.max(np.abs(v_T))**2 * np.ones(np.size(i_T))
+            Eon  = 0.50 * np.max(np.abs(v_T)) * np.max(np.abs(i_T)) * (para['Swi']['Elec']['con']['tr'] + para['Swi']['Elec']['con']['tf']) + 0.5 * para['Swi']['Elec']['con']['Coss'] * np.max(np.abs(v_T))**2 * np.ones(np.size(i_T))
+            Eoff = 0.50 * np.max(np.abs(v_T)) * np.max(np.abs(i_T)) * (para['Swi']['Elec']['con']['tr'] + para['Swi']['Elec']['con']['tf']) + 0.5 * para['Swi']['Elec']['con']['Coss'] * np.max(np.abs(v_T))**2 * np.ones(np.size(i_T))
+            Erec = 0.25 * para['Swi']['Elec']['con']['Qrr'] * np.max(np.abs(v_D)) * np.ones(np.size(i_T))  + 0.5 * para['Swi']['Elec']['con']['Crss'] * np.max(np.abs(v_T))**2 * np.ones(np.size(i_T))
 
     # ------------------------------------------
     # Piece-wise-linear
@@ -81,14 +85,14 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupTopo):
     if setupPara['Elec']['SwiMdl'] == "pwl":
         # IGBT
         if setupPara['Elec']['SwiType'] == "IGBT":  
-            Eon  = para['Swi']['Elec']['con']['Eon'] * i_T / para['Swi']['Elec']['con']['Imax'] * np.max(v_T) / para['Swi']['Elec']['con']['Vmax']
-            Eoff = para['Swi']['Elec']['con']['Eoff'] * i_T / para['Swi']['Elec']['con']['Imax'] * np.max(v_T) / para['Swi']['Elec']['con']['Vmax']
-            Erec = para['Swi']['Elec']['con']['Erec'] * i_T / para['Swi']['Elec']['con']['Imax'] * np.max(v_T) / para['Swi']['Elec']['con']['Vmax']
+            Eon  = para['Swi']['Elec']['con']['Eon']  * np.abs(i_T) / para['Swi']['Elec']['con']['Imax'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vmax']
+            Eoff = para['Swi']['Elec']['con']['Eoff'] * np.abs(i_T) / para['Swi']['Elec']['con']['Imax'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vmax']
+            Erec = para['Swi']['Elec']['con']['Erec'] * np.abs(i_T) / para['Swi']['Elec']['con']['Imax'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vmax']
 
         # MOSFET
-        if setupPara['Elec']['SwiType'] == "MOSFET": 
-            Eon  = 0.5 * np.max(np.abs(v_T)) * i_T * (para['Swi']['Elec']['con']['tr'] + para['Swi']['Elec']['con']['tf']) + para['Swi']['Elec']['con']['Qrr'] * np.max(np.abs(v_T)) 
-            Eoff = 0.5 * np.max(np.abs(v_T)) * i_T * (para['Swi']['Elec']['con']['tr'] + para['Swi']['Elec']['con']['tf'])
+        if setupPara['Elec']['SwiType'] == "MOSFET":
+            Eon  = 0.50 * np.max(np.abs(v_T)) * np.abs(i_T) * (para['Swi']['Elec']['con']['tr'] + para['Swi']['Elec']['con']['tf']) + para['Swi']['Elec']['con']['Qrr'] * np.max(np.abs(v_T)) 
+            Eoff = 0.50 * np.max(np.abs(v_T)) * np.abs(i_T) * (para['Swi']['Elec']['con']['tr'] + para['Swi']['Elec']['con']['tf'])
             Erec = 0.25 * para['Swi']['Elec']['con']['Qrr'] * np.max(np.abs(v_D)) * np.ones(np.size(i_T)) 
 
     # ------------------------------------------
@@ -96,10 +100,10 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupTopo):
     # ------------------------------------------
     if setupPara['Elec']['SwiMdl'] == "tab":
         # IGBT
-        if setupPara['Elec']['SwiType'] == "IGBT":   
-            Eon_2d  = interpolate.interp2d(para['Swi']['Elec']['tab']['Tj'].to_numpy(), para['Swi']['Elec']['tab']['If'].to_numpy(), para['Swi']['Elec']['tab']['Eon'].to_numpy(), kind='linear')
-            Eoff_2d = interpolate.interp2d(para['Swi']['Elec']['tab']['Tj'].to_numpy(), para['Swi']['Elec']['tab']['If'].to_numpy(), para['Swi']['Elec']['tab']['Eoff'].to_numpy(), kind='linear')
-            Erec_2d = interpolate.interp2d(para['Swi']['Elec']['tab']['Tj'].to_numpy(), para['Swi']['Elec']['tab']['If'].to_numpy(), para['Swi']['Elec']['tab']['Erec'].to_numpy(), kind='linear')
+        if setupPara['Elec']['SwiType'] == "IGBT" or setupPara['PWM']['swloss'] == 0:   
+            Eon_2d  = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['If'].to_numpy(), para['Swi']['Elec']['tab']['Eon'].to_numpy(), kind='linear')
+            Eoff_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['If'].to_numpy(), para['Swi']['Elec']['tab']['Eoff'].to_numpy(), kind='linear')
+            Erec_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['If'].to_numpy(), para['Swi']['Elec']['tab']['Erec'].to_numpy(), kind='linear')
 
             for i in range(0, len(i_T)):
                 Eon[i]  = Eon_2d(t_Tj, i_T[i])
@@ -107,27 +111,40 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupTopo):
                 Erec[i] = Erec_2d(t_Tj, i_D[i])
 
         # MOSFET
-        if setupPara['Elec']['SwiType'] == "MOSFET":
-            Ciss_2d = interpolate.interp1d(para['Swi']['Elec']['tab']['Tj'].to_numpy(),para['Swi']['Elec']['tab']['Vf'].to_numpy(),para['Swi']['Elec']['tab']['Ciss'].to_numpy()) 
-            Coss_2d = interpolate.interp1d(para['Swi']['Elec']['tab']['Tj'].to_numpy(),para['Swi']['Elec']['tab']['Vf'].to_numpy(),para['Swi']['Elec']['tab']['Coss'].to_numpy()) 
-            Crss_2d = interpolate.interp1d(para['Swi']['Elec']['tab']['Tj'].to_numpy(),para['Swi']['Elec']['tab']['Vf'].to_numpy(),para['Swi']['Elec']['tab']['Crss'].to_numpy()) 
+        if setupPara['Elec']['SwiType'] == "MOSFET" and setupPara['PWM']['swloss'] == 1:
+            Coss_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),para['Swi']['Elec']['vec']['Vf'].to_numpy(),para['Swi']['Elec']['tab']['Coss'].to_numpy(), kind='linear') 
+            Crss_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),para['Swi']['Elec']['vec']['Vf'].to_numpy(),para['Swi']['Elec']['tab']['Crss'].to_numpy(), kind='linear') 
 
-            for i in range(0, len(para['Swi']['Elec']['tab']['Tj'])):
+            IGon  = (para['Swi']['Elec']['con']['Vg'] - para['Swi']['Elec']['con']['Vpl']) / para['Swi']['Elec']['con']['Rg']
+            IGoff = para['Swi']['Elec']['con']['Vpl'] / para['Swi']['Elec']['con']['Rg']
+
+            for i in range(0, len(para['Swi']['Elec']['vec']['Tj'])):
                 for ii in range(0, len(V_int)):
-                    Ciss_int[i,ii] = Ciss_2d(para['Swi']['Elec']['tab']['Tj'][i],V_int[ii])
-                    Coss_int[i,ii] = Coss_2d(para['Swi']['Elec']['tab']['Tj'][i],V_int[ii])
-                    Crss_int[i,ii] = Crss_2d(para['Swi']['Elec']['tab']['Tj'][i],V_int[ii])
-                Qiss = integrate.cumulative_trapezoid(Ciss_int[i,:], x=V_int)
-                Qoss = integrate.cumulative_trapezoid(Coss_int[i,:], x=V_int)
-                Qrss = integrate.cumulative_trapezoid(Crss_int[i,:], x=V_int)
-                Eiss_2d[i,:] = integrate.cumulative_trapezoid(Qiss[i,:], x=V_int)
-                Eoss_2d[i,:] = integrate.cumulative_trapezoid(Qoss[i,:], x=V_int)
-                Erss_2d[i,:] = integrate.cumulative_trapezoid(Qrss[i,:], x=V_int)
+                    Coss_int[i,ii] = Coss_2d(para['Swi']['Elec']['vec']['Tj'][i],V_int[ii])
+                    Crss_int[i,ii] = Crss_2d(para['Swi']['Elec']['vec']['Tj'][i],V_int[ii])
+                Qoss = integrate.cumulative_trapezoid(Coss_int[i,:], x=V_int, initial=V_int[0])
+                Qrss = integrate.cumulative_trapezoid(Crss_int[i,:], x=V_int, initial=V_int[0])
+                Eoss_2d[i,:] = integrate.cumulative_trapezoid(Qoss, x=V_int, initial=V_int[0])
+                Erss_2d[i,:] = integrate.cumulative_trapezoid(Qrss, x=V_int, initial=V_int[0])
+
+            Eon_2d  = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), V_int, np.transpose(Eoss_2d), kind='linear')
+            Eoff_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), V_int, np.transpose(Eoss_2d), kind='linear')
+            Erec_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), V_int, np.transpose(Erss_2d), kind='linear')
 
             for i in range(0, len(i_T)):
-                Eon[i]  = Eiss_2d(t_Tj, i_T[i])
-                Eoff[i] = Eiss_2d(t_Tj, i_T[i])
-                Erec[i] = Eiss_2d(t_Tj, i_D[i])
+                Eon[i]  = Eon_2d(t_Tj, abs(v_T[i]))
+                Eoff[i] = Eoff_2d(t_Tj, abs(v_T[i]))
+                Erec[i] = Erec_2d(t_Tj, abs(v_D[i]))
+                tf1 = (np.max(np.abs(v_T)) - np.abs(v_T[i]))*(Crss_2d(t_Tj,np.abs(v_T[i]))/IGon)
+                tf2 = (np.max(np.abs(v_T)) - np.abs(v_T[i]))*(Crss_2d(t_Tj,np.max(np.abs(v_T)))/IGon)
+                tr1 = (np.max(np.abs(v_T)) - np.abs(v_T[i]))*(Crss_2d(t_Tj,np.abs(v_T[i]))/IGoff)
+                tr2 = (np.max(np.abs(v_T)) - np.abs(v_T[i]))*(Crss_2d(t_Tj,np.max(np.abs(v_T)))/IGoff)
+                tf[i] = (tf1 + tf2)/2
+                tr[i] = (tr1 + tr2)/2
+
+            Eon = Eon + 0.5*np.abs(i_T)*np.max(abs(v_T))*(tr + tf)
+            Eoff = Eoff + 0.5*np.abs(i_T)*np.max(abs(v_T))*(tr + tf)
+            Erec = Erec + 0.25 * para['Swi']['Elec']['con']['Qrr'] * np.max(np.abs(v_D))
 
     ###################################################################################################################
     # Calculation
@@ -143,10 +160,23 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupTopo):
     # ------------------------------------------
     # Switching
     # ------------------------------------------
-    if setupPara['Elec']['SwiMdl'] == "tab" or setupPara['Elec']['SwiMdl'] == "pwl":
-        out['p_T_s'] = (zoh_easy(Eon, np.diff(i_G,prepend=0)) + np.roll(zoh_easy(Eoff, np.diff(i_G,append=0)*(-1)),1))*fs
-    else:
-        out['p_T_s'] = (Eon + Eoff)*fs
+    out['p_T_s'] = (zoh_easy(Eon, np.diff(i_G,prepend=0)) + np.roll(zoh_easy(Eoff, np.diff(i_G,append=0)*(-1)),1))*fs
+    ## IGBT
+    #if setupPara['Elec']['SwiType'] == "IGBT":
+    #    out['p_T_s'] = (zoh_easy(Eon, np.diff(i_G,prepend=0)) + np.roll(zoh_easy(Eoff, np.diff(i_G,append=0)*(-1)),1))*fs
+
+    ## MOSFET
+    #if setupPara['Elec']['SwiType'] == "MOSFET":
+     #   if setupPara['Elec']['SwiMdl'] == "tab":
+      #      if setupPara['PWM']['swloss'] == 0:
+      #          out['p_T_s'] = (zoh_easy(Eon, np.diff(i_G,prepend=0)) + np.roll(zoh_easy(Eoff, np.diff(i_G,append=0)*(-1)),1))*fs
+      #      else:
+      #          out['p_T_s'] = 0.5*np.abs(i_T)*np.max(abs(v_T))*(tr + tf)*fs + (zoh_easy(Eon, np.diff(i_G,prepend=0)) + np.roll(zoh_easy(Eoff, np.diff(i_G,append=0)*(-1)),1))*fs
+      #  elif setupPara['Elec']['SwiMdl'] == "pwl":
+       #     out['p_T_s'] = (zoh_easy(Eon, np.diff(i_G,prepend=0)) + np.roll(zoh_easy(Eoff, np.diff(i_G,append=0)*(-1)),1))*fs
+      #  else:
+            #out['p_T_s'] = (Eon + Eoff)*fs
+       #     out['p_T_s'] = (zoh_easy(Eon, np.diff(i_G,prepend=0)) + np.roll(zoh_easy(Eoff, np.diff(i_G,append=0)*(-1)),1))*fs
 
     # ==============================================================================
     # Diode
@@ -159,10 +189,24 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupTopo):
     # ------------------------------------------
     # Switching
     # ------------------------------------------
-    if setupPara['Elec']['SwiMdl'] == "tab" or setupPara['Elec']['SwiMdl'] == "pwl":
-        out['p_D_s'] = zoh_easy(Erec, np.diff(i_G,append=0)*(-1)) * fs
-    else:
-        out['p_D_s'] = Erec*fs
+    out['p_D_s'] = zoh_easy(Erec, np.diff(i_G,append=0)*(-1)) * fs
+
+    # IGBT
+    #if setupPara['Elec']['SwiType'] == "IGBT":
+    #    out['p_D_s'] = zoh_easy(Erec, np.diff(i_G,append=0)*(-1)) * fs
+
+    # MOSFET
+    #if setupPara['Elec']['SwiType'] == "MOSFET":
+     #   if setupPara['Elec']['SwiMdl'] == "tab":
+       #     if setupPara['PWM']['swloss'] == 0:
+       #         out['p_D_s'] = zoh_easy(Erec, np.diff(i_G,append=0)*(-1)) * fs
+       #     else:
+       #         out['p_D_s'] = zoh_easy(Erec, np.diff(i_G,append=0)*(-1)) * fs + 0.25 * para['Swi']['Elec']['con']['Qrr'] * np.max(np.abs(v_D)) * np.ones(np.size(i_T))
+       # elif setupPara['Elec']['SwiMdl'] == "pwl":
+      #      out['p_D_s'] = zoh_easy(Erec, np.diff(i_G,append=0)*(-1)) * fs 
+       # else:
+            #out['p_D_s'] = Erec*fs
+        #    out['p_D_s'] = zoh_easy(Erec, np.diff(i_G,append=0)*(-1)) * fs
 
     # ==============================================================================
     # Total

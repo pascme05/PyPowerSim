@@ -31,6 +31,7 @@ from src.plot.plotResults import plotResults
 from src.general.genTF import genTF
 from src.general.sanityCheck import sanityInput
 from src.general.saveResults import saveResults
+from src.general.genLoadInput import genLoadInput
 
 # ==============================================================================
 # External
@@ -108,6 +109,11 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     # Transfer Functions
     # ==============================================================================
     mdl = genTF(para, setupTopo)
+
+    # ==============================================================================
+    # Control Mode
+    # ==============================================================================
+    setupData = genLoadInput(setupExp, setupTopo, setupData)
 
     # ==============================================================================
     # MSG OUT

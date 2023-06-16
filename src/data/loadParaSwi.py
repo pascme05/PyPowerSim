@@ -44,15 +44,17 @@ def loadParaSwi(name, path, setupPara):
     para['Life'] = {}
     para['Elec']['con'] = {}
     para['Elec']['tab'] = {}
+    para['Elec']['vec'] = {}
     para['Ther']['con'] = {}
     para['Ther']['tab'] = {}
+    para['Ther']['vec'] = {}
 
     # ==============================================================================
     # Parameters
     # ==============================================================================#
     col = ['Value-1', 'Value-2', 'Value-3', 'Value-4', 'Value-5', 'Value-6', 'Value-7', 'Value-8', 'Value-9', 'Value-10']
     tab = ['Description', 'Model', 'Symbol', 'Typical', 'Value-1', 'Value-2', 'Value-3', 'Value-4', 'Value-5', 'Value-6']
-    lenElec = 20
+    lenElec = 24
     lenTher = 6
 
     ###################################################################################################################
@@ -99,27 +101,26 @@ def loadParaSwi(name, path, setupPara):
     # ------------------------------------------
     for i in range(0,len(varElecNamesCon)):
         para['Elec']['con'][varElecNamesCon[i]] = varElecValueCon[i]
-        para['Elec']['tab'][varElecNamesCon[i]] = varElecValueTab.iloc[i]
+        para['Elec']['vec'][varElecNamesCon[i]] = varElecValueTab.iloc[i]
 
     # ------------------------------------------
     # Tabular values
     # ------------------------------------------
-    para['Elec']['tab']['Vf'] = dataElec[tab][31:41]
-    para['Elec']['tab']['Eon'] = dataElec[tab][51:61]
-    para['Elec']['tab']['Eoff'] = dataElec[tab][71:81]
-    para['Elec']['tab']['Erec'] = dataElec[tab][91:101]
-    para['Elec']['tab']['Vfd'] = dataElec[tab][111:121]
-    para['Elec']['tab']['Ciss'] = dataElec[tab][131:141]
-    para['Elec']['tab']['Coss'] = dataElec[tab][151:161]
-    para['Elec']['tab']['Crss'] = dataElec[tab][171:181]
-    para['Elec']['tab']['Ron'] = dataElec[tab][191:201]
+    para['Elec']['tab']['Vf'] = dataElec[tab][33:43]
+    para['Elec']['tab']['Eon'] = dataElec[tab][53:63]
+    para['Elec']['tab']['Eoff'] = dataElec[tab][73:83]
+    para['Elec']['tab']['Erec'] = dataElec[tab][93:103]
+    para['Elec']['tab']['Vfd'] = dataElec[tab][113:123]
+    para['Elec']['tab']['Ciss'] = dataElec[tab][133:143]
+    para['Elec']['tab']['Coss'] = dataElec[tab][153:163]
+    para['Elec']['tab']['Crss'] = dataElec[tab][173:183]
 
     # ==============================================================================
     # Thermal
     # ==============================================================================
     for i in range(0,len(varTherNamesCon)):
         para['Ther']['con'][varTherNamesCon[i]] = varTherValueCon[i]
-        para['Ther']['tab'][varTherNamesCon[i]] = varTherValueTab.iloc[i]
+        para['Ther']['vec'][varTherNamesCon[i]] = varTherValueTab.iloc[i]
 
     ###################################################################################################################
     # Post-Processing
@@ -130,11 +131,13 @@ def loadParaSwi(name, path, setupPara):
     # ------------------------------------------
     # Vectors
     # ------------------------------------------
-    para['Elec']['tab']['Vf'] = para['Elec']['tab']['Vf'].dropna(axis= 0, how='all')
-    para['Elec']['tab']['Vfd'] = para['Elec']['tab']['Vfd'].dropna(axis= 0, how='all')
-    para['Elec']['tab']['Tj'] = para['Elec']['tab']['Tj'].dropna(axis= 0, how='all')
-    para['Elec']['tab']['If'] = para['Elec']['tab']['If'].dropna(axis= 0, how='all')
-    para['Elec']['tab']['Ifd'] = para['Elec']['tab']['Ifd'].dropna(axis= 0, how='all')
+    # Electrical
+    for i in range(0,len(varElecNamesCon)):
+        para['Elec']['vec'][varElecNamesCon[i]] = para['Elec']['vec'][varElecNamesCon[i]].dropna(axis= 0, how='all')
+
+    # Thermal
+    for i in range(0,len(varTherNamesCon)):
+        para['Ther']['vec'][varTherNamesCon[i]] = para['Ther']['vec'][varTherNamesCon[i]].dropna(axis= 0, how='all')
 
     # ------------------------------------------
     # Matrix
@@ -149,8 +152,6 @@ def loadParaSwi(name, path, setupPara):
     para['Elec']['tab']['Erec'] = para['Elec']['tab']['Erec'].dropna(axis= 1, how='all')
     para['Elec']['tab']['Vfd'] = para['Elec']['tab']['Vfd'].dropna(axis= 0, how='all')
     para['Elec']['tab']['Vfd'] = para['Elec']['tab']['Vfd'].dropna(axis= 1, how='all')
-    para['Elec']['tab']['Ron'] = para['Elec']['tab']['Ron'].dropna(axis= 0, how='all')
-    para['Elec']['tab']['Ron'] = para['Elec']['tab']['Ron'].dropna(axis= 1, how='all')
     para['Elec']['tab']['Ciss'] = para['Elec']['tab']['Ciss'].dropna(axis= 0, how='all')
     para['Elec']['tab']['Ciss'] = para['Elec']['tab']['Ciss'].dropna(axis= 1, how='all')
     para['Elec']['tab']['Coss'] = para['Elec']['tab']['Coss'].dropna(axis= 0, how='all')
@@ -170,7 +171,6 @@ def loadParaSwi(name, path, setupPara):
         para['Elec']['tab']['Eoff'] = para['Elec']['tab']['Eoff']*0
         para['Elec']['tab']['Erec'] = para['Elec']['tab']['Erec']*0
         para['Elec']['tab']['Vfd'] = para['Elec']['tab']['Vfd']*0
-        para['Elec']['tab']['Ron'] = para['Elec']['tab']['Ron']*0
         para['Elec']['tab']['Ciss'] = para['Elec']['tab']['Ciss']*0
         para['Elec']['tab']['Coss'] = para['Elec']['tab']['Coss']*0
         para['Elec']['tab']['Crss'] = para['Elec']['tab']['Crss']*0

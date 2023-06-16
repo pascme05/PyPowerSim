@@ -56,9 +56,10 @@ setupExp['debug'] = 0                                                           
 # ------------------------------------------
 # Operating Mode
 # ------------------------------------------
+setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled 
 setupExp['type'] = 1                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
 setupExp['loop'] = 'OL'                                                                                                 # (CL): closed-loop, (OL): open-loop
-setupExp['freqPar'] = 'fel'                                                                                              # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
+setupExp['freqPar'] = 'fel'                                                                                             # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
 setupExp['freqAvg'] = 'none'                                                                                            # (none): no averaging is used (fs): values are averaged over switching cycle, (fel): values are averaged over fundamental cycle
 
 # ------------------------------------------
@@ -67,6 +68,7 @@ setupExp['freqAvg'] = 'none'                                                    
 setupExp['fsim'] = 5e5                                                                                                  # simulation frequency (Hz)
 setupExp['tol'] = 1e-6                                                                                                  # tolerance in percent with respect to the previous converged result
 setupExp['eps'] = 1e-12                                                                                                 # small numerical tolerance
+setupExp['int'] = 20                                                                                                    # number of steps for integration
 
 # ------------------------------------------
 # Output
@@ -94,7 +96,14 @@ setupData['stat']['Tc'] = 25.0                                                  
 # ------------------------------------------
 # Parameter
 # ------------------------------------------
-setupData['stat']['Mi'] = 0.80                                                                                     # modulation index (Mi) for distortion analysis                                                                                                # power factor cos_phi
+# Control
+setupData['stat']['Po'] = 1000                                                                                          # output active power (Po) in (W) for power control
+setupData['stat']['Qo'] = 500                                                                                           # output reactive power (Qo) in (VAr) for power control
+setupData['stat']['Vo'] = 50                                                                                            # output RMS phase voltage (V0) in (V) for voltage control    
+setupData['stat']['Io'] = 25                                                                                            # output RMS phase current (Io) in (A) for current control
+
+# Input and Output
+setupData['stat']['Mi'] = 0.80                                                                                          # modulation index (Mi) for distortion analysis                                                                                                # power factor cos_phi
 setupData['stat']['Vdc'] = 200                                                                                          # DC-Link voltage (V)
 setupData['stat']['phi'] = 0.0                                                                                          # load angle output voltage (deg)
 
@@ -158,6 +167,7 @@ setupPara['PWM']['tmin'] = 0                                                    
 # Modelling
 # ------------------------------------------
 setupPara['PWM']['loss'] = 1                                                                                            # (0): ideal and lossles, (1): linear modelling
+setupPara['PWM']['swloss'] = 1                                                                                          # (0): switching losses based on energies (Eon, Eoff, Erec), (1): switching losses based on integration of capacitances (Ciss, Coss, Crec)
 setupPara['PWM']['sw'] = 0                                                                                              # (0): hard switching, (1): soft switching (tbi)
 
 # ------------------------------------------

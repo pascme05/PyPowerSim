@@ -76,13 +76,13 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     if setupPara['Elec']['SwiMdl'] == "pwl":
         # IGBT
         if setupPara['Elec']['SwiType'] == "IGBT":
-            VfT = Vf + Ron * Is
-            VfD = Vfd + RonD * Is
+            VfT = Vf + Ron * np.abs(Is)
+            VfD = Vfd + RonD * np.abs(Is)
 
         # MOSFET
         if setupPara['Elec']['SwiType'] == "MOSFET":
-            VfT = Ron * Is
-            VfD = Vfd + RonD * Is
+            VfT = Ron * np.abs(Is)
+            VfD = Vfd + RonD * np.abs(Is)
         
     # ------------------------------------------
     # Tabular
@@ -90,8 +90,8 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     if setupPara['Elec']['SwiMdl'] == "tab":
         # IGBT
         if setupPara['Elec']['SwiType'] == "IGBT": 
-            Vce_2d = interpolate.interp2d(para['Swi']['Elec']['tab']['Tj'].to_numpy(), para['Swi']['Elec']['tab']['If'].to_numpy(), para['Swi']['Elec']['tab']['Vf'].to_numpy(), kind='linear')
-            Vfd_2d = interpolate.interp2d(para['Swi']['Elec']['tab']['Tj'].to_numpy(), para['Swi']['Elec']['tab']['Ifd'].to_numpy(), para['Swi']['Elec']['tab']['Vfd'].to_numpy(), kind='linear')
+            Vce_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['If'].to_numpy(), para['Swi']['Elec']['tab']['Vf'].to_numpy(), kind='linear')
+            Vfd_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['Ifd'].to_numpy(), para['Swi']['Elec']['tab']['Vfd'].to_numpy(), kind='linear')
 
             for i in range(0, len(Is)):
                 VfT[i] = Vce_2d(Tj, abs(Is[i]))
@@ -99,11 +99,11 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
 
         # MOSFET
         if setupPara['Elec']['SwiType'] == "MOSFET":
-            Ron_2d = interpolate.interp2d(para['Swi']['Elec']['tab']['Tj'].to_numpy(), para['Swi']['Elec']['tab']['If'].to_numpy(), para['Swi']['Elec']['tab']['Ron'].to_numpy(), kind='linear')
-            Vfd_2d = interpolate.interp2d(para['Swi']['Elec']['tab']['Tj'].to_numpy(), para['Swi']['Elec']['tab']['Ifd'].to_numpy(), para['Swi']['Elec']['tab']['Vfd'].to_numpy(), kind='linear')
+            Vce_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['If'].to_numpy(), para['Swi']['Elec']['tab']['Vf'].to_numpy(), kind='linear')
+            Vfd_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['Ifd'].to_numpy(), para['Swi']['Elec']['tab']['Vfd'].to_numpy(), kind='linear')
 
             for i in range(0, len(Is)):
-                VfT[i] = Ron_2d(Tj, abs(Is[i])) * Is[i]
+                VfT[i] = Vce_2d(Tj, abs(Is[i]))
                 VfD[i] = Vfd_2d(Tj, abs(Is[i]))
 
 
@@ -118,68 +118,32 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     # Calculation
     ###################################################################################################################
     # ==============================================================================
-    # IGBT
+    # Transistor
     # ==============================================================================
-    if setupPara['Elec']['SwiType'] == "IGBT":
-        # ------------------------------------------
-        # Transistor
-        # ------------------------------------------
-        if pos == 'HS':
-            v_T = Vdc * (~G).astype(float)
-            v_T[Is>0] = v_T[Is>0] + (VfT[Is>0]) * (G[Is>0]).astype(float) + (VfD[Is>0]) * (~G[Is>0]).astype(float)
-            v_T[Is<=0] = v_T[Is<=0] - (VfT[Is<=0]) * (~G[Is<=0]).astype(float) - (VfD[Is<=0]) * (G[Is<=0]).astype(float)
-            i_T = Is * G.astype(float)
-            i_T[Is<0] = 0     
-        else:
-            v_T = Vdc * (~G).astype(float)
-            v_T[Is<=0] = v_T[Is<=0] + (VfT[Is<=0]) * (G[Is<=0]).astype(float) + (VfD[Is<=0]) * (~G[Is<=0]).astype(float)
-            v_T[Is>0] = v_T[Is>0] - (VfT[Is>0]) * (~G[Is>0]).astype(float) - (VfD[Is>0]) * (G[Is>0]).astype(float)
-            i_T = Is * G.astype(float) * (-1)
-            i_T[Is>0] = 0
-        
-        # ------------------------------------------
-        # Diode
-        # ------------------------------------------
-        if pos == 'HS':
-            v_D = -v_T
-            i_D = Is * G.astype(float) * (-1)
-            i_D[Is>0] = 0
-        else:     
-            v_D = -v_T
-            i_D = Is * G.astype(float)
-            i_D[Is<0] = 0
+    if pos == 'HS':
+        v_T = Vdc * (~G).astype(float)
+        v_T[Is>0] = v_T[Is>0] + (VfT[Is>0]) * (G[Is>0]).astype(float) + (VfD[Is>0]) * (~G[Is>0]).astype(float)
+        v_T[Is<=0] = v_T[Is<=0] - (VfT[Is<=0]) * (~G[Is<=0]).astype(float) - (VfD[Is<=0]) * (G[Is<=0]).astype(float)
+        i_T = Is * G.astype(float)
+        i_T[Is<0] = 0     
+    else:
+        v_T = Vdc * (~G).astype(float)
+        v_T[Is<=0] = v_T[Is<=0] + (VfT[Is<=0]) * (G[Is<=0]).astype(float) + (VfD[Is<=0]) * (~G[Is<=0]).astype(float)
+        v_T[Is>0] = v_T[Is>0] - (VfT[Is>0]) * (~G[Is>0]).astype(float) - (VfD[Is>0]) * (G[Is>0]).astype(float)
+        i_T = Is * G.astype(float) * (-1)
+        i_T[Is>0] = 0
 
     # ==============================================================================
-    # Mosfet
+    # Diode
     # ==============================================================================
-    if setupPara['Elec']['SwiType'] == "MOSFET":
-        # ------------------------------------------
-        # Transistor
-        # ------------------------------------------
-        if pos == 'HS':
-            v_T = Vdc * (~G).astype(float)
-            v_T[Is>0] = v_T[Is>0] + (VfT[Is>0]) * (G[Is>0]).astype(float) + (VfD[Is>0]) * (~G[Is>0]).astype(float)
-            v_T[Is<=0] = v_T[Is<=0] - (VfT[Is<=0]) * (~G[Is<=0]).astype(float) - (VfD[Is<=0]) * (G[Is<=0]).astype(float)
-            i_T = Is * G.astype(float)
-            i_T[Is<0] = 0     
-        else:
-            v_T = Vdc * (~G).astype(float)
-            v_T[Is<=0] = v_T[Is<=0] + (VfT[Is<=0]) * (G[Is<=0]).astype(float) + (VfD[Is<=0]) * (~G[Is<=0]).astype(float)
-            v_T[Is>0] = v_T[Is>0] - (VfT[Is>0]) * (~G[Is>0]).astype(float) - (VfD[Is>0]) * (G[Is>0]).astype(float)
-            i_T = Is * G.astype(float) * (-1)
-            i_T[Is>0] = 0
-        
-        # ------------------------------------------
-        # Diode
-        # ------------------------------------------
-        if pos == 'HS':
-            v_D = -v_T
-            i_D = Is * G.astype(float) * (-1)
-            i_D[Is>0] = 0
-        else:     
-            v_D = -v_T
-            i_D = Is * G.astype(float)
-            i_D[Is<0] = 0
+    if pos == 'HS':
+        v_D = -v_T
+        i_D = Is * G.astype(float) * (-1)
+        i_D[Is>0] = 0
+    else:     
+        v_D = -v_T
+        i_D = Is * G.astype(float)
+        i_D[Is<0] = 0
 
     ###################################################################################################################
     # Post-Processing

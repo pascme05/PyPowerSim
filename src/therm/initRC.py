@@ -35,16 +35,16 @@ def initRC(para, setupPara):
     ###################################################################################################################
     # Loading Data
     ###################################################################################################################
-    Rth_JC = para['Swi']['Ther']['tab']['Rth_JC'].values
-    Cth_JC = para['Swi']['Ther']['tab']['Cth_JC'].values
-    Rth_DC = para['Swi']['Ther']['tab']['Rth_DC'].values
-    Cth_DC = para['Swi']['Ther']['tab']['Cth_DC'].values
-    Rth_CA = para['Swi']['Ther']['tab']['Rth_CA'].values
-    Cth_CA = para['Swi']['Ther']['tab']['Cth_CA'].values
-    Rth_JC_cap = para['Cap']['Ther']['tab']['Rth_JC'].values
-    Cth_JC_cap = para['Cap']['Ther']['tab']['Cth_JC'].values
-    Rth_CA_cap = para['Cap']['Ther']['tab']['Rth_CA'].values
-    Cth_CA_cap = para['Cap']['Ther']['tab']['Cth_CA'].values
+    Rth_JC = para['Swi']['Ther']['vec']['Rth_JC'].values
+    Cth_JC = para['Swi']['Ther']['vec']['Cth_JC'].values
+    Rth_DC = para['Swi']['Ther']['vec']['Rth_DC'].values
+    Cth_DC = para['Swi']['Ther']['vec']['Cth_DC'].values
+    Rth_CA = para['Swi']['Ther']['vec']['Rth_CA'].values
+    Cth_CA = para['Swi']['Ther']['vec']['Cth_CA'].values
+    Rth_JC_cap = para['Cap']['Ther']['vec']['Rth_JC'].values
+    Cth_JC_cap = para['Cap']['Ther']['vec']['Cth_JC'].values
+    Rth_CA_cap = para['Cap']['Ther']['vec']['Rth_CA'].values
+    Cth_CA_cap = para['Cap']['Ther']['vec']['Cth_CA'].values
 
     ###################################################################################################################
     # Pre-Processing

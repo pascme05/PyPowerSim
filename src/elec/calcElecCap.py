@@ -73,8 +73,8 @@ def calcElecCap(t, i_c, Tj, para, setupPara, setupTopo):
     # ------------------------------------------
     if setupPara['Elec']['CapMdl'] == "tab":
         # Matrix 
-        ESR_2d = interpolate.interp2d(para['Cap']['Elec']['tab']['Tj'].to_numpy(), para['Cap']['Elec']['tab']['f'].to_numpy(), para['Cap']['Elec']['tab']['ESR'].to_numpy(), kind='linear')
-        C_2d = interpolate.interp2d(para['Cap']['Elec']['tab']['Tj'].to_numpy(), para['Cap']['Elec']['tab']['f'].to_numpy(), para['Cap']['Elec']['tab']['C'].to_numpy(), kind='linear')
+        ESR_2d = interpolate.interp2d(para['Cap']['Elec']['vec']['Tj'].to_numpy(), para['Cap']['Elec']['vec']['f'].to_numpy(), para['Cap']['Elec']['tab']['ESR'].to_numpy(), kind='linear')
+        C_2d = interpolate.interp2d(para['Cap']['Elec']['vec']['Tj'].to_numpy(), para['Cap']['Elec']['vec']['f'].to_numpy(), para['Cap']['Elec']['tab']['C'].to_numpy(), kind='linear')
 
         # Fundamental Value
         ESR = ESR_2d(Tj, f[idx])

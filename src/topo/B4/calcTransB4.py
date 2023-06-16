@@ -183,10 +183,10 @@ def calcTransB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
             timeElec['cap']['C1']['v_c'] = timeDc['v_dc'][start:ende]
 
             # Losses
-            timeLoss['sw']['S1'] = calcLossSwi(s['A'][start:ende]*(+1), timeElec['sw']['S1']['i_T'], timeElec['sw']['S1']['i_D'], timeElec['sw']['S1']['v_T'], timeElec['sw']['S1']['v_D'], Tj[0], para, setupPara, setupTopo)
-            timeLoss['sw']['S2'] = calcLossSwi(s['A'][start:ende]*(-1), timeElec['sw']['S2']['i_T'], timeElec['sw']['S2']['i_D'], timeElec['sw']['S2']['v_T'], timeElec['sw']['S2']['v_D'], Tj[1], para, setupPara, setupTopo)
-            timeLoss['sw']['S3'] = calcLossSwi(s['B'][start:ende]*(+1), timeElec['sw']['S3']['i_T'], timeElec['sw']['S3']['i_D'], timeElec['sw']['S3']['v_T'], timeElec['sw']['S3']['v_D'], Tj[2], para, setupPara, setupTopo)
-            timeLoss['sw']['S4'] = calcLossSwi(s['B'][start:ende]*(-1), timeElec['sw']['S4']['i_T'], timeElec['sw']['S4']['i_D'], timeElec['sw']['S4']['v_T'], timeElec['sw']['S4']['v_D'], Tj[3], para, setupPara, setupTopo)
+            timeLoss['sw']['S1'] = calcLossSwi(s['A'][start:ende]*(+1), timeElec['sw']['S1']['i_T'], timeElec['sw']['S1']['i_D'], timeElec['sw']['S1']['v_T'], timeElec['sw']['S1']['v_D'], Tj[0], para, setupPara, setupExp)
+            timeLoss['sw']['S2'] = calcLossSwi(s['A'][start:ende]*(-1), timeElec['sw']['S2']['i_T'], timeElec['sw']['S2']['i_D'], timeElec['sw']['S2']['v_T'], timeElec['sw']['S2']['v_D'], Tj[1], para, setupPara, setupExp)
+            timeLoss['sw']['S3'] = calcLossSwi(s['B'][start:ende]*(+1), timeElec['sw']['S3']['i_T'], timeElec['sw']['S3']['i_D'], timeElec['sw']['S3']['v_T'], timeElec['sw']['S3']['v_D'], Tj[2], para, setupPara, setupExp)
+            timeLoss['sw']['S4'] = calcLossSwi(s['B'][start:ende]*(-1), timeElec['sw']['S4']['i_T'], timeElec['sw']['S4']['i_D'], timeElec['sw']['S4']['v_T'], timeElec['sw']['S4']['v_D'], Tj[3], para, setupPara, setupExp)
             timeLoss['cap']['C1'] = calcLossCap(t_ref, timeDc['i_c'][start:ende], Tcap, para, setupPara, setupTopo)
 
             # Thermal

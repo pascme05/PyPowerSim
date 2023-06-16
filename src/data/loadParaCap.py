@@ -43,8 +43,10 @@ def loadParaCap(name, path, setupPara):
     para['Ther'] = {}
     para['Life'] = {}
     para['Elec']['con'] = {}
+    para['Elec']['vec'] = {}
     para['Elec']['tab'] = {}
     para['Ther']['con'] = {}
+    para['Ther']['vec'] = {}
     para['Ther']['tab'] = {}
     para['Life']['con'] = {}
     para['Life']['tab'] = {}
@@ -101,7 +103,7 @@ def loadParaCap(name, path, setupPara):
     # ------------------------------------------
     for i in range(0,len(varElecNamesCon)):
         para['Elec']['con'][varElecNamesCon[i]] = varElecValueCon[i]
-        para['Elec']['tab'][varElecNamesCon[i]] = varElecValueTab.iloc[i]
+        para['Elec']['vec'][varElecNamesCon[i]] = varElecValueTab.iloc[i]
 
     # ------------------------------------------
     # Tabular values
@@ -116,7 +118,7 @@ def loadParaCap(name, path, setupPara):
     # ==============================================================================
     for i in range(0,len(varTherNamesCon)):
         para['Ther']['con'][varTherNamesCon[i]] = varTherValueCon[i]
-        para['Ther']['tab'][varTherNamesCon[i]] = varTherValueTab.iloc[i]
+        para['Ther']['vec'][varTherNamesCon[i]] = varTherValueTab.iloc[i]
 
     ###################################################################################################################
     # Post-Processing
@@ -127,8 +129,13 @@ def loadParaCap(name, path, setupPara):
     # ------------------------------------------
     # Vectors
     # ------------------------------------------
-    para['Elec']['tab']['f'] = para['Elec']['tab']['f'].dropna(axis= 0, how='all')
-    para['Elec']['tab']['Tj'] = para['Elec']['tab']['Tj'].dropna(axis= 0, how='all')
+    # Electrical
+    for i in range(0,len(varElecNamesCon)):
+        para['Elec']['vec'][varElecNamesCon[i]] = para['Elec']['vec'][varElecNamesCon[i]].dropna(axis= 0, how='all')
+
+    # Thermal
+    for i in range(0,len(varTherNamesCon)):
+        para['Ther']['vec'][varTherNamesCon[i]] = para['Ther']['vec'][varTherNamesCon[i]].dropna(axis= 0, how='all')
 
     # ------------------------------------------
     # Matrix

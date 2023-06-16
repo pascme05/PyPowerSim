@@ -149,12 +149,12 @@ def calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
         # ------------------------------------------
         # Losses
         # ------------------------------------------
-        timeLoss['sw']['S1'] = calcLossSwi(s['A'][start:ende]*(+1), timeElec['sw']['S1']['i_T'], timeElec['sw']['S1']['i_D'], timeElec['sw']['S1']['v_T'], timeElec['sw']['S1']['v_D'], Tj, para, setupPara, setupTopo)
-        timeLoss['sw']['S2'] = calcLossSwi(s['A'][start:ende]*(-1), timeElec['sw']['S2']['i_T'], timeElec['sw']['S2']['i_D'], timeElec['sw']['S2']['v_T'], timeElec['sw']['S2']['v_D'], Tj, para, setupPara, setupTopo)
-        timeLoss['sw']['S3'] = calcLossSwi(s['B'][start:ende]*(+1), timeElec['sw']['S3']['i_T'], timeElec['sw']['S3']['i_D'], timeElec['sw']['S3']['v_T'], timeElec['sw']['S3']['v_D'], Tj, para, setupPara, setupTopo)
-        timeLoss['sw']['S4'] = calcLossSwi(s['B'][start:ende]*(-1), timeElec['sw']['S4']['i_T'], timeElec['sw']['S4']['i_D'], timeElec['sw']['S4']['v_T'], timeElec['sw']['S4']['v_D'], Tj, para, setupPara, setupTopo)
-        timeLoss['sw']['S5'] = calcLossSwi(s['C'][start:ende]*(+1), timeElec['sw']['S5']['i_T'], timeElec['sw']['S5']['i_D'], timeElec['sw']['S5']['v_T'], timeElec['sw']['S5']['v_D'], Tj, para, setupPara, setupTopo)
-        timeLoss['sw']['S6'] = calcLossSwi(s['C'][start:ende]*(-1), timeElec['sw']['S6']['i_T'], timeElec['sw']['S6']['i_D'], timeElec['sw']['S6']['v_T'], timeElec['sw']['S6']['v_D'], Tj, para, setupPara, setupTopo)
+        timeLoss['sw']['S1'] = calcLossSwi(s['A'][start:ende]*(+1), timeElec['sw']['S1']['i_T'], timeElec['sw']['S1']['i_D'], timeElec['sw']['S1']['v_T'], timeElec['sw']['S1']['v_D'], Tj, para, setupPara, setupExp)
+        timeLoss['sw']['S2'] = calcLossSwi(s['A'][start:ende]*(-1), timeElec['sw']['S2']['i_T'], timeElec['sw']['S2']['i_D'], timeElec['sw']['S2']['v_T'], timeElec['sw']['S2']['v_D'], Tj, para, setupPara, setupExp)
+        timeLoss['sw']['S3'] = calcLossSwi(s['B'][start:ende]*(+1), timeElec['sw']['S3']['i_T'], timeElec['sw']['S3']['i_D'], timeElec['sw']['S3']['v_T'], timeElec['sw']['S3']['v_D'], Tj, para, setupPara, setupExp)
+        timeLoss['sw']['S4'] = calcLossSwi(s['B'][start:ende]*(-1), timeElec['sw']['S4']['i_T'], timeElec['sw']['S4']['i_D'], timeElec['sw']['S4']['v_T'], timeElec['sw']['S4']['v_D'], Tj, para, setupPara, setupExp)
+        timeLoss['sw']['S5'] = calcLossSwi(s['C'][start:ende]*(+1), timeElec['sw']['S5']['i_T'], timeElec['sw']['S5']['i_D'], timeElec['sw']['S5']['v_T'], timeElec['sw']['S5']['v_D'], Tj, para, setupPara, setupExp)
+        timeLoss['sw']['S6'] = calcLossSwi(s['C'][start:ende]*(-1), timeElec['sw']['S6']['i_T'], timeElec['sw']['S6']['i_D'], timeElec['sw']['S6']['v_T'], timeElec['sw']['S6']['v_D'], Tj, para, setupPara, setupExp)
         timeLoss['cap']['C1'] = calcLossCap(t, timeDc['i_c'], Tcap, para, setupPara, setupTopo)
         
         # ------------------------------------------
@@ -207,12 +207,12 @@ def calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
             timeElec['cap']['C1']['v_c'] = timeDc['v_dc']
 
             # Losses
-            timeLoss['sw']['S1'] = calcLossSwi(s['A'][start:ende]*(+1), timeElec['sw']['S1']['i_T'], timeElec['sw']['S1']['i_D'], timeElec['sw']['S1']['v_T'], timeElec['sw']['S1']['v_D'], T_old[0], para, setupPara, setupTopo)
-            timeLoss['sw']['S2'] = calcLossSwi(s['A'][start:ende]*(-1), timeElec['sw']['S2']['i_T'], timeElec['sw']['S2']['i_D'], timeElec['sw']['S2']['v_T'], timeElec['sw']['S2']['v_D'], T_old[1], para, setupPara, setupTopo)
-            timeLoss['sw']['S3'] = calcLossSwi(s['B'][start:ende]*(+1), timeElec['sw']['S3']['i_T'], timeElec['sw']['S3']['i_D'], timeElec['sw']['S3']['v_T'], timeElec['sw']['S3']['v_D'], T_old[2], para, setupPara, setupTopo)
-            timeLoss['sw']['S4'] = calcLossSwi(s['B'][start:ende]*(-1), timeElec['sw']['S4']['i_T'], timeElec['sw']['S4']['i_D'], timeElec['sw']['S4']['v_T'], timeElec['sw']['S4']['v_D'], T_old[3], para, setupPara, setupTopo)
-            timeLoss['sw']['S5'] = calcLossSwi(s['C'][start:ende]*(+1), timeElec['sw']['S5']['i_T'], timeElec['sw']['S5']['i_D'], timeElec['sw']['S5']['v_T'], timeElec['sw']['S5']['v_D'], T_old[4], para, setupPara, setupTopo)
-            timeLoss['sw']['S6'] = calcLossSwi(s['C'][start:ende]*(-1), timeElec['sw']['S6']['i_T'], timeElec['sw']['S6']['i_D'], timeElec['sw']['S6']['v_T'], timeElec['sw']['S6']['v_D'], T_old[5], para, setupPara, setupTopo)
+            timeLoss['sw']['S1'] = calcLossSwi(s['A'][start:ende]*(+1), timeElec['sw']['S1']['i_T'], timeElec['sw']['S1']['i_D'], timeElec['sw']['S1']['v_T'], timeElec['sw']['S1']['v_D'], T_old[0], para, setupPara, setupExp)
+            timeLoss['sw']['S2'] = calcLossSwi(s['A'][start:ende]*(-1), timeElec['sw']['S2']['i_T'], timeElec['sw']['S2']['i_D'], timeElec['sw']['S2']['v_T'], timeElec['sw']['S2']['v_D'], T_old[1], para, setupPara, setupExp)
+            timeLoss['sw']['S3'] = calcLossSwi(s['B'][start:ende]*(+1), timeElec['sw']['S3']['i_T'], timeElec['sw']['S3']['i_D'], timeElec['sw']['S3']['v_T'], timeElec['sw']['S3']['v_D'], T_old[2], para, setupPara, setupExp)
+            timeLoss['sw']['S4'] = calcLossSwi(s['B'][start:ende]*(-1), timeElec['sw']['S4']['i_T'], timeElec['sw']['S4']['i_D'], timeElec['sw']['S4']['v_T'], timeElec['sw']['S4']['v_D'], T_old[3], para, setupPara, setupExp)
+            timeLoss['sw']['S5'] = calcLossSwi(s['C'][start:ende]*(+1), timeElec['sw']['S5']['i_T'], timeElec['sw']['S5']['i_D'], timeElec['sw']['S5']['v_T'], timeElec['sw']['S5']['v_D'], T_old[4], para, setupPara, setupExp)
+            timeLoss['sw']['S6'] = calcLossSwi(s['C'][start:ende]*(-1), timeElec['sw']['S6']['i_T'], timeElec['sw']['S6']['i_D'], timeElec['sw']['S6']['v_T'], timeElec['sw']['S6']['v_D'], T_old[5], para, setupPara, setupExp)
             timeLoss['cap']['C1'] = calcLossCap(t, timeDc['i_c'], T_old[6], para, setupPara, setupTopo)
 
             # Thermal

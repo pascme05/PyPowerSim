@@ -341,52 +341,68 @@ def plotStat_B4(time, freq, setupPara, setupData, setupTopo, setupExp):
     # Switches
     # ------------------------------------------
     for i in range(0,4):
-        ax = plt.subplot(4,5,4*i+1)
+        # Current
+        ax = plt.subplot(4,5,5*i+1)
         plt.plot(t, timeElec['sw'][id[i]]['i_T'], t, timeElec['sw'][id[i]]['i_D'])
         plt.ylabel("$i(t)$ (A)")
         txt = 'Time-domain Currents Switch ' + str(id[i])
         plt.title(txt)
-        plt.xlabel('time in (sec)')
+        if i == 3:
+            plt.xlabel('time in (sec)')
+        else:
+            plt.xticks([], [])
         plt.legend(["$i_{T}$", "$i_{D}$"], loc='upper right')
         plt.grid('on')
         
         # Voltage
-        ax = plt.subplot(4,5,4*i+2)
+        ax = plt.subplot(4,5,5*i+2)
         plt.plot(t, timeElec['sw'][id[i]]['v_T'], t, timeElec['sw'][id[i]]['v_D'])
         plt.ylabel("$v(t)$ (V)")
         txt = 'Time-domain Voltages Switch ' + str(id[i])
         plt.title(txt)
-        plt.xlabel('time in (sec)')
+        if i == 3:
+            plt.xlabel('time in (sec)')
+        else:
+            plt.xticks([], [])
         plt.legend(["$v_{T}$", "$v_{D}$"], loc='upper right')
         plt.grid('on')
         
         # Losses
-        ax = plt.subplot(4,5,4*i+3)
+        ax = plt.subplot(4,5,5*i+3)
         plt.plot(t, timeLoss['sw'][id[i]]['p_T_c'], t, timeLoss['sw'][id[i]]['p_D_c'])
         plt.ylabel("$p(t)$ (W)")
         txt = 'Time-domain Conduction Losses Switch ' + str(id[i])
         plt.title(txt)
-        plt.xlabel('time in (sec)')
+        if i == 3:
+            plt.xlabel('time in (sec)')
+        else:
+            plt.xticks([], [])
         plt.legend(["$p_{T}$", "$p_{D}$"], loc='upper right')
         plt.grid('on')
 
         # Losses
-        ax = plt.subplot(4,5,4*i+4)
+        ax = plt.subplot(4,5,5*i+4)
         plt.plot(t, timeLoss['sw'][id[i]]['p_T_s'], t, timeLoss['sw'][id[i]]['p_D_s'])
         plt.ylabel("$p(t)$ (W)")
         txt = 'Time-domain Switching Losses Switch ' + str(id[i])
         plt.title(txt)
-        plt.xlabel('time in (sec)')
+        if i == 3:
+            plt.xlabel('time in (sec)')
+        else:
+            plt.xticks([], [])
         plt.legend(["$p_{T}$", "$p_{D}$"], loc='upper right')
         plt.grid('on')
         
         # Temperature
-        plt.subplot(4,5,4*i+5)
+        plt.subplot(4,5,5*i+5)
         plt.plot(t, timeTher['sw'][idT[i]], t, timeTher['sw'][idD[i]])
         plt.ylabel("$\Theta(t)$ (°C)")
         txt = 'Time-domain Thermal Switch ' + str(id[i])
         plt.title(txt)
-        plt.xlabel('time in (sec)')
+        if i == 3:
+            plt.xlabel('time in (sec)')
+        else:
+            plt.xticks([], [])
         plt.legend(["$\Theta_{T}$", "$\Theta_{D}$"], loc='upper right')
         plt.grid('on')
 
