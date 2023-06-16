@@ -11,7 +11,13 @@ of commercial software but will hopefully provide a better understanding due to 
 available source code. The toolkit is obviously not complete; thus, suggestions are 
 always welcome.
 
-
+# Version
+v.0.1: (01.04.2023) Initial version of PyPowerSim
+v.0.1: (16.06.2023) Major Update and housekeeping
+    - Adding MOSFET devices
+    - Revising switching loss calculation
+    - Adding output control
+    
 # Publication
 The PyPowerSim toolkit is part of the following survey paper and tries to replicate 
 the presented architectures and approaches. Please cite the following paper when 
@@ -40,7 +46,6 @@ In the following a list of know issues and limitations is provided:
 - The transfer functions for the input and output filter are not yet verified. Also, there is no protection against instability of the transfer functions.
 - Soft switching architectures are not included yet.
 - The interpolation methods for calculating the tabulated parameter options are only linear now.
-- The MOSFET implementation needs to be finalised and verified.
 
 
 # Architecture
