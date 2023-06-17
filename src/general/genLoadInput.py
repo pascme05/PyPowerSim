@@ -62,8 +62,16 @@ def genLoadInput(setupExp, setupTopo, setupData):
     fel = setupTopo['fel']
     
     # ==============================================================================
-    # Variables
+    # Topology
     # ==============================================================================
+    if setupTopo['sourceType'] == "B2":
+        paraV = 2
+    elif setupTopo['sourceType'] == "B4":
+        paraV = 1
+    elif setupTopo['sourceType'] == "B6":
+        paraV = 2
+    else:
+        paraV = 2
 
     ###################################################################################################################
     # Pre-Processing
@@ -96,7 +104,7 @@ def genLoadInput(setupExp, setupTopo, setupData):
     # ==============================================================================
     elif setupExp['output'] == 'V':
         print(f"INFO: Voltage controlled mode with Vo {setupData['stat']['Vo']:.2f} (V)")
-        Mi = setupData['stat']['Vo'] / setupData['stat']['Vdc'] * 2
+        Mi = setupData['stat']['Vo'] / setupData['stat']['Vdc'] * paraV
         
     # ==============================================================================
     # Current is controlled 
@@ -104,7 +112,7 @@ def genLoadInput(setupExp, setupTopo, setupData):
     elif setupExp['output'] == 'I':
         print(f"INFO: Current controlled mode with Io {setupData['stat']['Io']:.2f} (A)")
         Vo = abs(setupData['stat']['Io'] * Z * np.sqrt(2) + EMF)
-        Mi = Vo / setupData['stat']['Vdc'] * 2
+        Mi = Vo / setupData['stat']['Vdc'] * paraV
         
     # ==============================================================================
     # Active power is controlled
@@ -113,7 +121,7 @@ def genLoadInput(setupExp, setupTopo, setupData):
         print(f"INFO: Active power controlled mode with Po {setupData['stat']['Po']:.2f} (W)")
         Io = np.sqrt(setupData['stat']['Po'] / R) * np.sqrt(2)
         Io = complex(Io*np.cos(angZ), Io*np.sin(angZ))
-        Mi = abs(Io*Z + EMF) / setupData['stat']['Vdc'] * 2
+        Mi = abs(Io*Z + EMF) / setupData['stat']['Vdc'] * paraV
         
     # ==============================================================================
     # Reactive power is controlled
@@ -122,7 +130,7 @@ def genLoadInput(setupExp, setupTopo, setupData):
         print(f"INFO: Reactive power controlled mode with Qo {setupData['stat']['Qo']:.2f} (W)")
         Io = np.sqrt(setupData['stat']['Qo'] / (2*np.pi*fel*L)) * np.sqrt(2)
         Io = complex(Io*np.cos(angZ), Io*np.sin(angZ))
-        Mi = abs(Io*Z + EMF) / setupData['stat']['Vdc'] * 2
+        Mi = abs(Io*Z + EMF) / setupData['stat']['Vdc'] * paraV
         
     # ==============================================================================
     # Default
@@ -136,7 +144,7 @@ def genLoadInput(setupExp, setupTopo, setupData):
     # ==============================================================================
     # Ouput Values
     # ==============================================================================
-    Vo = Mi * Vdc / 2
+    Vo = Mi * Vdc / paraV
     Io = (complex(Vo,phiO) - EMF) / Z / np.sqrt(2)
     So = Vo * Io / np.sqrt(2)
     Po = So.real

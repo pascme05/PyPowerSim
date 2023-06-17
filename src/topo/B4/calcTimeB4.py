@@ -61,9 +61,13 @@ def calcTimeB4(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     v_L = v_out - Mi*e
     
     # Current
-    _, i_a, _, = sig.lsim(mdl['SS']['Load'], (v_L - np.mean(v_L)), t)
-    i_a = i_a[start:ende]
-    i_a = i_a - np.mean(i_a)
+    if setupTopo['wave'] == "con":
+        _, i_a, _, = sig.lsim(mdl['SS']['Load'], v_L, t)
+        i_a = i_a[start:ende]
+    else: 
+        _, i_a, _, = sig.lsim(mdl['SS']['Load'], (v_L - np.mean(v_L)), t)
+        i_a = i_a[start:ende]
+        i_a = i_a - np.mean(i_a)
 
     # ==============================================================================
     # DC-Side
