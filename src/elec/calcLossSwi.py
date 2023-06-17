@@ -46,7 +46,10 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupExp):
     Erec = np.zeros(np.size(i_T))
     tf = np.zeros(np.size(i_T))
     tr = np.zeros(np.size(i_T))
-    V_int = np.linspace(0,int(np.max(para['Swi']['Elec']['vec']['Vf'].values)), nInt)
+    try:
+        V_int = np.linspace(0,int(np.max(para['Swi']['Elec']['vec']['Vf'].values)), nInt)
+    except:
+        V_int = np.linspace(0,int(np.max(np.abs(v_D))), nInt)
     Coss_int = np.zeros((len(para['Swi']['Elec']['vec']['Tj']),len(V_int)))
     Crss_int = np.zeros((len(para['Swi']['Elec']['vec']['Tj']),len(V_int)))
     Eoss_2d = np.zeros((len(para['Swi']['Elec']['vec']['Tj']),len(V_int)))
