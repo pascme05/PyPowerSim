@@ -106,7 +106,7 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupExp):
         if setupPara['Elec']['SwiType'] == "IGBT" or setupPara['PWM']['swloss'] == 0:   
             Eon_2d  = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['If'].to_numpy(), para['Swi']['Elec']['tab']['Eon'].to_numpy(), kind='linear')
             Eoff_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['If'].to_numpy(), para['Swi']['Elec']['tab']['Eoff'].to_numpy(), kind='linear')
-            Erec_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['If'].to_numpy(), para['Swi']['Elec']['tab']['Erec'].to_numpy(), kind='linear')
+            Erec_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['Ifd'].to_numpy(), para['Swi']['Elec']['tab']['Erec'].to_numpy(), kind='linear')
 
             for i in range(0, len(i_T)):
                 Eon[i]  = Eon_2d(t_Tj, i_T[i])
