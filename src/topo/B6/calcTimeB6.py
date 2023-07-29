@@ -77,22 +77,21 @@ def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
             v_out[id[j]] = v[id[j]]
         else:
             _, v_out[id[j]], _, = sig.lsim(mdl['SS']['Out'], v[id[j]], t, X0=v[id[j]][0])
-    
-    # ------------------------------------------
-    # Load 
-    # ------------------------------------------
-    for j in range(0, len(id)):
-        # Voltage
-        v_L[id[j]] = v_out[id[j]] - Mi*e[id[j]]
 
-        # Current
-        if setupTopo['wave'] == "con":
-            _, i[id[j]], _, = sig.lsim(mdl['SS']['Load'], v_L[id[j]], t)
-            i[id[j]] = i[id[j]][start:ende]
-        else: 
-            _, i[id[j]], _, = sig.lsim(mdl['SS']['Load'], (v_L[id[j]] - np.mean(v_L[id[j]])), t)
-            i[id[j]] = i[id[j]][start:ende]
-            i[id[j]] = i[id[j]] - np.mean(i[id[j]])
+    # ------------------------------------------
+    # Load
+    # ------------------------------------------
+    # Voltage
+    for j in range(0, len(id)):
+        v_L[id[j]] = v_out[id[j]] - Mi * e[id[j]]
+
+    # Current
+    _, i_ab, _, = sig.lsim(mdl['SS']['Load'], (v0['A'] - Mi * e['A'] - v0['B'] - Mi * e['B']) / np.sqrt(3), t)
+    _, i_bc, _, = sig.lsim(mdl['SS']['Load'], (v0['B'] - Mi * e['B'] - v0['C'] - Mi * e['C']) / np.sqrt(3), t)
+    _, i_ca, _, = sig.lsim(mdl['SS']['Load'], (v0['C'] - Mi * e['C'] - v0['A'] - Mi * e['A']) / np.sqrt(3), t)
+    i['A'] = np.roll(i_ab[start:ende], int(np.floor((60 + 0) / 720 * len(s['A'][start:ende]))))
+    i['B'] = np.roll(i_bc[start:ende], int(np.floor((60 + 0) / 720 * len(s['B'][start:ende]))))
+    i['C'] = np.roll(i_ca[start:ende], int(np.floor((60 + 0) / 720 * len(s['C'][start:ende]))))
 
     # ==============================================================================
     # DC-Side
