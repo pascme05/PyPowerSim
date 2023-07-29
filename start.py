@@ -56,8 +56,8 @@ setupExp['debug'] = 0                                                           
 # ------------------------------------------
 # Operating Mode
 # ------------------------------------------
-setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled 
-setupExp['type'] = 0                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
+setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled
+setupExp['type'] = 1                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
 setupExp['loop'] = 'CL'                                                                                                 # (CL): closed-loop, (OL): open-loop
 setupExp['freqPar'] = 'fs'                                                                                              # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
 setupExp['freqAvg'] = 'none'                                                                                            # (none): no averaging is used (fs): values are averaged over switching cycle, (fel): values are averaged over fundamental cycle
@@ -65,7 +65,7 @@ setupExp['freqAvg'] = 'none'                                                    
 # ------------------------------------------
 # Numerical
 # ------------------------------------------
-setupExp['fsim'] = 5e5                                                                                                  # simulation frequency (Hz)
+setupExp['fsim'] = 1e6                                                                                                  # simulation frequency (Hz)
 setupExp['tol'] = 1e-6                                                                                                  # tolerance in percent with respect to the previous converged result
 setupExp['eps'] = 1e-12                                                                                                 # small numerical tolerance
 setupExp['int'] = 20                                                                                                    # number of steps for integration
@@ -73,7 +73,7 @@ setupExp['int'] = 20                                                            
 # ------------------------------------------
 # Output
 # ------------------------------------------
-setupExp['plot'] = 1                                                                                                    # (0): no results are plotted, (1): results are plotted
+setupExp['plot'] = 0                                                                                                    # (0): no results are plotted, (1): results are plotted
 setupExp['save'] = 0                                                                                                    # (0): no results are saved, (1): results are saved
 
 # ==============================================================================
@@ -100,7 +100,7 @@ setupData['stat']['Tc'] = 50.0                                                  
 setupData['stat']['Po'] = 1000                                                                                          # output active power (Po) in (W) for power control
 setupData['stat']['Qo'] = 500                                                                                           # output reactive power (Qo) in (VAr) for power control
 setupData['stat']['Vo'] = 50                                                                                            # output RMS phase voltage (V0) in (V) for voltage control    
-setupData['stat']['Io'] = 25                                                                                            # output RMS phase current (Io) in (A) for current control
+setupData['stat']['Io'] = 27                                                                                            # output RMS phase current (Io) in (A) for current control
 
 # Input and Output
 setupData['stat']['Mi'] = 1.00                                                                                          # modulation index (Mi) for distortion analysis                                                                                                # power factor cos_phi
@@ -155,8 +155,8 @@ setupTopo['fel'] = 50                                                           
 # ------------------------------------------
 # General
 # ------------------------------------------
-setupPara['PWM']['type'] = "SV"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based
-setupPara['PWM']['upd'] = "DE"                                                                                          # (SE): single edge, (DE): double edge 
+setupPara['PWM']['type'] = "CB"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based
+setupPara['PWM']['upd'] = "DE"                                                                                          # (SE): single edge, (DE): double edge
 setupPara['PWM']['samp'] = "RS"                                                                                         # (NS): natural sampling, (RS): regular sampling
 setupPara['PWM']['tri'] = "SM"                                                                                          # modulation trigger (RE): rising edge, (FE): falling edge, (SM): symmetrical modulation, (AM): asymmetrical modualtion
 setupPara['PWM']['int'] = 0                                                                                             # (0): non-interleaved, (1): interleaving (when multiple carriers are used)
@@ -199,7 +199,7 @@ setupPara['Elec']['CapSeries'] = 1                                              
 # ==============================================================================
 # Thermal Parameters
 # ==============================================================================
-setupPara['Ther']['Heatsink'] = 1                                                                                       # 1) using thermal capacities and resistances of heatsink RC model
+setupPara['Ther']['Heatsink'] = 0                                                                                       # 1) using thermal capacities and resistances of heatsink RC model
 
 #######################################################################################################################
 # Calculations
