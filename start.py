@@ -185,7 +185,9 @@ setupPara['PWM']['zero'] = "SVPWM"                                              
 # ------------------------------------------
 setupPara['Elec']['SwiMdl'] = "tab"                                                                                     # modelling of the switch (con): constant parameters, (pwl): piecewise linear, (tab): tabulated parameters
 setupPara['Elec']['SwiType'] = "IGBT"                                                                                   # type of the switch (IGBT, MOSFET) 
-setupPara['Elec']['SwiPara'] = 1                                                                                        # number of switches in parallel  
+setupPara['Elec']['SwiRecCon'] = "D"                                                                                    # reverse conduction using (D): diode channel, (DT): diode and transistor share current (tbi)
+setupPara['Elec']['SwiRecMdl'] = 0                                                                                      # reverse conduction model (0): Ideal, (1): including blanking time
+setupPara['Elec']['SwiPara'] = 1                                                                                        # number of switches in parallel
 setupPara['Elec']['SwiSeries'] = 1                                                                                      # number of switches in series 
 
 # ------------------------------------------
@@ -200,6 +202,7 @@ setupPara['Elec']['CapSeries'] = 1                                              
 # Thermal Parameters
 # ==============================================================================
 setupPara['Ther']['Heatsink'] = 1                                                                                       # 1) using thermal capacities and resistances of heatsink RC model
+setupPara['Ther']['Coupling'] = 0                                                                                       # 0) no thermal coupling between diode and transistor, 1) thermal coupling between diode and transistor
 
 #######################################################################################################################
 # Calculations

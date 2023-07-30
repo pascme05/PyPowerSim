@@ -22,7 +22,9 @@
 # ==============================================================================
 import numpy as np
 import pandas as pd
+import copy
 from scipy import interpolate
+
 
 #######################################################################################################################
 # Function
@@ -48,7 +50,7 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     # ==============================================================================
     # Output
     # ==============================================================================
-    out = pd.DataFrame(columns=['i_T','v_T','i_D','v_D'])
+    out = pd.DataFrame(columns=['i_T', 'v_T', 'i_D', 'v_D'])
 
     ###################################################################################################################
     # Pre-Processing
@@ -83,15 +85,19 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
         if setupPara['Elec']['SwiType'] == "MOSFET":
             VfT = Ron * np.abs(Is)
             VfD = Vfd + RonD * np.abs(Is)
-        
+
     # ------------------------------------------
     # Tabular
     # ------------------------------------------
     if setupPara['Elec']['SwiMdl'] == "tab":
         # IGBT
-        if setupPara['Elec']['SwiType'] == "IGBT": 
-            Vce_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['If'].to_numpy(), para['Swi']['Elec']['tab']['Vf'].to_numpy(), kind='linear')
-            Vfd_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['Ifd'].to_numpy(), para['Swi']['Elec']['tab']['Vfd'].to_numpy(), kind='linear')
+        if setupPara['Elec']['SwiType'] == "IGBT":
+            Vce_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),
+                                          para['Swi']['Elec']['vec']['If'].to_numpy(),
+                                          para['Swi']['Elec']['tab']['Vf'].to_numpy(), kind='linear')
+            Vfd_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),
+                                          para['Swi']['Elec']['vec']['Ifd'].to_numpy(),
+                                          para['Swi']['Elec']['tab']['Vfd'].to_numpy(), kind='linear')
 
             for i in range(0, len(Is)):
                 VfT[i] = Vce_2d(Tj, abs(Is[i]))
@@ -99,13 +105,16 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
 
         # MOSFET
         if setupPara['Elec']['SwiType'] == "MOSFET":
-            Vce_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['If'].to_numpy(), para['Swi']['Elec']['tab']['Vf'].to_numpy(), kind='linear')
-            Vfd_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(), para['Swi']['Elec']['vec']['Ifd'].to_numpy(), para['Swi']['Elec']['tab']['Vfd'].to_numpy(), kind='linear')
+            Vce_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),
+                                          para['Swi']['Elec']['vec']['If'].to_numpy(),
+                                          para['Swi']['Elec']['tab']['Vf'].to_numpy(), kind='linear')
+            Vfd_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),
+                                          para['Swi']['Elec']['vec']['Ifd'].to_numpy(),
+                                          para['Swi']['Elec']['tab']['Vfd'].to_numpy(), kind='linear')
 
             for i in range(0, len(Is)):
                 VfT[i] = Vce_2d(Tj, abs(Is[i]))
                 VfD[i] = Vfd_2d(Tj, abs(Is[i]))
-
 
     # ==============================================================================
     # Parameterize PWM Method
@@ -121,29 +130,90 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     # Transistor
     # ==============================================================================
     if pos == 'HS':
+        # ------------------------------------------
+        # Voltage
+        # ------------------------------------------
         v_T = Vdc * (~G).astype(float)
-        v_T[Is>0] = v_T[Is>0] + (VfT[Is>0]) * (G[Is>0]).astype(float) + (VfD[Is>0]) * (~G[Is>0]).astype(float)
-        v_T[Is<=0] = v_T[Is<=0] - (VfT[Is<=0]) * (~G[Is<=0]).astype(float) - (VfD[Is<=0]) * (G[Is<=0]).astype(float)
+        v_T[Is > 0] = v_T[Is > 0] + (VfT[Is > 0]) * (G[Is > 0]).astype(float) + (VfD[Is > 0]) * (~G[Is > 0]).astype(float)
+        v_T[Is <= 0] = v_T[Is <= 0] - (VfT[Is <= 0]) * (~G[Is <= 0]).astype(float) - (VfD[Is <= 0]) * (G[Is <= 0]).astype(float)
+
+        # ------------------------------------------
+        # Current
+        # ------------------------------------------
         i_T = Is * G.astype(float)
-        i_T[Is<0] = 0     
+        if setupPara['Elec']['SwiRecCon'] == "D":
+            i_T[Is < 0] = 0
+        else:
+            i_T[Is < 0] = i_T[Is < 0] * (VfD[Is < 0] / (VfD[Is < 0] + VfT[Is < 0]))
     else:
+        # ------------------------------------------
+        # Voltage
+        # ------------------------------------------
         v_T = Vdc * (~G).astype(float)
-        v_T[Is<=0] = v_T[Is<=0] + (VfT[Is<=0]) * (G[Is<=0]).astype(float) + (VfD[Is<=0]) * (~G[Is<=0]).astype(float)
-        v_T[Is>0] = v_T[Is>0] - (VfT[Is>0]) * (~G[Is>0]).astype(float) - (VfD[Is>0]) * (G[Is>0]).astype(float)
+        v_T[Is <= 0] = v_T[Is <= 0] + (VfT[Is <= 0]) * (G[Is <= 0]).astype(float) + (VfD[Is <= 0]) * (~G[Is <= 0]).astype(float)
+        v_T[Is > 0] = v_T[Is > 0] - (VfT[Is > 0]) * (~G[Is > 0]).astype(float) - (VfD[Is > 0]) * (G[Is > 0]).astype(float)
+
+        # ------------------------------------------
+        # Current
+        # ------------------------------------------
         i_T = Is * G.astype(float) * (-1)
-        i_T[Is>0] = 0
+        if setupPara['Elec']['SwiRecCon'] == "D":
+            i_T[Is > 0] = 0
+        else:
+            i_T[Is > 0] = i_T[Is > 0] * (VfD[Is > 0] / (VfD[Is > 0] + VfT[Is > 0]))
 
     # ==============================================================================
     # Diode
     # ==============================================================================
     if pos == 'HS':
+        # ------------------------------------------
+        # Voltage
+        # ------------------------------------------
         v_D = -v_T
-        i_D = Is * G.astype(float) * (-1)
-        i_D[Is>0] = 0
-    else:     
+
+        # ------------------------------------------
+        # Current
+        # ------------------------------------------
+        i_D = -copy.deepcopy(Is)
+        i_D[Is > 0] = 0
+        if setupPara['Elec']['SwiRecCon'] == "D":
+            # HS Gate 0/1
+            i_D[v_D < 0] = 0
+        else:
+            # HS Gate 0
+            i_D[v_D < 0] = 0
+
+            # HS Gate 1
+            i_D = i_D * (VfT / (VfD + VfT))
+
+            # Blanking time
+            if setupPara['Elec']['SwiRecMdl'] == 1:
+                i_D[(VfT > VfD) & (G.astype(float) == 1)] = 0
+
+    else:
+        # ------------------------------------------
+        # Voltage
+        # ------------------------------------------
         v_D = -v_T
-        i_D = Is * G.astype(float)
-        i_D[Is<0] = 0
+
+        # ------------------------------------------
+        # Current
+        # ------------------------------------------
+        i_D = copy.deepcopy(Is)
+        i_D[Is < 0] = 0
+        if setupPara['Elec']['SwiRecCon'] == "D":
+            # HS Gate 0/1
+            i_D[v_D < 0] = 0
+        else:
+            # HS Gate 0
+            i_D[v_D < 0] = 0
+
+            # HS Gate 1
+            i_D = i_D * (VfT / (VfD + VfT))
+
+            # Blanking time
+            if setupPara['Elec']['SwiRecMdl'] == 1:
+                i_D[(VfT > VfD) & ((~G).astype(float) == 1)] = 0
 
     ###################################################################################################################
     # Post-Processing
@@ -162,7 +232,7 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     # ------------------------------------------
     out['v_D'] = v_D / setupPara['Elec']['SwiSeries']
     out['i_D'] = i_D / setupPara['Elec']['SwiPara']
-    
+
     ###################################################################################################################
     # Return
     ###################################################################################################################
