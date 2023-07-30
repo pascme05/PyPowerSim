@@ -85,13 +85,17 @@ def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     for j in range(0, len(id)):
         v_L[id[j]] = v_out[id[j]] - Mi * e[id[j]]
 
-    # Current
+    # LL Current
     _, i_ab, _, = sig.lsim(mdl['SS']['Load'], (v0['A'] - Mi * e['A'] - v0['B'] - Mi * e['B']) / np.sqrt(3), t)
     _, i_bc, _, = sig.lsim(mdl['SS']['Load'], (v0['B'] - Mi * e['B'] - v0['C'] - Mi * e['C']) / np.sqrt(3), t)
     _, i_ca, _, = sig.lsim(mdl['SS']['Load'], (v0['C'] - Mi * e['C'] - v0['A'] - Mi * e['A']) / np.sqrt(3), t)
     i['A'] = np.roll(i_ab[start:ende], int(np.floor((30 + 0) / 720 * len(s['A'][start:ende]))))
     i['B'] = np.roll(i_bc[start:ende], int(np.floor((30 + 0) / 720 * len(s['B'][start:ende]))))
     i['C'] = np.roll(i_ca[start:ende], int(np.floor((30 + 0) / 720 * len(s['C'][start:ende]))))
+
+    # LN Current
+    for j in range(0, len(id)):
+        i[id[j]] = i[id[j]] - np.mean(i[id[j]])
 
     # ==============================================================================
     # DC-Side
