@@ -46,6 +46,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     id =  ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
     idT = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6']
     idD = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6']
+    idC = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6']
 
     # ==============================================================================
     # Init
@@ -80,6 +81,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     Vdc = setupData['stat']['Vdc']
     phiE = setupTopo['phiE']
     down = setupData['stat']['cyc']
+    Ta = setupData['stat']['Tc']
 
     # ==============================================================================
     # Variables
@@ -421,12 +423,12 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
         # Temperature
         plt.subplot(4,3,i+4)
-        plt.plot(t, timeTher['sw'][idT[i*2]], t, timeTher['sw'][idD[i*2]])
+        plt.plot(t, timeTher['sw'][idT[i*2]], t, timeTher['sw'][idD[i*2]], t, timeTher['sw'][idC[i*2]], t, Ta*np.ones(np.size(t)))
         plt.ylabel("$\Theta(t)$ (°C)")
         txt = 'Time-domain Thermal Switch ' + str(id[i*2])
         plt.title(txt)
         plt.xticks([], [])
-        plt.legend(["$\Theta_{T}$", "$\Theta_{D}$"], loc='upper right')
+        plt.legend(["$\Theta_{T}$", "$\Theta_{D}$", "$\Theta_{C}$", "$\Theta_{A}$"], loc='upper right')
         plt.grid('on')
 
         # Losses
@@ -441,12 +443,12 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
         # Temperature
         plt.subplot(4,3,i+10)
-        plt.plot(t, timeTher['sw'][idT[i*2+1]], t, timeTher['sw'][idD[i*2+1]])
+        plt.plot(t, timeTher['sw'][idT[i*2+1]], t, timeTher['sw'][idD[i*2+1]], t, timeTher['sw'][idC[i*2+1]], t, Ta*np.ones(np.size(t)))
         plt.ylabel("$\Theta(t)$ (°C)")
         txt = 'Time-domain Thermal Switch ' + str(id[i*2+1])
         plt.title(txt)
         plt.xlabel('time in (sec)')
-        plt.legend(["$\Theta_{T}$", "$\Theta_{D}$"], loc='upper right')
+        plt.legend(["$\Theta_{T}$", "$\Theta_{D}$", "$\Theta_{C}$", "$\Theta_{A}$"], loc='upper right')
         plt.grid('on')
 
     # ==============================================================================

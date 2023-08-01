@@ -71,6 +71,7 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     Vdc = setupData['stat']['Vdc']
     phiE = setupTopo['phiE']
     down = setupData['stat']['cyc']
+    Ta = setupData['trans']['Tc']
 
     # ==============================================================================
     # Variables
@@ -247,7 +248,6 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     plt.xlabel('time in (sec)')
     plt.legend(["$v_{in}$", "$v_{dc}$", "$V_{dc,avg}$"], loc='upper right')
     plt.grid('on')
-    
 
     # ==============================================================================
     # Time-domain Transient
@@ -361,33 +361,40 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
     # Capacitor
     plt.figure()
-    plt.subplot(3,1,1)
+    plt.subplot(4,1,1)
     plt.plot(tel, timeElec['cap']['C1']['v_c'] )
     plt.title('Voltage Capacitor')
     plt.ylabel('Voltage in (V)')
     plt.xticks([], [])
     plt.grid('on')
 
-    plt.subplot(3,1,2)
+    plt.subplot(4,1,2)
     plt.plot(tel, timeElec['cap']['C1']['i_c'])
     plt.title('Current Capacitor')
     plt.ylabel('Current in (A)')
     plt.xticks([], [])
     plt.grid('on')
 
-    plt.subplot(3,1,3)
+    plt.subplot(4,1,3)
     plt.plot(tel, timeLoss['cap']['C1']['p_L'])
     plt.title('Losses Capacitor')
     plt.ylabel('Power in (W)')
     plt.xlabel('time in (sec)')
     plt.grid('on')
 
+    plt.subplot(4,1,4)
+    plt.plot(tel, timeTher['cap']['C1'])
+    plt.title('Thermal Capacitor')
+    plt.ylabel('Temperature in (°C)')
+    plt.grid('on')
+    plt.xlabel('time in (sec)')
+
     # ------------------------------------------
     # Thermal
     # ------------------------------------------
     # Switches A
     plt.figure()
-    plt.subplot(421)
+    plt.subplot(321)
     plt.plot(tel, timeLoss['sw']['S1']['p_L'], 'r', tel, timeLoss['sw']['S2']['p_L'], 'b')
     plt.title('Losses Switches (A)')
     plt.ylabel('Power in (W)')
@@ -395,16 +402,22 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     plt.legend(['S1', 'S2'])
     plt.grid('on')
 
-    plt.subplot(422)
-    plt.plot(tel, timeTher['sw']['T1'], 'r', tel, timeTher['sw']['D1'], 'r--', tel, timeTher['sw']['T2'], 'b', tel, timeTher['sw']['D2'], 'b--')
+    plt.subplot(322)
+    plt.plot(tel, timeTher['sw']['T1'], color='b', linestyle='--')
+    plt.plot(tel, timeTher['sw']['D1'], color='b', linestyle=':')
+    plt.plot(tel, timeTher['sw']['C1'], color='b', linestyle='-')
+    plt.plot(tel, timeTher['sw']['T2'], color='r', linestyle='--')
+    plt.plot(tel, timeTher['sw']['D2'], color='r', linestyle=':')
+    plt.plot(tel, timeTher['sw']['C2'], color='r', linestyle='-')
+    plt.plot(tel, Ta*np.ones(np.size(tel)), color='k', linestyle='-')
     plt.title('Thermal Switches (A)')
     plt.ylabel('Temperature in (°C)')
     plt.xticks([], [])
-    plt.legend(['T1_j', 'T1_d', 'T2_j', 'T2_d'])
+    plt.legend(['T1_j', 'T1_d', 'T1_c', 'T2_j', 'T2_d', 'T2_c', 'Ta'])
     plt.grid('on')
 
     # Switches B
-    plt.subplot(423)
+    plt.subplot(323)
     plt.plot(tel, timeLoss['sw']['S3']['p_L'], 'r', tel, timeLoss['sw']['S4']['p_L'], 'b')
     plt.title('Losses Switches (B)')
     plt.ylabel('Power in (W)')
@@ -412,7 +425,7 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     plt.legend(['S3', 'S4'])
     plt.grid('on')
 
-    plt.subplot(424)
+    plt.subplot(324)
     plt.plot(tel, timeTher['sw']['T3'], 'r', tel, timeTher['sw']['D3'], 'r--', tel, timeTher['sw']['T4'], 'b', tel, timeTher['sw']['D4'], 'b--')
     plt.title('Thermal Switches (B)')
     plt.ylabel('Temperature in (°C)')
@@ -421,7 +434,7 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     plt.grid('on')
 
     # Switches C
-    plt.subplot(425)
+    plt.subplot(325)
     plt.plot(tel, timeLoss['sw']['S5']['p_L'], 'r', tel, timeLoss['sw']['S6']['p_L'], 'b')
     plt.title('Losses Switches (C)')
     plt.ylabel('Power in (W)')
@@ -429,28 +442,13 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     plt.legend(['S5', 'S6'])
     plt.grid('on')
 
-    plt.subplot(426)
+    plt.subplot(326)
     plt.plot(tel, timeTher['sw']['T5'], 'r', tel, timeTher['sw']['D5'], 'r--', tel, timeTher['sw']['T6'], 'b', tel, timeTher['sw']['D6'], 'b--')
     plt.title('Thermal Switches (C)')
     plt.ylabel('Temperature in (°C)')
     plt.xticks([], [])
     plt.legend(['T5_j', 'T5_d', 'T6_j', 'T6_d'])
     plt.grid('on')
-
-    # Capacitor
-    plt.subplot(427)
-    plt.plot(tel, timeLoss['cap']['C1']['p_L'])
-    plt.title('Losses Capacitor')
-    plt.ylabel('Power in (W)')
-    plt.xlabel('time in (sec)')
-    plt.grid('on')
-
-    plt.subplot(428)
-    plt.plot(tel, timeTher['cap']['C1'])
-    plt.title('Thermal Capacitor')
-    plt.ylabel('Temperature in (°C)')
-    plt.grid('on')
-    plt.xlabel('time in (sec)')
     plt.show()
 
     ###################################################################################################################

@@ -63,7 +63,7 @@ def initRC(para, setupPara):
     ###################################################################################################################
     # Calculation
     ###################################################################################################################
-    if setupPara['Ther']['Heatsink'] == 1: 
+    if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 0:
         Rth_JA = np.concatenate((Rth_JC, Rth_CA))
         Cth_JA = np.concatenate((Cth_JC, Cth_CA))
         Rth_DA = np.concatenate((Rth_DC, Rth_CA))
@@ -81,4 +81,4 @@ def initRC(para, setupPara):
     ###################################################################################################################
     # Return
     ###################################################################################################################
-    return [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_JA_cap, Cth_JA_cap]
+    return [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap]

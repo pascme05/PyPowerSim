@@ -85,7 +85,7 @@ def calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ------------------------------------------
     # Thermal
     # ------------------------------------------
-    Tc = setupData['stat']['Tc']
+    Ta = setupData['stat']['Tc']
     Tj = setupData['stat']['Tj'] * np.ones((6,1))
     Tcap = setupData['stat']['Tj']
     
@@ -124,7 +124,7 @@ def calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Thermal ROM
     # ==============================================================================
-    [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_JA_cap, Cth_JA_cap] = initRC(para, setupPara)
+    [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap] = initRC(para, setupPara)
 
     ###################################################################################################################
     # Calculation
@@ -138,7 +138,13 @@ def calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     Tinit_T4 = np.zeros(np.size(Rth_JA))
     Tinit_T5 = np.zeros(np.size(Rth_JA))
     Tinit_T6 = np.zeros(np.size(Rth_JA))
-    Tinit_C1 = np.zeros(np.size(Rth_JA_cap))
+    Tinit_C1 = np.zeros(np.size(Rth_CA))
+    Tinit_C2 = np.zeros(np.size(Rth_CA))
+    Tinit_C3 = np.zeros(np.size(Rth_CA))
+    Tinit_C4 = np.zeros(np.size(Rth_CA))
+    Tinit_C5 = np.zeros(np.size(Rth_CA))
+    Tinit_C6 = np.zeros(np.size(Rth_CA))
+    Tinit_Cap1 = np.zeros(np.size(Rth_JA_cap))
 
     # ==============================================================================
     # Switching Function
@@ -156,7 +162,7 @@ def calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     [timeAc, timeDc] = calcTimeB6(t_ref, s, e_ref, Vdc, Mi, mdl, setupTopo, Nsim*(K-1), (K*Nsim + 1))
 
     # ==============================================================================
-    # Elelctrical cycle
+    # Electrical cycle
     # ==============================================================================
     for i in trange(iterNel, desc='Elec-Period'):
         # ------------------------------------------
@@ -183,11 +189,11 @@ def calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
                 ende = int(Nsim/iterNpwm * (ii+1) + 0)
 
             # Electrical
-            timeElec['sw']['S1'] = calcElecSwi(Vdc, timeAc['i_a'][start:ende], (s['A'][start:ende] ==  1), Tj[0], 'HS', para, setupPara)
+            timeElec['sw']['S1'] = calcElecSwi(Vdc, timeAc['i_a'][start:ende], (s['A'][start:ende] == +1), Tj[0], 'HS', para, setupPara)
             timeElec['sw']['S2'] = calcElecSwi(Vdc, timeAc['i_a'][start:ende], (s['A'][start:ende] == -1), Tj[1], 'LS', para, setupPara)
-            timeElec['sw']['S3'] = calcElecSwi(Vdc, timeAc['i_b'][start:ende], (s['B'][start:ende] ==  1), Tj[2], 'HS', para, setupPara)
+            timeElec['sw']['S3'] = calcElecSwi(Vdc, timeAc['i_b'][start:ende], (s['B'][start:ende] == +1), Tj[2], 'HS', para, setupPara)
             timeElec['sw']['S4'] = calcElecSwi(Vdc, timeAc['i_b'][start:ende], (s['B'][start:ende] == -1), Tj[3], 'LS', para, setupPara)
-            timeElec['sw']['S5'] = calcElecSwi(Vdc, timeAc['i_c'][start:ende], (s['C'][start:ende] ==  1), Tj[4], 'HS', para, setupPara)
+            timeElec['sw']['S5'] = calcElecSwi(Vdc, timeAc['i_c'][start:ende], (s['C'][start:ende] == +1), Tj[4], 'HS', para, setupPara)
             timeElec['sw']['S6'] = calcElecSwi(Vdc, timeAc['i_c'][start:ende], (s['C'][start:ende] == -1), Tj[5], 'LS', para, setupPara)
             timeElec['cap']['C1']['i_c'] = timeDc['i_c'][start:ende]
             timeElec['cap']['C1']['v_c'] = timeDc['v_dc'][start:ende]
@@ -202,13 +208,28 @@ def calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
             timeLoss['cap']['C1'] = calcLossCap(t_ref, timeDc['i_c'][start:ende], Tcap, para, setupPara, setupTopo)
 
             # Thermal
-            [timeTher['sw']['T1'], Tinit_T1] = calcTherRC(Tinit_T1, Tc, timeLoss['sw']['S1']['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
-            [timeTher['sw']['T2'], Tinit_T2] = calcTherRC(Tinit_T2, Tc, timeLoss['sw']['S2']['p_T'], t_ref[start:ende], Rth_JA, Cth_JA) 
-            [timeTher['sw']['T3'], Tinit_T3] = calcTherRC(Tinit_T3, Tc, timeLoss['sw']['S3']['p_T'], t_ref[start:ende], Rth_JA, Cth_JA) 
-            [timeTher['sw']['T4'], Tinit_T4] = calcTherRC(Tinit_T4, Tc, timeLoss['sw']['S4']['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)      
-            [timeTher['sw']['T5'], Tinit_T5] = calcTherRC(Tinit_T5, Tc, timeLoss['sw']['S5']['p_T'], t_ref[start:ende], Rth_JA, Cth_JA) 
-            [timeTher['sw']['T6'], Tinit_T6] = calcTherRC(Tinit_T6, Tc, timeLoss['sw']['S6']['p_T'], t_ref[start:ende], Rth_JA, Cth_JA) 
-            [timeTher['cap']['C1'], Tinit_C1] = calcTherRC(Tinit_C1, Tc, timeLoss['cap']['C1']['p_L'], t_ref[start:ende], Rth_JA_cap, Cth_JA_cap) 
+            [timeTher['sw']['T1'], Tinit_T1] = calcTherRC(Tinit_T1, Ta, timeLoss['sw']['S1']['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
+            [timeTher['sw']['T2'], Tinit_T2] = calcTherRC(Tinit_T2, Ta, timeLoss['sw']['S2']['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
+            [timeTher['sw']['T3'], Tinit_T3] = calcTherRC(Tinit_T3, Ta, timeLoss['sw']['S3']['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
+            [timeTher['sw']['T4'], Tinit_T4] = calcTherRC(Tinit_T4, Ta, timeLoss['sw']['S4']['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
+            [timeTher['sw']['T5'], Tinit_T5] = calcTherRC(Tinit_T5, Ta, timeLoss['sw']['S5']['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
+            [timeTher['sw']['T6'], Tinit_T6] = calcTherRC(Tinit_T6, Ta, timeLoss['sw']['S6']['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
+            [timeTher['cap']['C1'], Tinit_Cap1] = calcTherRC(Tinit_Cap1, Ta, timeLoss['cap']['C1']['p_L'], t_ref[start:ende], Rth_JA_cap, Cth_JA_cap)
+
+            if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:
+                [timeTher['sw']['C1'], Tinit_C1] = calcTherRC(Tinit_C1, Ta, timeLoss['sw']['S1']['p_L'], t_ref[start:ende], Rth_CA, Cth_CA)
+                [timeTher['sw']['C2'], Tinit_C2] = calcTherRC(Tinit_C2, Ta, timeLoss['sw']['S2']['p_L'], t_ref[start:ende], Rth_CA, Cth_CA)
+                [timeTher['sw']['C3'], Tinit_C3] = calcTherRC(Tinit_C3, Ta, timeLoss['sw']['S3']['p_L'], t_ref[start:ende], Rth_CA, Cth_CA)
+                [timeTher['sw']['C4'], Tinit_C4] = calcTherRC(Tinit_C4, Ta, timeLoss['sw']['S4']['p_L'], t_ref[start:ende], Rth_CA, Cth_CA)
+                [timeTher['sw']['C5'], Tinit_C5] = calcTherRC(Tinit_C5, Ta, timeLoss['sw']['S5']['p_L'], t_ref[start:ende], Rth_CA, Cth_CA)
+                [timeTher['sw']['C6'], Tinit_C6] = calcTherRC(Tinit_C6, Ta, timeLoss['sw']['S6']['p_L'], t_ref[start:ende], Rth_CA, Cth_CA)
+
+                timeTher['sw']['T1'] = timeTher['sw']['T1'][:] + timeTher['sw']['C1'][:] - Ta
+                timeTher['sw']['T2'] = timeTher['sw']['T2'][:] + timeTher['sw']['C2'][:] - Ta
+                timeTher['sw']['T3'] = timeTher['sw']['T3'][:] + timeTher['sw']['C3'][:] - Ta
+                timeTher['sw']['T4'] = timeTher['sw']['T4'][:] + timeTher['sw']['C4'][:] - Ta
+                timeTher['sw']['T5'] = timeTher['sw']['T5'][:] + timeTher['sw']['C5'][:] - Ta
+                timeTher['sw']['T6'] = timeTher['sw']['T6'][:] + timeTher['sw']['C6'][:] - Ta
 
             # Apending
             dataFel = app_fs(dataFel, timeElec, timeLoss, setupExp)
@@ -236,21 +257,54 @@ def calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Thermal
     # ==============================================================================
+    # ------------------------------------------
+    # Init
+    # ------------------------------------------
     t = np.linspace(0, Tel*Nel, len(out['loss']['sw']['S1']['p_T']))
-    [out['ther']['sw']['T1'], _] = calcTherRC(0, Tc, out['loss']['sw']['S1']['p_T'].values, t, Rth_JA, Cth_JA)
-    [out['ther']['sw']['T2'], _] = calcTherRC(0, Tc, out['loss']['sw']['S2']['p_T'].values, t, Rth_JA, Cth_JA)     
-    [out['ther']['sw']['T3'], _] = calcTherRC(0, Tc, out['loss']['sw']['S3']['p_T'].values, t, Rth_JA, Cth_JA)
-    [out['ther']['sw']['T4'], _] = calcTherRC(0, Tc, out['loss']['sw']['S4']['p_T'].values, t, Rth_JA, Cth_JA) 
-    [out['ther']['sw']['T5'], _] = calcTherRC(0, Tc, out['loss']['sw']['S5']['p_T'].values, t, Rth_JA, Cth_JA)
-    [out['ther']['sw']['T6'], _] = calcTherRC(0, Tc, out['loss']['sw']['S6']['p_T'].values, t, Rth_JA, Cth_JA) 
-    [out['ther']['sw']['D1'], _] = calcTherRC(0, Tc, out['loss']['sw']['S1']['p_D'].values, t, Rth_DA, Cth_DA)
-    [out['ther']['sw']['D2'], _] = calcTherRC(0, Tc, out['loss']['sw']['S2']['p_D'].values, t, Rth_DA, Cth_DA)
-    [out['ther']['sw']['D3'], _] = calcTherRC(0, Tc, out['loss']['sw']['S3']['p_D'].values, t, Rth_DA, Cth_DA)
-    [out['ther']['sw']['D4'], _] = calcTherRC(0, Tc, out['loss']['sw']['S4']['p_D'].values, t, Rth_DA, Cth_DA)
-    [out['ther']['sw']['D5'], _] = calcTherRC(0, Tc, out['loss']['sw']['S5']['p_D'].values, t, Rth_DA, Cth_DA)
-    [out['ther']['sw']['D6'], _] = calcTherRC(0, Tc, out['loss']['sw']['S6']['p_D'].values, t, Rth_DA, Cth_DA)
-    [out['ther']['cap']['C1'], _] = calcTherRC(0, Tc, out['loss']['cap']['C1']['p_L'].values, t, Rth_JA_cap, Cth_JA_cap)
-    out['ther']['sw'] = pd.DataFrame(out['ther']['sw'], columns = ['T1','T2','T3','T4','T5','T6','D1','D2','D3','D4','D5','D6'])  
+
+    # ------------------------------------------
+    # Calc
+    # ------------------------------------------
+    # No Coupling
+    [out['ther']['sw']['T1'], _] = calcTherRC(0, Ta, out['loss']['sw']['S1']['p_T'].values, t, Rth_JA, Cth_JA)
+    [out['ther']['sw']['T2'], _] = calcTherRC(0, Ta, out['loss']['sw']['S2']['p_T'].values, t, Rth_JA, Cth_JA)
+    [out['ther']['sw']['T3'], _] = calcTherRC(0, Ta, out['loss']['sw']['S3']['p_T'].values, t, Rth_JA, Cth_JA)
+    [out['ther']['sw']['T4'], _] = calcTherRC(0, Ta, out['loss']['sw']['S4']['p_T'].values, t, Rth_JA, Cth_JA)
+    [out['ther']['sw']['T5'], _] = calcTherRC(0, Ta, out['loss']['sw']['S5']['p_T'].values, t, Rth_JA, Cth_JA)
+    [out['ther']['sw']['T6'], _] = calcTherRC(0, Ta, out['loss']['sw']['S6']['p_T'].values, t, Rth_JA, Cth_JA)
+    [out['ther']['sw']['D1'], _] = calcTherRC(0, Ta, out['loss']['sw']['S1']['p_D'].values, t, Rth_DA, Cth_DA)
+    [out['ther']['sw']['D2'], _] = calcTherRC(0, Ta, out['loss']['sw']['S2']['p_D'].values, t, Rth_DA, Cth_DA)
+    [out['ther']['sw']['D3'], _] = calcTherRC(0, Ta, out['loss']['sw']['S3']['p_D'].values, t, Rth_DA, Cth_DA)
+    [out['ther']['sw']['D4'], _] = calcTherRC(0, Ta, out['loss']['sw']['S4']['p_D'].values, t, Rth_DA, Cth_DA)
+    [out['ther']['sw']['D5'], _] = calcTherRC(0, Ta, out['loss']['sw']['S5']['p_D'].values, t, Rth_DA, Cth_DA)
+    [out['ther']['sw']['D6'], _] = calcTherRC(0, Ta, out['loss']['sw']['S6']['p_D'].values, t, Rth_DA, Cth_DA)
+    [out['ther']['cap']['C1'], _] = calcTherRC(0, Ta, out['loss']['cap']['C1']['p_L'].values, t, Rth_JA_cap, Cth_JA_cap)
+
+    # Coupling
+    if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:
+        [out['ther']['sw']['C1'], _] = calcTherRC(0, Ta, out['loss']['sw']['S1']['p_L'].values, t, Rth_CA, Cth_CA)
+        [out['ther']['sw']['C2'], _] = calcTherRC(0, Ta, out['loss']['sw']['S2']['p_L'].values, t, Rth_CA, Cth_CA)
+        [out['ther']['sw']['C3'], _] = calcTherRC(0, Ta, out['loss']['sw']['S3']['p_L'].values, t, Rth_CA, Cth_CA)
+        [out['ther']['sw']['C4'], _] = calcTherRC(0, Ta, out['loss']['sw']['S4']['p_L'].values, t, Rth_CA, Cth_CA)
+        [out['ther']['sw']['C5'], _] = calcTherRC(0, Ta, out['loss']['sw']['S5']['p_L'].values, t, Rth_CA, Cth_CA)
+        [out['ther']['sw']['C6'], _] = calcTherRC(0, Ta, out['loss']['sw']['S6']['p_L'].values, t, Rth_CA, Cth_CA)
+        out['ther']['sw']['T1'] = out['ther']['sw']['T1'][:] + out['ther']['sw']['C1'][:] - Ta
+        out['ther']['sw']['T2'] = out['ther']['sw']['T2'][:] + out['ther']['sw']['C2'][:] - Ta
+        out['ther']['sw']['T3'] = out['ther']['sw']['T3'][:] + out['ther']['sw']['C3'][:] - Ta
+        out['ther']['sw']['T4'] = out['ther']['sw']['T4'][:] + out['ther']['sw']['C4'][:] - Ta
+        out['ther']['sw']['T5'] = out['ther']['sw']['T5'][:] + out['ther']['sw']['C5'][:] - Ta
+        out['ther']['sw']['T6'] = out['ther']['sw']['T6'][:] + out['ther']['sw']['C6'][:] - Ta
+        out['ther']['sw']['D1'] = out['ther']['sw']['D1'][:] + out['ther']['sw']['C1'][:] - Ta
+        out['ther']['sw']['D2'] = out['ther']['sw']['D2'][:] + out['ther']['sw']['C2'][:] - Ta
+        out['ther']['sw']['D3'] = out['ther']['sw']['D3'][:] + out['ther']['sw']['C3'][:] - Ta
+        out['ther']['sw']['D4'] = out['ther']['sw']['D4'][:] + out['ther']['sw']['C4'][:] - Ta
+        out['ther']['sw']['D5'] = out['ther']['sw']['D5'][:] + out['ther']['sw']['C5'][:] - Ta
+        out['ther']['sw']['D6'] = out['ther']['sw']['D6'][:] + out['ther']['sw']['C6'][:] - Ta
+
+    # ------------------------------------------
+    # Apending
+    # ------------------------------------------
+    out['ther']['sw'] = pd.DataFrame(out['ther']['sw'], columns = ['T1','T2','T3','T4','T5','T6','D1','D2','D3','D4','D5','D6','C1','C2','C3','C4','C5','C6'])
     out['ther']['cap'] = pd.DataFrame(out['ther']['cap'], columns = ['C1']) 
 
     ###################################################################################################################
