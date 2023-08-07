@@ -17,23 +17,26 @@
 # Internal
 # ==============================================================================
 from src.topo.B6.calcSSeqB6 import calcSSeqB6_CB, calcSSeqB6_FF, calcSSeqB6_SV
-from src.topo.B6.calcDistB6 import calcDistB6_Num, calcDistB6_Ana 
+from src.topo.B6.calcDistB6 import calcDistB6_Ana
 from src.topo.B6.calcTimeB6 import calcTimeB6
-from src.topo.B6.calcFreqB6 import calcFreqB6
+from src.general.calcFreq import calcFreq
+from src.general.calcDistNum import calcDistNum
 from src.topo.B6.initB6 import initB6
 from src.general.genWaveform import genWave
+from src.topo.B6.outB6 import outB6_Sweep
 
 # ==============================================================================
 # External
 # ==============================================================================
 import numpy as np
 import math
-from tqdm.auto import trange
+from tqdm import tqdm
+
 
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcSweepB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
+def calcSweepB6(mdl, _, setupTopo, setupData, setupPara, setupExp):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -45,17 +48,25 @@ def calcSweepB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Init
     # ==============================================================================
+    # ------------------------------------------
+    # Variables
+    # ------------------------------------------
     v_ref = {}
     e_ref = {}
+
+    # ------------------------------------------
+    # IDs
+    # ------------------------------------------
+    id1 = ['A', 'B', 'C']
 
     # ==============================================================================
     # Parameters
     # ==============================================================================
     fel = setupTopo['fel']
     fsim = setupExp['fsim']
-    N = int(fsim/fel)
-    K = setupData['stat']['cyc']*2
-    W = setupData['stat']['W'] 
+    N = int(fsim / fel)
+    K = setupData['stat']['cyc'] * 2
+    W = setupData['stat']['W']
     Mi = setupData['stat']['Mi']
 
     # ==============================================================================
@@ -64,7 +75,7 @@ def calcSweepB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ------------------------------------------
     # Init 
     # ------------------------------------------
-    [timeSw, _, _, _, freqSw, freqDc, freqAc, distAc, distDc] = initB6(W)
+    [_, _, _, _, _, _, _, distAc, distDc] = initB6(W)
 
     # ------------------------------------------
     # Inputs 
@@ -80,13 +91,17 @@ def calcSweepB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Generate Reference Waveform
     # ==============================================================================
-    t = np.linspace(0, K/fel, K*N+1)
-    v_ref['A'] = (Vdc/2) * Mi * genWave(t, fel, phiV, 0, setupTopo)
-    v_ref['B'] = (Vdc/2) * Mi * genWave(t, fel, phiV, -2/3*np.pi, setupTopo)
-    v_ref['C'] = (Vdc/2) * Mi * genWave(t, fel, phiV, -4/3*np.pi, setupTopo)
-    e_ref['A'] = E * genWave(t, fel, phiE, 0, setupTopo) 
-    e_ref['B'] = E * genWave(t, fel, phiE, -2/3*np.pi, setupTopo) 
-    e_ref['C'] = E * genWave(t, fel, phiE, -4/3*np.pi, setupTopo) 
+    # ------------------------------------------
+    # Time
+    # ------------------------------------------
+    t = np.linspace(0, K / fel, K * N + 1)
+
+    # ------------------------------------------
+    # Reference
+    # ------------------------------------------
+    for i in range(0, len(id1)):
+        v_ref[id1[i]] = (Vdc / 2) * Mi * genWave(t, fel, phiV, -i * 2 / 3 * np.pi, setupTopo)
+        e_ref[id1[i]] = E * genWave(t, fel, phiE, -i * 2 / 3 * np.pi, setupTopo)
 
     # ==============================================================================
     # Maximum Modulation Index
@@ -94,17 +109,17 @@ def calcSweepB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     if setupPara['PWM']['zero'] == "SPWM":
         Mi_max = 1.0
     else:
-        Mi_max = 2/np.sqrt(3)
+        Mi_max = 2 / np.sqrt(3)
     if Mi > Mi_max:
         Mi_max = Mi
-    M_i = np.linspace(0, Mi_max-1e-3, W)
-    
+    M_i = np.linspace(0, Mi_max - 1e-3, W)
+
     # ==============================================================================
     # Start and End
     # ==============================================================================
-    start = int(N * (K/2))
-    ende = int(K*N + 1)
-    
+    start = int(N * (K / 2))
+    ende = int(K * N + 1)
+
     ###################################################################################################################
     # Calculation
     ###################################################################################################################
@@ -120,6 +135,8 @@ def calcSweepB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
         [xs, xsh, s, c, x, n0] = calcSSeqB6_CB(v_ref, t, Mi, setupPara, setupTopo)
     elif setupPara['PWM']['type'] == "SV":
         [xs, xsh, s, c, x, n0] = calcSSeqB6_SV(v_ref, t, Mi, setupPara, setupTopo)
+    else:
+        [xs, xsh, s, c, x, n0] = calcSSeqB6_CB(v_ref, t, Mi, setupPara, setupTopo)
 
     # ------------------------------------------
     # Time Domain
@@ -129,7 +146,7 @@ def calcSweepB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Sweeping
     # ==============================================================================
-    for i in trange(len(M_i), desc='Sweep'):
+    for i in tqdm(range(len(M_i)), desc='Sweep'):
         # ------------------------------------------
         # Switching
         # ------------------------------------------
@@ -139,18 +156,22 @@ def calcSweepB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
             [_, _, s, _, _, _] = calcSSeqB6_CB(v_ref, t, M_i[i], setupPara, setupTopo)
         elif setupPara['PWM']['type'] == "SV":
             [_, _, s, _, _, _] = calcSSeqB6_SV(v_ref, t, M_i[i], setupPara, setupTopo)
-        
+        else:
+            [_, _, s, _, _, _] = calcSSeqB6_CB(v_ref, t, Mi, setupPara, setupTopo)
+
         # ------------------------------------------
         # Time
         # ------------------------------------------
         [tempTimeAc, tempTimeDc] = calcTimeB6(t, s, e_ref, Vdc, M_i[i], mdl, setupTopo, start, ende)
-        
+
         # ------------------------------------------
         # Distortion
         # ------------------------------------------
-        [numDistAc, numDistDc] = calcDistB6_Num(t[start:ende], tempTimeAc['i_a'], tempTimeAc['v_a'], tempTimeDc['i_dc'], tempTimeDc['v_dc'], Vdc, setupTopo)
-        [anaTimeAc, anaTimeDc] = calcDistB6_Ana(t[start:ende], tempTimeAc['i_a'], tempTimeAc['v_a'], numDistAc['I_a_v1_eff'], M_i[i], Vdc, setupTopo, setupPara)
-        
+        [numDistAc, numDistDc] = calcDistNum(t[start:ende], tempTimeAc['i_a'], tempTimeAc['v_a'], tempTimeDc['i_dc'],
+                                             tempTimeDc['v_dc'], Vdc, fel)
+        [anaTimeAc, anaTimeDc] = calcDistB6_Ana(t[start:ende], tempTimeAc['i_a'], tempTimeAc['v_a'],
+                                                numDistAc['I_a_v1_eff'], M_i[i], Vdc, setupTopo, setupPara)
+
         # ------------------------------------------
         # Output
         # ------------------------------------------
@@ -160,56 +181,21 @@ def calcSweepB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
         for c1 in numDistDc:
             distDc['num'][c1][i] = numDistDc[c1]
             distDc['ana'][c1][i] = anaTimeDc[c1]
-                    
+
     ###################################################################################################################
     # Post-Processing
     ###################################################################################################################
     # ==============================================================================
     # Frequency domain
     # ==============================================================================
-    [freqSw, freqAc, freqDc] = calcFreqB6(s['A'][start:ende], xs['A'][start:ende], timeAc, timeDc)
-    
+    [freqSw, freqAc, freqDc] = calcFreq(s['A'][start:ende], xs['A'][start:ende], timeAc, timeDc)
+
     # ==============================================================================
     # Output
     # ==============================================================================
-    timeSw['t'] = t[0:(ende-start)]
-    timeSw['v_a_ref'] = v_ref['A'][start:ende]
-    timeSw['v_b_ref'] = v_ref['B'][start:ende]
-    timeSw['v_c_ref'] = v_ref['C'][start:ende]
-    timeSw['e_a'] = e_ref['A'][start:ende]
-    timeSw['e_b'] = e_ref['B'][start:ende]
-    timeSw['e_c'] = e_ref['C'][start:ende]
-    timeSw['sA'] = s['A'][start:ende]
-    timeSw['sB'] = s['B'][start:ende]
-    timeSw['sC'] = s['C'][start:ende]
-    timeSw['c'] = c[start:ende]
-    timeSw['xAs'] = xs['A'][start:ende]
-    timeSw['xBs'] = xs['B'][start:ende]
-    timeSw['xCs'] = xs['C'][start:ende]
-    timeSw['xAsh'] = xsh['A'][start:ende]
-    timeSw['xBsh'] = xsh['B'][start:ende]
-    timeSw['xCsh'] = xsh['C'][start:ende]
-    timeSw['xA'] = x['A'][start:ende]
-    timeSw['xB'] = x['B'][start:ende]
-    timeSw['xC'] = x['C'][start:ende]
-    timeSw['n0'] = n0[start:ende]
-    
-    # ==============================================================================
-    # Combine
-    # ==============================================================================
-    time = {}
-    time['Sw'] = timeSw
-    time['Ac'] = timeAc
-    time['Dc'] = timeDc
-    freq = {}
-    freq['Sw'] = freqSw
-    freq['Ac'] = freqAc
-    freq['Dc'] = freqDc
-    sweep = {}
-    sweep['Ac'] = distAc
-    sweep['Dc'] = distDc
-    sweep['Mi'] = M_i
-    
+    [time, freq, sweep] = outB6_Sweep(distAc, distDc, timeAc, timeDc, freqSw, freqAc, freqDc, t, v_ref, e_ref, s, c, xs,
+                                      xsh, x, n0, W, M_i, ende, start)
+
     ###################################################################################################################
     # MSG Out
     ###################################################################################################################

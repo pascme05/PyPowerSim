@@ -23,7 +23,6 @@ from src.general.helpFnc import initSetup, initPath
 # External
 # ==============================================================================
 import warnings
-import numpy as np
 
 #######################################################################################################################
 # Format
@@ -36,7 +35,7 @@ warnings.filterwarnings("ignore")
 setupPath = initPath('PyPowerSim')
 
 #######################################################################################################################
-# Inits
+# Init
 #######################################################################################################################
 [setupExp, setupData, setupPara, setupTopo] = initSetup()
 
@@ -57,7 +56,7 @@ setupExp['debug'] = 0                                                           
 # Operating Mode
 # ------------------------------------------
 setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled 
-setupExp['type'] = 2                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
+setupExp['type'] = 0                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
 setupExp['loop'] = 'CL'                                                                                                 # (CL): closed-loop, (OL): open-loop
 setupExp['freqPar'] = 'fel'                                                                                              # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
 setupExp['freqAvg'] = 'fs'                                                                                            # (none): no averaging is used (fs): values are averaged over switching cycle, (fel): values are averaged over fundamental cycle
@@ -125,13 +124,13 @@ setupTopo['sourceType'] = "B6"                                                  
 # Filter
 # ------------------------------------------
 # Input
-setupTopo['inpFilter'] = 0                                                                                              # 0) input filter is deacitvated, 1) input filter is activated
+setupTopo['inpFilter'] = 0                                                                                              # 0) input filter is deactivated, 1) input filter is activated
 setupTopo['Rinp'] = 1e-3                                                                                                # input filter resistance (Ohm)
 setupTopo['Linp'] = 2e-3                                                                                                # input filter inductance (H)
 setupTopo['Cinp'] = 1e-3                                                                                                # input filter capacitance (F)
 
 # Output
-setupTopo['outFilter'] = 0                                                                                              # 0) output filter is deacitvated, 1) output filter is activated
+setupTopo['outFilter'] = 0                                                                                              # 0) output filter is deactivated, 1) output filter is activated
 setupTopo['Rout'] = 0                                                                                                   # output filter resistance (Ohm)
 setupTopo['Lout'] = 1e-3                                                                                                # output filter inductance (H)
 setupTopo['Cout'] = 1e-3                                                                                                # output filter capacitance (F)
@@ -140,7 +139,7 @@ setupTopo['Cout'] = 1e-3                                                        
 # Load
 # ------------------------------------------
 # Parameters
-setupTopo['R'] = 0.0                                                                                                    # resistance in (Ohm)
+setupTopo['R'] = 1.0                                                                                                    # resistance in (Ohm)
 setupTopo['L'] = 5e-3                                                                                                   # inductance in (H)
 setupTopo['E'] = 0                                                                                                      # induced voltage in (V)
 setupTopo['phiE'] = 0                                                                                                   # load angle induced voltage (deg)
@@ -167,7 +166,7 @@ setupPara['PWM']['tmin'] = 0                                                    
 # Modelling
 # ------------------------------------------
 setupPara['PWM']['loss'] = 1                                                                                            # (0): ideal and lossles, (1): linear modelling
-setupPara['PWM']['swloss'] = 1                                                                                          # (0): switching losses based on energies (Eon, Eoff, Erec), (1): switching losses based on integration of capacitances (Ciss, Coss, Crec)
+setupPara['PWM']['swloss'] = 1                                                                                          # (0): switching losses based on energies (Eon, Eoff, Erec), (1): switching losses based on integration of capacitance's (Ciss, Coss, Crec)
 setupPara['PWM']['sw'] = 0                                                                                              # (0): hard switching, (1): soft switching (tbi)
 
 # ------------------------------------------
@@ -202,7 +201,7 @@ setupPara['Elec']['CapSeries'] = 1                                              
 # Thermal Parameters
 # ==============================================================================
 setupPara['Ther']['Heatsink'] = 1                                                                                       # 1) using thermal capacities and resistances of heatsink RC model
-setupPara['Ther']['Coupling'] = 1                                                                                       # 0) no thermal coupling between diode and transistor, 1) thermal coupling between diode and transistor
+setupPara['Ther']['Coupling'] = 0                                                                                       # 0) no thermal coupling between diode and transistor, 1) thermal coupling between diode and transistor
 
 #######################################################################################################################
 # Calculations

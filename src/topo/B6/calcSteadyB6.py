@@ -18,7 +18,7 @@
 # ==============================================================================
 from src.topo.B6.calcSSeqB6 import calcSSeqB6_CB, calcSSeqB6_FF, calcSSeqB6_SV
 from src.topo.B6.calcTimeB6 import calcTimeB6
-from src.topo.B6.calcFreqB6 import calcFreqB6
+from src.general.calcFreq import calcFreq
 from src.elec.calcElecSwi import calcElecSwi
 from src.elec.calcLossSwi import calcLossSwi
 from src.elec.calcLossCap import calcLossCap
@@ -27,12 +27,14 @@ from src.topo.B6.initB6 import initB6
 from src.general.genWaveform import genWave
 from src.therm.initRC import initRC
 from src.elec.calcElecCap import calcElecCap
+from src.topo.B6.outB6 import outB6_Steady
 
 # ==============================================================================
 # External
 # ==============================================================================
 import numpy as np
 import math
+
 
 #######################################################################################################################
 # Function
@@ -51,17 +53,32 @@ def calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Init
     # ==============================================================================
+    # ------------------------------------------
+    # Variables
+    # ------------------------------------------
     v_ref = {}
     e_ref = {}
+
+    # ------------------------------------------
+    # IDs
+    # ------------------------------------------
+    id1 = ['A', 'B', 'C']
+    id2 = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+    id3 = ['A', 'A', 'B', 'B', 'C', 'C']
+    id4 = ['i_a', 'i_a', 'i_b', 'i_b', 'i_c', 'i_c']
+    id5 = ['HS', 'LS', 'HS', 'LS', 'HS', 'LS']
+    id6 = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6']
+    id7 = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6']
+    id8 = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6']
 
     # ==============================================================================
     # Parameters
     # ==============================================================================
     fel = setupTopo['fel']
     fsim = setupExp['fsim']
-    N = int(fsim/fel)
-    K = setupData['stat']['cyc']*2
-    W = setupData['stat']['W'] 
+    N = int(fsim / fel)
+    K = setupData['stat']['cyc'] * 2
+    W = setupData['stat']['W']
     Mi = setupData['stat']['Mi']
 
     # ==============================================================================
@@ -70,7 +87,7 @@ def calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ------------------------------------------
     # Init 
     # ------------------------------------------
-    [timeSw, timeElec, timeLoss, timeTher, freqSw, freqDc, freqAc, _, _] = initB6(W)
+    [_, timeElec, timeLoss, timeTher, _, _, _, _, _] = initB6(W)
 
     # ------------------------------------------
     # Inputs 
@@ -80,32 +97,36 @@ def calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     Vdc = setupData['stat']['Vdc']
     phiE = math.radians(setupTopo['phiE'])
     phiV = math.radians(setupData['stat']['phi'])
-    
+
     # Thermal
     Tj = setupData['stat']['Tj']
     Tcap = setupData['stat']['Tj']
     Tc = setupData['stat']['Tc']
-    
+
     ###################################################################################################################
     # Pre-Processing
     ###################################################################################################################
     # ==============================================================================
     # Generate Reference Waveform
     # ==============================================================================
-    t = np.linspace(0, K/fel, K*N+1)
-    v_ref['A'] = (Vdc/2) * Mi * genWave(t, fel, phiV, 0, setupTopo)
-    v_ref['B'] = (Vdc/2) * Mi * genWave(t, fel, phiV, -2/3*np.pi, setupTopo)
-    v_ref['C'] = (Vdc/2) * Mi * genWave(t, fel, phiV, -4/3*np.pi, setupTopo)
-    e_ref['A'] = E * genWave(t, fel, phiE, 0, setupTopo) 
-    e_ref['B'] = E * genWave(t, fel, phiE, -2/3*np.pi, setupTopo) 
-    e_ref['C'] = E * genWave(t, fel, phiE, -4/3*np.pi, setupTopo) 
+    # ------------------------------------------
+    # Time
+    # ------------------------------------------
+    t = np.linspace(0, K / fel, K * N + 1)
+
+    # ------------------------------------------
+    # Reference
+    # ------------------------------------------
+    for i in range(0, len(id1)):
+        v_ref[id1[i]] = (Vdc / 2) * Mi * genWave(t, fel, phiV, -i * 2 / 3 * np.pi, setupTopo)
+        e_ref[id1[i]] = E * genWave(t, fel, phiE, -i * 2 / 3 * np.pi, setupTopo)
 
     # ==============================================================================
     # Start and End
     # ==============================================================================
-    start = int(N * (K/2))
-    ende = int(K*N + 1)
-    
+    start = int(N * (K / 2))
+    ende = int(K * N + 1)
+
     # ==============================================================================
     # Thermal ROM
     # ==============================================================================
@@ -132,18 +153,18 @@ def calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     [timeAc, timeDc] = calcTimeB6(t, s, e_ref, Vdc, Mi, mdl, setupTopo, start, ende)
 
     # ==============================================================================
-    # Open-Loop
+    # Open-Loop Losses
     # ==============================================================================
     if setupExp['loop'] == "OL":
         # ------------------------------------------
         # Electrical
         # ------------------------------------------
-        timeElec['sw']['S1'] = calcElecSwi(Vdc, timeAc['i_a'], (s['A'][start:ende] == +1), Tj, 'HS', para, setupPara)
-        timeElec['sw']['S2'] = calcElecSwi(Vdc, timeAc['i_a'], (s['A'][start:ende] == -1), Tj, 'LS', para, setupPara)
-        timeElec['sw']['S3'] = calcElecSwi(Vdc, timeAc['i_b'], (s['B'][start:ende] == +1), Tj, 'HS', para, setupPara)
-        timeElec['sw']['S4'] = calcElecSwi(Vdc, timeAc['i_b'], (s['B'][start:ende] == -1), Tj, 'LS', para, setupPara)
-        timeElec['sw']['S5'] = calcElecSwi(Vdc, timeAc['i_c'], (s['C'][start:ende] == +1), Tj, 'HS', para, setupPara)
-        timeElec['sw']['S6'] = calcElecSwi(Vdc, timeAc['i_c'], (s['C'][start:ende] == -1), Tj, 'LS', para, setupPara)
+        # Switches
+        for i in range(0, len(id2)):
+            timeElec['sw'][id2[i]] = calcElecSwi(Vdc, timeAc[id4[i]], (s[id3[i]][start:ende] == (-1) ** i), Tj, id5[i],
+                                                 para, setupPara)
+
+        # Capacitor
         timeDc['v_dc'] = calcElecCap(t, timeDc['i_c'], Tcap, para, setupPara, setupTopo)
         timeElec['cap']['C1']['i_c'] = timeDc['i_c']
         timeElec['cap']['C1']['v_c'] = timeDc['v_dc']
@@ -151,67 +172,25 @@ def calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
         # ------------------------------------------
         # Losses
         # ------------------------------------------
-        timeLoss['sw']['S1'] = calcLossSwi(s['A'][start:ende]*(+1), timeElec['sw']['S1']['i_T'], timeElec['sw']['S1']['i_D'], timeElec['sw']['S1']['v_T'], timeElec['sw']['S1']['v_D'], Tj, para, setupPara, setupExp)
-        timeLoss['sw']['S2'] = calcLossSwi(s['A'][start:ende]*(-1), timeElec['sw']['S2']['i_T'], timeElec['sw']['S2']['i_D'], timeElec['sw']['S2']['v_T'], timeElec['sw']['S2']['v_D'], Tj, para, setupPara, setupExp)
-        timeLoss['sw']['S3'] = calcLossSwi(s['B'][start:ende]*(+1), timeElec['sw']['S3']['i_T'], timeElec['sw']['S3']['i_D'], timeElec['sw']['S3']['v_T'], timeElec['sw']['S3']['v_D'], Tj, para, setupPara, setupExp)
-        timeLoss['sw']['S4'] = calcLossSwi(s['B'][start:ende]*(-1), timeElec['sw']['S4']['i_T'], timeElec['sw']['S4']['i_D'], timeElec['sw']['S4']['v_T'], timeElec['sw']['S4']['v_D'], Tj, para, setupPara, setupExp)
-        timeLoss['sw']['S5'] = calcLossSwi(s['C'][start:ende]*(+1), timeElec['sw']['S5']['i_T'], timeElec['sw']['S5']['i_D'], timeElec['sw']['S5']['v_T'], timeElec['sw']['S5']['v_D'], Tj, para, setupPara, setupExp)
-        timeLoss['sw']['S6'] = calcLossSwi(s['C'][start:ende]*(-1), timeElec['sw']['S6']['i_T'], timeElec['sw']['S6']['i_D'], timeElec['sw']['S6']['v_T'], timeElec['sw']['S6']['v_D'], Tj, para, setupPara, setupExp)
-        timeLoss['cap']['C1'] = calcLossCap(t, timeDc['i_c'], Tcap, para, setupPara, setupTopo)
-        
-        # ------------------------------------------
-        # Thermal
-        # ------------------------------------------
-        # Transistor
-        [timeTher['sw']['T1'], _] = calcTherRC(0, Tc, timeLoss['sw']['S1']['p_T'], t[start:ende], Rth_JA, Cth_JA)
-        [timeTher['sw']['T2'], _] = calcTherRC(0, Tc, timeLoss['sw']['S2']['p_T'], t[start:ende], Rth_JA, Cth_JA)
-        [timeTher['sw']['T3'], _] = calcTherRC(0, Tc, timeLoss['sw']['S3']['p_T'], t[start:ende], Rth_JA, Cth_JA)
-        [timeTher['sw']['T4'], _] = calcTherRC(0, Tc, timeLoss['sw']['S4']['p_T'], t[start:ende], Rth_JA, Cth_JA)
-        [timeTher['sw']['T5'], _] = calcTherRC(0, Tc, timeLoss['sw']['S5']['p_T'], t[start:ende], Rth_JA, Cth_JA)
-        [timeTher['sw']['T6'], _] = calcTherRC(0, Tc, timeLoss['sw']['S6']['p_T'], t[start:ende], Rth_JA, Cth_JA)
-
-        # Diode
-        [timeTher['sw']['D1'], _] = calcTherRC(0, Tc, timeLoss['sw']['S1']['p_D'], t[start:ende], Rth_DA, Cth_DA)
-        [timeTher['sw']['D2'], _] = calcTherRC(0, Tc, timeLoss['sw']['S2']['p_D'], t[start:ende], Rth_DA, Cth_DA)
-        [timeTher['sw']['D3'], _] = calcTherRC(0, Tc, timeLoss['sw']['S3']['p_D'], t[start:ende], Rth_DA, Cth_DA)
-        [timeTher['sw']['D4'], _] = calcTherRC(0, Tc, timeLoss['sw']['S4']['p_D'], t[start:ende], Rth_DA, Cth_DA)
-        [timeTher['sw']['D5'], _] = calcTherRC(0, Tc, timeLoss['sw']['S5']['p_D'], t[start:ende], Rth_DA, Cth_DA)
-        [timeTher['sw']['D6'], _] = calcTherRC(0, Tc, timeLoss['sw']['S6']['p_D'], t[start:ende], Rth_DA, Cth_DA)
+        # Switches
+        for i in range(0, len(id2)):
+            timeLoss['sw'][id2[i]] = calcLossSwi(s[id3[i]][start:ende] * (-1) ** i, timeElec['sw'][id2[i]]['i_T'],
+                                                 timeElec['sw'][id2[i]]['i_D'], timeElec['sw'][id2[i]]['v_T'],
+                                                 timeElec['sw'][id2[i]]['v_D'], Tj, para, setupPara, setupExp)
 
         # Capacitor
-        [timeTher['cap']['C1'], _] = calcTherRC(0, Tc, timeLoss['cap']['C1']['p_L'], t[start:ende], Rth_JA_cap, Cth_JA_cap)
-
-        # Coupling
-        if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:
-            [timeTher['sw']['C1'], _] = calcTherRC(0, Tc, timeLoss['sw']['S1']['p_L'], t[start:ende], Rth_CA, Cth_CA)
-            [timeTher['sw']['C2'], _] = calcTherRC(0, Tc, timeLoss['sw']['S2']['p_L'], t[start:ende], Rth_CA, Cth_CA)
-            [timeTher['sw']['C3'], _] = calcTherRC(0, Tc, timeLoss['sw']['S3']['p_L'], t[start:ende], Rth_CA, Cth_CA)
-            [timeTher['sw']['C4'], _] = calcTherRC(0, Tc, timeLoss['sw']['S4']['p_L'], t[start:ende], Rth_CA, Cth_CA)
-            [timeTher['sw']['C5'], _] = calcTherRC(0, Tc, timeLoss['sw']['S5']['p_L'], t[start:ende], Rth_CA, Cth_CA)
-            [timeTher['sw']['C6'], _] = calcTherRC(0, Tc, timeLoss['sw']['S6']['p_L'], t[start:ende], Rth_CA, Cth_CA)
-            timeTher['sw']['T1'] = timeTher['sw']['T1'][:] + timeTher['sw']['C1'][:] - Tc
-            timeTher['sw']['T2'] = timeTher['sw']['T2'][:] + timeTher['sw']['C2'][:] - Tc
-            timeTher['sw']['T3'] = timeTher['sw']['T3'][:] + timeTher['sw']['C3'][:] - Tc
-            timeTher['sw']['T4'] = timeTher['sw']['T4'][:] + timeTher['sw']['C4'][:] - Tc
-            timeTher['sw']['T5'] = timeTher['sw']['T5'][:] + timeTher['sw']['C5'][:] - Tc
-            timeTher['sw']['T6'] = timeTher['sw']['T6'][:] + timeTher['sw']['C6'][:] - Tc
-            timeTher['sw']['D1'] = timeTher['sw']['D1'][:] + timeTher['sw']['C1'][:] - Tc
-            timeTher['sw']['D2'] = timeTher['sw']['D2'][:] + timeTher['sw']['C2'][:] - Tc
-            timeTher['sw']['D3'] = timeTher['sw']['D3'][:] + timeTher['sw']['C3'][:] - Tc
-            timeTher['sw']['D4'] = timeTher['sw']['D4'][:] + timeTher['sw']['C4'][:] - Tc
-            timeTher['sw']['D5'] = timeTher['sw']['D5'][:] + timeTher['sw']['C5'][:] - Tc
-            timeTher['sw']['D6'] = timeTher['sw']['D6'][:] + timeTher['sw']['C6'][:] - Tc
+        timeLoss['cap']['C1'] = calcLossCap(t, timeDc['i_c'], Tcap, para, setupPara, setupTopo)
 
     # ==============================================================================
-    # Open-Loop
+    # Closed-Loop Losses
     # ==============================================================================
     if setupExp['loop'] == "CL":
         # ------------------------------------------
         # Init
         # ------------------------------------------
         err = np.inf
-        T_old = np.ones((7,1))*Tj
-        T_new = np.ones((7,1))*Tj
+        T_old = np.ones((7, 1)) * Tj
+        T_new = np.ones((7, 1)) * Tj
         iter = 0
 
         # ------------------------------------------
@@ -224,40 +203,28 @@ def calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
         # Start
         while err > setupExp['tol']:
             # Electrical
-            timeElec['sw']['S1'] = calcElecSwi(Vdc, timeAc['i_a'], (s['A'][start:ende] == +1), T_old[0], 'HS', para, setupPara)
-            timeElec['sw']['S2'] = calcElecSwi(Vdc, timeAc['i_a'], (s['A'][start:ende] == -1), T_old[1], 'LS', para, setupPara)
-            timeElec['sw']['S3'] = calcElecSwi(Vdc, timeAc['i_b'], (s['B'][start:ende] == +1), T_old[2], 'HS', para, setupPara)
-            timeElec['sw']['S4'] = calcElecSwi(Vdc, timeAc['i_b'], (s['B'][start:ende] == -1), T_old[3], 'LS', para, setupPara)
-            timeElec['sw']['S5'] = calcElecSwi(Vdc, timeAc['i_c'], (s['C'][start:ende] == +1), T_old[4], 'HS', para, setupPara)
-            timeElec['sw']['S6'] = calcElecSwi(Vdc, timeAc['i_c'], (s['C'][start:ende] == -1), T_old[5], 'LS', para, setupPara)
+            for i in range(0, len(id2)):
+                timeElec['sw'][id2[i]] = calcElecSwi(Vdc, timeAc[id4[i]], (s[id3[i]][start:ende] == (-1) ** i),
+                                                     T_old[i], id5[i], para, setupPara)
+
             timeDc['v_dc'] = calcElecCap(t, timeDc['i_c'], T_old[6], para, setupPara, setupTopo)
             timeElec['cap']['C1']['i_c'] = timeDc['i_c']
             timeElec['cap']['C1']['v_c'] = timeDc['v_dc']
 
             # Losses
-            timeLoss['sw']['S1'] = calcLossSwi(s['A'][start:ende]*(+1), timeElec['sw']['S1']['i_T'], timeElec['sw']['S1']['i_D'], timeElec['sw']['S1']['v_T'], timeElec['sw']['S1']['v_D'], T_old[0], para, setupPara, setupExp)
-            timeLoss['sw']['S2'] = calcLossSwi(s['A'][start:ende]*(-1), timeElec['sw']['S2']['i_T'], timeElec['sw']['S2']['i_D'], timeElec['sw']['S2']['v_T'], timeElec['sw']['S2']['v_D'], T_old[1], para, setupPara, setupExp)
-            timeLoss['sw']['S3'] = calcLossSwi(s['B'][start:ende]*(+1), timeElec['sw']['S3']['i_T'], timeElec['sw']['S3']['i_D'], timeElec['sw']['S3']['v_T'], timeElec['sw']['S3']['v_D'], T_old[2], para, setupPara, setupExp)
-            timeLoss['sw']['S4'] = calcLossSwi(s['B'][start:ende]*(-1), timeElec['sw']['S4']['i_T'], timeElec['sw']['S4']['i_D'], timeElec['sw']['S4']['v_T'], timeElec['sw']['S4']['v_D'], T_old[3], para, setupPara, setupExp)
-            timeLoss['sw']['S5'] = calcLossSwi(s['C'][start:ende]*(+1), timeElec['sw']['S5']['i_T'], timeElec['sw']['S5']['i_D'], timeElec['sw']['S5']['v_T'], timeElec['sw']['S5']['v_D'], T_old[4], para, setupPara, setupExp)
-            timeLoss['sw']['S6'] = calcLossSwi(s['C'][start:ende]*(-1), timeElec['sw']['S6']['i_T'], timeElec['sw']['S6']['i_D'], timeElec['sw']['S6']['v_T'], timeElec['sw']['S6']['v_D'], T_old[5], para, setupPara, setupExp)
+            for i in range(0, len(id2)):
+                timeLoss['sw'][id2[i]] = calcLossSwi(s[id3[i]][start:ende] * (-1) ** i, timeElec['sw'][id2[i]]['i_T'],
+                                                     timeElec['sw'][id2[i]]['i_D'], timeElec['sw'][id2[i]]['v_T'],
+                                                     timeElec['sw'][id2[i]]['v_D'], T_old[i], para, setupPara, setupExp)
             timeLoss['cap']['C1'] = calcLossCap(t, timeDc['i_c'], T_old[6], para, setupPara, setupTopo)
 
             # Thermal
-            if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:
-                T_new[0] = np.mean(timeLoss['sw']['S1']['p_T']) * np.sum(Rth_JA) + np.mean(timeLoss['sw']['S1']['p_L']) * np.sum(Rth_CA) + Tc
-                T_new[1] = np.mean(timeLoss['sw']['S2']['p_T']) * np.sum(Rth_JA) + np.mean(timeLoss['sw']['S2']['p_L']) * np.sum(Rth_CA) + Tc
-                T_new[2] = np.mean(timeLoss['sw']['S3']['p_T']) * np.sum(Rth_JA) + np.mean(timeLoss['sw']['S3']['p_L']) * np.sum(Rth_CA) + Tc
-                T_new[3] = np.mean(timeLoss['sw']['S4']['p_T']) * np.sum(Rth_JA) + np.mean(timeLoss['sw']['S4']['p_L']) * np.sum(Rth_CA) + Tc
-                T_new[4] = np.mean(timeLoss['sw']['S5']['p_T']) * np.sum(Rth_JA) + np.mean(timeLoss['sw']['S5']['p_L']) * np.sum(Rth_CA) + Tc
-                T_new[5] = np.mean(timeLoss['sw']['S6']['p_T']) * np.sum(Rth_JA) + np.mean(timeLoss['sw']['S6']['p_L']) * np.sum(Rth_CA) + Tc
-            else:
-                T_new[0] = np.mean(timeLoss['sw']['S1']['p_T']) * np.sum(Rth_JA) + Tc
-                T_new[1] = np.mean(timeLoss['sw']['S2']['p_T']) * np.sum(Rth_JA) + Tc
-                T_new[2] = np.mean(timeLoss['sw']['S3']['p_T']) * np.sum(Rth_JA) + Tc
-                T_new[3] = np.mean(timeLoss['sw']['S4']['p_T']) * np.sum(Rth_JA) + Tc
-                T_new[4] = np.mean(timeLoss['sw']['S5']['p_T']) * np.sum(Rth_JA) + Tc
-                T_new[5] = np.mean(timeLoss['sw']['S6']['p_T']) * np.sum(Rth_JA) + Tc
+            for i in range(0, len(id2)):
+                if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:
+                    T_new[i] = np.mean(timeLoss['sw'][id2[i]]['p_T']) * np.sum(Rth_JA) + np.mean(
+                        timeLoss['sw'][id2[i]]['p_L']) * np.sum(Rth_CA) + Tc
+                else:
+                    T_new[i] = np.mean(timeLoss['sw'][id2[i]]['p_T']) * np.sum(Rth_JA) + Tc
             T_new[6] = np.mean(timeLoss['cap']['C1']['p_L']) * np.sum(Rth_JA_cap) + Tc
 
             # Error
@@ -268,50 +235,43 @@ def calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
             iter = iter + 1
 
             # Msg
-            print("ITER: %d) Stationary temperatur T_swi=%.2f (T_cap=%.2f) and P_swi=%.2f (Pv_cap=%.2f) with error: %.3f" % (iter, T_old[0], T_old[6], np.mean(timeLoss['sw']['S1']['p_L']), np.mean(timeLoss['cap']['C1']['p_L']), err*100))
-        
+            print("ITER: %d) Stationary temperature T_swi=%.2f (T_cap=%.2f) and P_swi=%.2f (Pv_cap=%.2f) with error: %.3f" % (
+                  iter, T_old[0], T_old[6], np.mean(timeLoss['sw']['S1']['p_L']), np.mean(timeLoss['cap']['C1']['p_L']), err * 100))
+
         # ------------------------------------------
         # Converged
         # ------------------------------------------
         # Msg
         print("------------------------------------------")
-        print("INFO: Converged after %d iterations with T_swi=%.2f (T_cap=%.2f) and error: %.3f" % (iter, T_old[0], T_old[6], err*100))
+        print("INFO: Converged after %d iterations with T_swi=%.2f (T_cap=%.2f) and error: %.3f" % (iter, T_old[0], T_old[6], err * 100))
 
-        # Thermal
-        print("INFO: Calculating transient temperatures")
-        [timeTher['sw']['T1'], _] = calcTherRC(0, Tc, timeLoss['sw']['S1']['p_T'], t[start:ende], Rth_JA, Cth_JA)
-        [timeTher['sw']['T2'], _] = calcTherRC(0, Tc, timeLoss['sw']['S2']['p_T'], t[start:ende], Rth_JA, Cth_JA)
-        [timeTher['sw']['T3'], _] = calcTherRC(0, Tc, timeLoss['sw']['S3']['p_T'], t[start:ende], Rth_JA, Cth_JA)
-        [timeTher['sw']['T4'], _] = calcTherRC(0, Tc, timeLoss['sw']['S4']['p_T'], t[start:ende], Rth_JA, Cth_JA)
-        [timeTher['sw']['T5'], _] = calcTherRC(0, Tc, timeLoss['sw']['S5']['p_T'], t[start:ende], Rth_JA, Cth_JA)
-        [timeTher['sw']['T6'], _] = calcTherRC(0, Tc, timeLoss['sw']['S6']['p_T'], t[start:ende], Rth_JA, Cth_JA)
-        [timeTher['sw']['D1'], _] = calcTherRC(0, Tc, timeLoss['sw']['S1']['p_D'], t[start:ende], Rth_DA, Cth_DA)
-        [timeTher['sw']['D2'], _] = calcTherRC(0, Tc, timeLoss['sw']['S2']['p_D'], t[start:ende], Rth_DA, Cth_DA)
-        [timeTher['sw']['D3'], _] = calcTherRC(0, Tc, timeLoss['sw']['S3']['p_D'], t[start:ende], Rth_DA, Cth_DA)
-        [timeTher['sw']['D4'], _] = calcTherRC(0, Tc, timeLoss['sw']['S4']['p_D'], t[start:ende], Rth_DA, Cth_DA)
-        [timeTher['sw']['D5'], _] = calcTherRC(0, Tc, timeLoss['sw']['S5']['p_D'], t[start:ende], Rth_DA, Cth_DA)
-        [timeTher['sw']['D6'], _] = calcTherRC(0, Tc, timeLoss['sw']['S6']['p_D'], t[start:ende], Rth_DA, Cth_DA)
-        [timeTher['cap']['C1'], _] = calcTherRC(0, Tc, timeLoss['cap']['C1']['p_L'], t[start:ende], Rth_JA_cap, Cth_JA_cap)
+    # ==============================================================================
+    # Transient Thermal
+    # ==============================================================================
+    # ------------------------------------------
+    # Msg
+    # ------------------------------------------
+    print("INFO: Calculating transient temperatures")
 
+    # ------------------------------------------
+    # Thermal
+    # ------------------------------------------
+    # Switches
+    for i in range(0, len(id2)):
+        [timeTher['sw'][id6[i]], _] = calcTherRC(0, Tc, timeLoss['sw'][id2[i]]['p_T'], t[start:ende], Rth_JA, Cth_JA)
+        [timeTher['sw'][id7[i]], _] = calcTherRC(0, Tc, timeLoss['sw'][id2[i]]['p_D'], t[start:ende], Rth_DA, Cth_DA)
+
+    # Capacitor
+    [timeTher['cap']['C1'], _] = calcTherRC(0, Tc, timeLoss['cap']['C1']['p_L'], t[start:ende], Rth_JA_cap, Cth_JA_cap)
+
+    # Coupling
+    for i in range(0, len(id2)):
         if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:
-            [timeTher['sw']['C1'], _] = calcTherRC(0, Tc, timeLoss['sw']['S1']['p_L'], t[start:ende], Rth_CA, Cth_CA)
-            [timeTher['sw']['C2'], _] = calcTherRC(0, Tc, timeLoss['sw']['S2']['p_L'], t[start:ende], Rth_CA, Cth_CA)
-            [timeTher['sw']['C3'], _] = calcTherRC(0, Tc, timeLoss['sw']['S3']['p_L'], t[start:ende], Rth_CA, Cth_CA)
-            [timeTher['sw']['C4'], _] = calcTherRC(0, Tc, timeLoss['sw']['S4']['p_L'], t[start:ende], Rth_CA, Cth_CA)
-            [timeTher['sw']['C5'], _] = calcTherRC(0, Tc, timeLoss['sw']['S5']['p_L'], t[start:ende], Rth_CA, Cth_CA)
-            [timeTher['sw']['C6'], _] = calcTherRC(0, Tc, timeLoss['sw']['S6']['p_L'], t[start:ende], Rth_CA, Cth_CA)
-            timeTher['sw']['T1'] = timeTher['sw']['T1'][:] + timeTher['sw']['C1'][:] - Tc
-            timeTher['sw']['T2'] = timeTher['sw']['T2'][:] + timeTher['sw']['C2'][:] - Tc
-            timeTher['sw']['T3'] = timeTher['sw']['T3'][:] + timeTher['sw']['C3'][:] - Tc
-            timeTher['sw']['T4'] = timeTher['sw']['T4'][:] + timeTher['sw']['C4'][:] - Tc
-            timeTher['sw']['T5'] = timeTher['sw']['T5'][:] + timeTher['sw']['C5'][:] - Tc
-            timeTher['sw']['T6'] = timeTher['sw']['T6'][:] + timeTher['sw']['C6'][:] - Tc
-            timeTher['sw']['D1'] = timeTher['sw']['D1'][:] + timeTher['sw']['C1'][:] - Tc
-            timeTher['sw']['D2'] = timeTher['sw']['D2'][:] + timeTher['sw']['C2'][:] - Tc
-            timeTher['sw']['D3'] = timeTher['sw']['D3'][:] + timeTher['sw']['C3'][:] - Tc
-            timeTher['sw']['D4'] = timeTher['sw']['D4'][:] + timeTher['sw']['C4'][:] - Tc
-            timeTher['sw']['D5'] = timeTher['sw']['D5'][:] + timeTher['sw']['C5'][:] - Tc
-            timeTher['sw']['D6'] = timeTher['sw']['D6'][:] + timeTher['sw']['C6'][:] - Tc
+            [timeTher['sw'][id8[i]], _] = calcTherRC(0, Tc, timeLoss['sw'][id2[i]]['p_L'], t[start:ende], Rth_CA, Cth_CA)
+            timeTher['sw'][id6[i]] = timeTher['sw'][id6[i]][:] + timeTher['sw'][id8[i]][:] - Tc
+            timeTher['sw'][id7[i]] = timeTher['sw'][id7[i]][:] + timeTher['sw'][id8[i]][:] - Tc
+        else:
+            timeTher['sw'][id8[i]] = Tc * np.ones(np.size(s['A'][start:ende]))
 
     ###################################################################################################################
     # Post-Processing
@@ -319,48 +279,14 @@ def calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Frequency domain
     # ==============================================================================
-    [freqSw, freqAc, freqDc] = calcFreqB6(s['A'][start:ende], xs['A'][start:ende], timeAc, timeDc)
-    
+    [freqSw, freqAc, freqDc] = calcFreq(s['A'][start:ende], xs['A'][start:ende], timeAc, timeDc)
+
     # ==============================================================================
     # Output
     # ==============================================================================
-    timeSw['t'] = t[0:(ende-start)]
-    timeSw['v_a_ref'] = v_ref['A'][start:ende]
-    timeSw['v_b_ref'] = v_ref['B'][start:ende]
-    timeSw['v_c_ref'] = v_ref['C'][start:ende]
-    timeSw['e_a'] = e_ref['A'][start:ende]
-    timeSw['e_b'] = e_ref['B'][start:ende]
-    timeSw['e_c'] = e_ref['C'][start:ende]
-    timeSw['sA'] = s['A'][start:ende]
-    timeSw['sB'] = s['B'][start:ende]
-    timeSw['sC'] = s['C'][start:ende]
-    timeSw['c'] = c[start:ende]
-    timeSw['xAs'] = xs['A'][start:ende]
-    timeSw['xBs'] = xs['B'][start:ende]
-    timeSw['xCs'] = xs['C'][start:ende]
-    timeSw['xAsh'] = xsh['A'][start:ende]
-    timeSw['xBsh'] = xsh['B'][start:ende]
-    timeSw['xCsh'] = xsh['C'][start:ende]
-    timeSw['xA'] = x['A'][start:ende]
-    timeSw['xB'] = x['B'][start:ende]
-    timeSw['xC'] = x['C'][start:ende]
-    timeSw['n0'] = n0[start:ende]
-    
-    # ==============================================================================
-    # Combine
-    # ==============================================================================
-    time = {}
-    time['Sw'] = timeSw
-    time['Ac'] = timeAc
-    time['Dc'] = timeDc
-    time['Elec'] = timeElec
-    time['Loss'] = timeLoss
-    time['Ther'] = timeTher
-    freq = {}
-    freq['Sw'] = freqSw
-    freq['Ac'] = freqAc
-    freq['Dc'] = freqDc
-    
+    [time, freq] = outB6_Steady(timeElec, timeLoss, timeTher, timeAc, timeDc, freqSw, freqAc, freqDc, t, v_ref, e_ref,
+                                s, c, xs, xsh, x, n0, W, ende, start)
+
     ###################################################################################################################
     # MSG Out
     ###################################################################################################################
