@@ -72,7 +72,7 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     Mi = setupData['stat']['Mi']
     Vdc = setupData['stat']['Vdc']
     phiE = setupTopo['phiE']
-    down = setupData['stat']['cyc'] - 1
+    down = setupData['stat']['cyc'] - 2
 
     # ==============================================================================
     # Variables

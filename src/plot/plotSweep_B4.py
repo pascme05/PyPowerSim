@@ -76,7 +76,7 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     Mi = setupData['stat']['Mi']
     Vdc = setupData['stat']['Vdc']
     phiE = setupTopo['phiE']
-    down = setupData['stat']['cyc'] - 1
+    down = setupData['stat']['cyc'] - 2
 
     # ==============================================================================
     # Variables

@@ -56,7 +56,7 @@ setupExp['debug'] = 0                                                           
 # Operating Mode
 # ------------------------------------------
 setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled 
-setupExp['type'] = 2                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
+setupExp['type'] = 0                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
 setupExp['loop'] = 'CL'                                                                                                 # (CL): closed-loop, (OL): open-loop
 setupExp['freqPar'] = 'fel'                                                                                              # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
 setupExp['freqAvg'] = 'fs'                                                                                            # (none): no averaging is used (fs): values are averaged over switching cycle, (fel): values are averaged over fundamental cycle
@@ -87,7 +87,7 @@ setupData['trans']['Tc'] = 50.0                                                 
 setupData['trans']['Tj'] = 50.0                                                                                         # core temperature at t=0 of all components (°C)
 
 # Stationary
-setupData['stat']['cyc'] = 5                                                                                            # number of fundamental cycles used for stationary analysis (at least 2)
+setupData['stat']['cyc'] = 3                                                                                            # number of fundamental cycles used for stationary analysis (at least 3)
 setupData['stat']['W'] = 10                                                                                             # number of datapoints for sweep analysis
 setupData['stat']['Tj'] = 50.0                                                                                          # core temperature of all components (°C)
 setupData['stat']['Tc'] = 50.0                                                                                          # reference temperature of all components (°C)
@@ -201,7 +201,7 @@ setupPara['Elec']['CapSeries'] = 1                                              
 # Thermal Parameters
 # ==============================================================================
 setupPara['Ther']['Heatsink'] = 1                                                                                       # 1) using thermal capacities and resistances of heatsink RC model
-setupPara['Ther']['Coupling'] = 0                                                                                       # 0) no thermal coupling between diode and transistor, 1) thermal coupling between diode and transistor
+setupPara['Ther']['Coupling'] = 1                                                                                       # 0) no thermal coupling between diode and transistor, 1) thermal coupling between diode and transistor
 
 #######################################################################################################################
 # Calculations

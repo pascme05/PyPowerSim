@@ -64,8 +64,8 @@ def sanityInput(setupExp, setupData, setupTopo, setupPara):
     # ==============================================================================
     # Cycles
     # ==============================================================================
-    if setupData['stat']['cyc'] < 5:
-        print("WARN: To ensure convergence chose 'setupData['stat']['cyc']' >= 5")
+    if setupData['stat']['cyc'] < 3:
+        print("WARN: To ensure convergence chose 'setupData['stat']['cyc']' >= 3")
     
     # ==============================================================================
     # Cycles
