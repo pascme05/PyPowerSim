@@ -72,7 +72,7 @@ setupExp['int'] = 20                                                            
 # ------------------------------------------
 # Output
 # ------------------------------------------
-setupExp['plot'] = 1                                                                                                    # (0): no results are plotted, (1): results are plotted
+setupExp['plot'] = 2                                                                                                    # (0): no results are plotted, (1): results are plotted, (2): analytic results are plotted
 setupExp['save'] = 0                                                                                                    # (0): no results are saved, (1): results are saved
 
 # ==============================================================================
@@ -87,8 +87,8 @@ setupData['trans']['Tc'] = 50.0                                                 
 setupData['trans']['Tj'] = 50.0                                                                                         # core temperature at t=0 of all components (°C)
 
 # Stationary
-setupData['stat']['cyc'] = 2                                                                                            # number of fundamental cycles used for stationary analysis
-setupData['stat']['W'] = 25                                                                                             # number of datapoints for sweep analysis
+setupData['stat']['cyc'] = 10                                                                                            # number of fundamental cycles used for stationary analysis
+setupData['stat']['W'] = 10                                                                                             # number of datapoints for sweep analysis
 setupData['stat']['Tj'] = 50.0                                                                                          # core temperature of all components (°C)
 setupData['stat']['Tc'] = 50.0                                                                                          # reference temperature of all components (°C)
 
@@ -102,7 +102,7 @@ setupData['stat']['Vo'] = 50                                                    
 setupData['stat']['Io'] = 25                                                                                            # output RMS phase current (Io) in (A) for current control
 
 # Input and Output
-setupData['stat']['Mi'] = 1.00                                                                                          # modulation index (Mi) for distortion analysis                                                                                                # power factor cos_phi
+setupData['stat']['Mi'] = 0.50                                                                                          # modulation index (Mi) for distortion analysis                                                                                                # power factor cos_phi
 setupData['stat']['Vdc'] = 400                                                                                          # DC-Link voltage (V)
 setupData['stat']['phi'] = 0.0                                                                                          # load angle output voltage (deg)
 
@@ -139,7 +139,7 @@ setupTopo['Cout'] = 1e-3                                                        
 # Load
 # ------------------------------------------
 # Parameters
-setupTopo['R'] = 1.0                                                                                                    # resistance in (Ohm)
+setupTopo['R'] = 0.0                                                                                                    # resistance in (Ohm)
 setupTopo['L'] = 5e-3                                                                                                   # inductance in (H)
 setupTopo['E'] = 0                                                                                                      # induced voltage in (V)
 setupTopo['phiE'] = 0                                                                                                   # load angle induced voltage (deg)
@@ -172,7 +172,7 @@ setupPara['PWM']['sw'] = 0                                                      
 # ------------------------------------------
 # Switching Sequence
 # ------------------------------------------
-setupPara['PWM']['fs'] = 1050                                                                                           # PWM switching frequency (Hz)
+setupPara['PWM']['fs'] = 2100                                                                                           # PWM switching frequency (Hz)
 setupPara['PWM']['seq'] = "0127"                                                                                        # PWM switching sequence B6 bridge
 setupPara['PWM']['zero'] = "SVPWM"                                                                                      # PWM method B6 bridge (SPWM, SVPWM, THIPWM4, THIPWM6, DPWM0, DPWM1, DPWM2, DPWM3, DPWMMAX, DPWMMIN)
 

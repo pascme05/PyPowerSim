@@ -63,7 +63,7 @@ def calcDistNum(t, i_a, v_a, i_dc, v_dc, Vdc, fel):
     # ==============================================================================
     V_dc_eff = np.sqrt(1 / Tel / K * np.sum(v_dc ** 2 * dt))
     V_dc_v1_eff = np.abs(fft(v_dc) / N)[0]
-    V_dc_thd = np.sqrt(V_dc_eff ** 2 - V_dc_v1_eff ** 2)
+    V_dc_thd = np.sqrt((np.sqrt(1 / Tel / K * np.sum((v_dc-Vdc) ** 2 * dt))) ** 2 - (np.abs(fft(v_dc-Vdc) / N)[0]) ** 2)
     I_dc_eff = np.sqrt(1 / Tel / K * np.sum(i_dc ** 2 * dt))
     I_dc_v1_eff = np.abs(fft(i_dc) / N)[0]
     I_dc_thd = np.sqrt(I_dc_eff ** 2 - I_dc_v1_eff ** 2)

@@ -22,6 +22,7 @@
 # ==============================================================================
 import numpy as np
 import scipy.signal as sig
+from scipy import integrate
 
 
 #######################################################################################################################
@@ -46,6 +47,7 @@ def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     i = {}
     timeAc = {}
     timeDc = {}
+    t = np.linspace(0,np.max(0.4),len(t))
 
     ###################################################################################################################
     # Pre-Processing
@@ -110,8 +112,9 @@ def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     # DC-Link
     # ------------------------------------------
     i_cap = np.mean(i_dc) - i_dc
-    _, v_dc, _, = sig.lsim(mdl['SS']['DC'], i_cap, t[start:ende])
-    v_dc = v_dc + Vdc
+    _, v_dc, _, = sig.lsim(mdl['SS']['DC'], i_cap, t[start:ende], X0=0)
+    v_dc2 = integrate.cumtrapz(i_cap, dx=2e-6, initial=0)/1e-3
+    v_dc = v_dc - np.mean(v_dc) + Vdc
 
     # ------------------------------------------
     # Filter Input

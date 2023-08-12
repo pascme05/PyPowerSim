@@ -253,7 +253,9 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Modulation
     plt.subplot(233)
     plt.plot(M_i, distAc['num']['I_a_thd'])
-    plt.plot(M_i, distAc['ana']['I_a_thd'], 'tab:blue', linestyle="", marker="o")
+    if setupExp['plot'] == 2:
+        plt.plot(M_i, distAc['ana']['I_a_thd'], 'tab:blue', linestyle="", marker="o")
+        plt.legend(['Numerical', 'Analytical'])
     plt.ylim(0, )
     plt.title('Distortion Current AC-Side')
     plt.ylabel("$I_{a,rms}^{THD}$ (A)")
@@ -288,7 +290,9 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Modulation
     plt.subplot(236)
     plt.plot(M_i, distDc['num']['I_dc_thd'])
-    plt.plot(M_i, distDc['ana']['I_dc_thd'], 'tab:blue', linestyle="", marker="o")
+    if setupExp['plot'] == 2:
+        plt.plot(M_i, distDc['ana']['I_dc_thd'], 'tab:blue', linestyle="", marker="o")
+        plt.legend(['Numerical', 'Analytical'])
     plt.ylim(0, )
     plt.title('Distortion Current DC-Side')
     plt.ylabel("$I_{dc,rms}^{THD}$ (A)")
@@ -320,13 +324,11 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Frequency
     ax = plt.subplot(2, 3, 2)
     plt.stem(f[::down], freqAc['V_a'][::down])
-    # plt.stem(f, freqAc['V_a0'])
     plt.ylabel("$V_{a}(f)$ (V)")
     plt.xlim(0, 50)
     plt.title('Frequency-domain Voltages AC-Side')
     plt.xlabel("$f/f_{1}$ (Hz/Hz)")
     plt.yscale('log')
-    # plt.legend(["$V_{a}$", "$V_{a0}$"], loc='upper right')
     plt.ylim(0.1 / OoM(max(freqAc['V_a'])), )
     txt = "THD=" + str(round(V_ph_thd * 100, 2)) + "%"
     plt.text(0.75, 0.90, txt, bbox=dict(facecolor='tab:blue', alpha=0.5), transform=ax.transAxes)
@@ -335,13 +337,12 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Modulation
     plt.subplot(233)
     plt.plot(M_i, distAc['num']['V_a_thd'])
-    # plt.plot(M_i, distAc['ana']['V_a_thd'], 'tab:blue', linestyle="",marker="o")
-    # plt.plot(M_i, distAc['num']['V_a_eff'], M_i, distAc['num']['V_a_v1_eff'], M_i, distAc['num']['V_a_thd'])
-    # plt.plot(M_i, distAc['ana']['V_a_eff'], 'tab:blue', M_i, distAc['ana']['V_a_v1_eff'], 'tab:orange', M_i, distAc['ana']['V_a_thd'], 'tab:green', linestyle="",marker="o")
+    if setupExp['plot'] == 2:
+        plt.plot(M_i, distAc['ana']['V_a_thd'], 'tab:blue', linestyle="", marker="o")
+        plt.legend(['Numerical', 'Analytical'])
     plt.title('Distortion Voltage AC-Side')
     plt.ylabel("$V_{a,rms}^{THD}$ (V)")
     plt.xlabel("$M_{i}$ in (p.u)")
-    # plt.legend(["$V_{a,eff}$", "$V_{a,eff}^{1}$", "$V_{a,eff}^{THD}$"])
     plt.grid('on')
 
     # ------------------------------------------
@@ -372,11 +373,12 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Modulation
     plt.subplot(236)
     plt.plot(M_i, distDc['num']['V_dc_thd'])
-    # plt.plot(M_i, distDc['num']['V_dc_eff'], M_i, distDc['num']['V_dc_v1_eff'], M_i, distDc['num']['V_dc_thd'])
+    if setupExp['plot'] == 2:
+        plt.plot(M_i, distDc['ana']['V_dc_thd'], 'tab:blue', linestyle="", marker="o")
+        plt.legend(['Numerical', 'Analytical'])
     plt.title('Distortion Voltage DC-Side')
     plt.ylabel("$V_{dc,rms}^{THD}$ (V)")
     plt.xlabel("$M_{i}$ in (p.u)")
-    # plt.legend(["$V_{dc,eff}$", "$V_{dc,eff}^{1}$", "$V_{dc,eff}^{THD}$"])
     plt.grid('on')
     plt.show()
 

@@ -148,9 +148,17 @@ def calcDistB6_Ana(t, i_a, v_a, Ia1, Mi, Vdc, setupTopo, setupPara):
     # ==============================================================================
     # DC-Side
     # ==============================================================================
+    # ------------------------------------------
+    # Current
+    # ------------------------------------------
     I_dc_eff = Ia1 * np.sqrt(2 * np.sqrt(3) / np.pi * Mi * (1 / 4 + np.cos(phi) ** 2))
     I_dc_v1_eff = 3 / 4 * np.sqrt(2) * Ia1 * np.cos(phi)
     I_dc_thd = np.sqrt(2 * Mi * (np.sqrt(3) / (4 * np.pi) + np.cos(phi) ** 2 * (np.sqrt(3) / np.pi - 9 / 16 * Mi))) * Ia1
+
+    # ------------------------------------------
+    # Voltage
+    # ------------------------------------------
+    V_dc_thd = np.sqrt(Mi**2 * (np.sqrt(3) / (4 * np.pi) + np.cos(phi) ** 2 * (np.sqrt(3) / np.pi - 6 / 16 * Mi))) * np.sqrt(Ia1)
 
     ###################################################################################################################
     # Post-Processing
@@ -179,7 +187,7 @@ def calcDistB6_Ana(t, i_a, v_a, Ia1, Mi, Vdc, setupTopo, setupPara):
     # ------------------------------------------
     distDc['V_dc_eff'] = 0
     distDc['V_dc_v1_eff'] = 0
-    distDc['V_dc_thd'] = 0
+    distDc['V_dc_thd'] = V_dc_thd
     distDc['I_dc_eff'] = I_dc_eff
     distDc['I_dc_v1_eff'] = I_dc_v1_eff
     distDc['I_dc_thd'] = I_dc_thd
