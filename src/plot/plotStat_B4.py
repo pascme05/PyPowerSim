@@ -79,7 +79,7 @@ def plotStat_B4(time, freq, setupPara, setupData, setupTopo, setupExp):
     Mi = setupData['stat']['Mi']
     Vdc = setupData['stat']['Vdc']
     phiE = setupTopo['phiE']
-    down = setupData['stat']['cyc']
+    down = setupData['stat']['cyc'] - 1
 
     # ==============================================================================
     # Variables

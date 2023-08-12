@@ -70,7 +70,7 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     Mi = setupData['stat']['Mi']
     Vdc = setupData['stat']['Vdc']
     phiE = setupTopo['phiE']
-    down = setupData['stat']['cyc']
+    down = setupData['stat']['cyc'] - 1
     Ta = setupData['trans']['Tc']
 
     # ==============================================================================
@@ -90,8 +90,8 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     # Limits
     # ------------------------------------------
     K = int(np.round((t[-1] - t[0]) * fel))
-    start = int((len(t) - 1) / K) * (K - 1)
-    ende = len(t)
+    start = 0
+    ende = int((len(t) - 1) / K) + 1
 
     # ------------------------------------------
     # Change time
@@ -467,6 +467,7 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     plt.plot(tel, timeTher['sw']['T6'], color='r', linestyle='--')
     plt.plot(tel, timeTher['sw']['D6'], color='r', linestyle=':')
     plt.plot(tel, timeTher['sw']['C6'], color='r', linestyle='-')
+    plt.plot(tel, Ta * np.ones(np.size(tel)), color='k', linestyle='-')
     plt.title('Thermal Switches (C)')
     plt.ylabel('Temperature in (°C)')
     plt.xticks([], [])
