@@ -36,6 +36,8 @@ def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     # Parameters
     # ==============================================================================
     id = ['A', 'B', 'C']
+    fel = setupTopo['fel']
+    K = int(np.round((t[-1] - t[0]) * fel))-1
 
     # ==============================================================================
     # Variables
@@ -47,7 +49,6 @@ def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     i = {}
     timeAc = {}
     timeDc = {}
-    t = np.linspace(0,np.max(0.4),len(t))
 
     ###################################################################################################################
     # Pre-Processing
@@ -89,16 +90,20 @@ def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
         v_L[id[j]] = v_out[id[j]] - Mi * e[id[j]]
 
     # LL Current
+    #for j in range(0, len(id)):
+    #    _, i[id[j]], _ = sig.lsim(mdl['SS']['Load'], v_L[id[j]], t)
+    #    i[id[j]] = i[id[j]][start:ende]
     _, i_ab, _, = sig.lsim(mdl['SS']['Load'], (v0['A'] - Mi * e['A'] - v0['B'] - Mi * e['B']) / np.sqrt(3), t)
     _, i_bc, _, = sig.lsim(mdl['SS']['Load'], (v0['B'] - Mi * e['B'] - v0['C'] - Mi * e['C']) / np.sqrt(3), t)
     _, i_ca, _, = sig.lsim(mdl['SS']['Load'], (v0['C'] - Mi * e['C'] - v0['A'] - Mi * e['A']) / np.sqrt(3), t)
-    i['A'] = np.roll(i_ab[start:ende], int(np.floor((30 + 0) / 720 * len(s['A'][start:ende]))))
-    i['B'] = np.roll(i_bc[start:ende], int(np.floor((30 + 0) / 720 * len(s['B'][start:ende]))))
-    i['C'] = np.roll(i_ca[start:ende], int(np.floor((30 + 0) / 720 * len(s['C'][start:ende]))))
+    i['A'] = np.roll(i_ab[start:ende], int(np.floor((30 + 0) / 360 / K * len(s['A'][start:ende]))))
+    i['B'] = np.roll(i_bc[start:ende], int(np.floor((30 + 0) / 360 / K * len(s['B'][start:ende]))))
+    i['C'] = np.roll(i_ca[start:ende], int(np.floor((30 + 0) / 360 / K * len(s['C'][start:ende]))))
 
     # LN Current
-    for j in range(0, len(id)):
-        i[id[j]] = i[id[j]] - np.mean(i[id[j]])
+    if setupTopo['wave'] != 'con':
+        for j in range(0, len(id)):
+            i[id[j]] = i[id[j]] - np.mean(i[id[j]])
 
     # ==============================================================================
     # DC-Side
@@ -112,8 +117,7 @@ def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     # DC-Link
     # ------------------------------------------
     i_cap = np.mean(i_dc) - i_dc
-    _, v_dc, _, = sig.lsim(mdl['SS']['DC'], i_cap, t[start:ende], X0=0)
-    v_dc2 = integrate.cumtrapz(i_cap, dx=2e-6, initial=0)/1e-3
+    _, v_dc, _, = sig.lsim(mdl['SS']['DC'], i_cap, t[start:ende])
     v_dc = v_dc - np.mean(v_dc) + Vdc
 
     # ------------------------------------------
