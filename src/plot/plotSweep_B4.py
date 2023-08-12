@@ -95,8 +95,8 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Limits
     # ------------------------------------------
     K = int(np.round((t[-1]-t[0])*fel))
-    start = 0
-    ende = int((len(t)-1)/K) + 1
+    start = int((len(t) - 1) / K) * (K - 1)
+    ende = len(t)
     
     # ------------------------------------------
     # Change time

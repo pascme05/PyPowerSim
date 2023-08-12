@@ -90,9 +90,6 @@ def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
         v_L[id[j]] = v_out[id[j]] - Mi * e[id[j]]
 
     # LL Current
-    #for j in range(0, len(id)):
-    #    _, i[id[j]], _ = sig.lsim(mdl['SS']['Load'], v_L[id[j]], t)
-    #    i[id[j]] = i[id[j]][start:ende]
     _, i_ab, _, = sig.lsim(mdl['SS']['Load'], (v0['A'] - Mi * e['A'] - v0['B'] - Mi * e['B']) / np.sqrt(3), t)
     _, i_bc, _, = sig.lsim(mdl['SS']['Load'], (v0['B'] - Mi * e['B'] - v0['C'] - Mi * e['C']) / np.sqrt(3), t)
     _, i_ca, _, = sig.lsim(mdl['SS']['Load'], (v0['C'] - Mi * e['C'] - v0['A'] - Mi * e['A']) / np.sqrt(3), t)

@@ -64,7 +64,7 @@ setupExp['freqAvg'] = 'fs'                                                      
 # ------------------------------------------
 # Numerical
 # ------------------------------------------
-setupExp['fsim'] = 5e5                                                                                                  # simulation frequency (Hz)
+setupExp['fsim'] = 1e6                                                                                                  # simulation frequency (Hz)
 setupExp['tol'] = 1e-6                                                                                                  # tolerance in percent with respect to the previous converged result
 setupExp['eps'] = 1e-12                                                                                                 # small numerical tolerance
 setupExp['int'] = 20                                                                                                    # number of steps for integration
@@ -87,7 +87,7 @@ setupData['trans']['Tc'] = 50.0                                                 
 setupData['trans']['Tj'] = 50.0                                                                                         # core temperature at t=0 of all components (°C)
 
 # Stationary
-setupData['stat']['cyc'] = 3                                                                                            # number of fundamental cycles used for stationary analysis
+setupData['stat']['cyc'] = 8                                                                                            # number of fundamental cycles used for stationary analysis (at least 2)
 setupData['stat']['W'] = 10                                                                                             # number of datapoints for sweep analysis
 setupData['stat']['Tj'] = 50.0                                                                                          # core temperature of all components (°C)
 setupData['stat']['Tc'] = 50.0                                                                                          # reference temperature of all components (°C)
@@ -139,7 +139,7 @@ setupTopo['Cout'] = 1e-3                                                        
 # Load
 # ------------------------------------------
 # Parameters
-setupTopo['R'] = 5.0                                                                                                    # resistance in (Ohm)
+setupTopo['R'] = 0.0                                                                                                    # resistance in (Ohm)
 setupTopo['L'] = 5e-3                                                                                                   # inductance in (H)
 setupTopo['E'] = 0                                                                                                      # induced voltage in (V)
 setupTopo['phiE'] = 0                                                                                                   # load angle induced voltage (deg)
