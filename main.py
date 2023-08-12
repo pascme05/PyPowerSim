@@ -33,9 +33,11 @@ from src.general.sanityCheck import sanityInput
 from src.general.saveResults import saveResults
 from src.general.genLoadInput import genLoadInput
 
+
 # ==============================================================================
 # External
 # ==============================================================================
+import sys
 
 
 #######################################################################################################################
@@ -64,7 +66,6 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     time = []
     freq = []
     sweep = []
-    para = []
 
     ###################################################################################################################
     # Loading
@@ -82,7 +83,7 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     try:
         para = loadPara(setupTopo, setupPath, setupPara)
     except:
-        print("ERROR: Parameters could not be loaded")
+        sys.exit('ERROR: Parameters could not be loaded')
 
     # ==============================================================================
     # MSG OUT
@@ -106,7 +107,7 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     # Sanity Checks
     # ==============================================================================
     [setupExp, setupData, setupTopo, setupPara] = sanityInput(setupExp, setupData, setupTopo, setupPara)
-    
+
     # ==============================================================================
     # Transfer Functions
     # ==============================================================================
@@ -156,7 +157,6 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
         # ------------------------------------------
         if setupExp['type'] == 2:
             [time, freq] = calcTransB2(mdl, para, setupTopo, setupData, setupPara, setupExp)
-        
 
     # ==============================================================================
     # B4 
@@ -225,7 +225,7 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     print("=======================================================================")
     print("START: Post-Processing")
     print("=======================================================================")
-    
+
     # ==============================================================================
     # Save Results
     # ==============================================================================
@@ -242,7 +242,7 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     # Plot Results
     # ==============================================================================
     plot(time, freq, sweep, setupPara, setupData, setupTopo, setupExp)
-    
+
     # ==============================================================================
     # MSG OUT
     # ==============================================================================

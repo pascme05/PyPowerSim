@@ -24,6 +24,7 @@ import numpy as np
 import math
 import cmath
 
+
 #######################################################################################################################
 # Function
 #######################################################################################################################
@@ -81,7 +82,7 @@ def genLoadInput(setupExp, setupTopo, setupData):
     # ==============================================================================
     magZ = np.sqrt(R**2 + 2*np.pi*fel*L)
     angZ = math.atan2(2*np.pi*fel*L, R)
-    Z = complex(R,2*np.pi*fel*L)
+    Z = complex(R, 2*np.pi*fel*L)
     EMF = complex(E*np.cos(phiE), E*np.sin(phiE))
     
     # ==============================================================================
@@ -142,10 +143,10 @@ def genLoadInput(setupExp, setupTopo, setupData):
     # Post-Processing
     ###################################################################################################################
     # ==============================================================================
-    # Ouput Values
+    # Output Values
     # ==============================================================================
     Vo = Mi * Vdc / paraV
-    Io = (complex(Vo,phiO) - EMF) / Z / np.sqrt(2)
+    Io = (complex(Vo, phiO) - EMF) / Z / np.sqrt(2)
     So = Vo * Io / np.sqrt(2)
     Po = So.real
     Qo = So.imag

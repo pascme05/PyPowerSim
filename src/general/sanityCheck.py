@@ -23,6 +23,7 @@
 import psutil
 import numpy as np
 
+
 #######################################################################################################################
 # Function
 #######################################################################################################################
@@ -39,15 +40,15 @@ def sanityInput(setupExp, setupData, setupTopo, setupPara):
     ###################################################################################################################
     RAM_machine = psutil.virtual_memory().total
     if setupExp['type'] == 2:
-        RAM_use = setupExp['fsim']*setupData['stat']['cyc']* (20 + 24 + 36 + 12) * setupTopo['fel']*setupData['trans']['tmax']
+        RAM_use = setupExp['fsim']*setupData['stat']['cyc'] * (20 + 24 + 36 + 12) * setupTopo['fel']*setupData['trans']['tmax']
     else:
-        RAM_use = setupExp['fsim']*setupData['stat']['cyc']* (20 + 24 + 36 + 12)
+        RAM_use = setupExp['fsim']*setupData['stat']['cyc'] * (20 + 24 + 36 + 12)
 
     ###################################################################################################################
     # General Settings
     ###################################################################################################################
     # ==============================================================================
-    # RAM (PS 14/01/2023: extimation of RAM based on fsim)
+    # RAM (PS 14/01/2023: estimation of RAM based on fsim)
     # ==============================================================================
     if RAM_machine/RAM_use < 5:
         print("WARN: Machine might run out of memory reduce 'setupExp['fsim']', 'setupData['stat']['cyc']' or 'setupData['trans']['tmax']'")
@@ -56,7 +57,7 @@ def sanityInput(setupExp, setupData, setupTopo, setupPara):
     # Epsilon
     # ==============================================================================
     if setupExp['eps'] * 1e3 > (1/setupExp['fsim']):
-        print("WARN: Numerical value 'setupExp['eps']' comparetively large")
+        print("WARN: Numerical value 'setupExp['eps']' comparatively large")
     
     ###################################################################################################################
     # Mission Profile
@@ -100,15 +101,15 @@ def sanityInput(setupExp, setupData, setupTopo, setupPara):
     # ------------------------------------------
     if (setupPara['PWM']['td'] + setupExp['eps']) < (1/setupExp['fsim']):
         setupPara['PWM']['td'] = 0
-        print("WARN: Deadtime (td) smaller than simulation time (tsim)")
+        print("WARN: Dead-time (td) smaller than simulation time (tsim)")
     elif setupPara['PWM']['td'] > (1/setupExp['fs']):
         setupPara['PWM']['td'] = 0
-        print("ERROR: Deadtime (td) larger than switching time (ts)")
+        print("ERROR: Dead-time (td) larger than switching time (ts)")
     
     # ------------------------------------------
     # Pulse number
     # ------------------------------------------
-    if (setupPara['PWM']['fs']/setupTopo['fel']).is_integer() == False:
+    if not (setupPara['PWM']['fs'] / setupTopo['fel']).is_integer():
         print("WARN: Pulse-number (q) is not integer, modulation is asynchronous")
     
     # ==============================================================================

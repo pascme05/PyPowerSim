@@ -22,13 +22,15 @@ from src.plot.plotTrans_B2 import plotTrans_B2
 from src.plot.plotSweep_B4 import plotSweep_B4
 from src.plot.plotStat_B4 import plotStat_B4
 from src.plot.plotTrans_B4 import plotTrans_B4
-from src.plot.plotSweep_B6 import plotSweep_B6 
+from src.plot.plotSweep_B6 import plotSweep_B6
 from src.plot.plotStat_B6 import plotStat_B6
 from src.plot.plotTrans_B6 import plotTrans_B6
+
 
 # ==============================================================================
 # External
 # ==============================================================================
+
 
 #######################################################################################################################
 # Function
@@ -62,7 +64,7 @@ def plot(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
         # ------------------------------------------
         if setupExp['type'] == 2:
             plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp)
-        
+
     ###################################################################################################################
     # B4
     ###################################################################################################################
@@ -106,7 +108,7 @@ def plot(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
         # ------------------------------------------
         if setupExp['type'] == 2:
             plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp)
-        
+
     ###################################################################################################################
     # MSG Out
     ###################################################################################################################

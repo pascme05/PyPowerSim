@@ -21,14 +21,12 @@
 # External
 # ==============================================================================
 import os
-import sys
-import csv
-import time
 import pandas as pd
 import numpy as np
 from datetime import datetime
 from pathlib import Path
 import json
+
 
 #######################################################################################################################
 # Function
@@ -53,6 +51,9 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
         id = ['S1', 'S2', 'S3', 'S4']
     elif setupTopo['sourceType'] == 'B6':
         id = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+    else:
+        print("WARN: Invalid topology assuming B6")
+        id = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
 
     # ==============================================================================
     # General
@@ -66,7 +67,7 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
     # ==============================================================================
     fel = setupTopo['fel']
     fsim = setupExp['fsim']
-    f = fsim * np.linspace(0, 0.5, int(len(time['Sw']['t'])/2)) / fel
+    f = fsim * np.linspace(0, 0.5, int(len(time['Sw']['t']) / 2)) / fel
 
     ###################################################################################################################
     # Directory
@@ -74,7 +75,7 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
     path = setupPath['resPath'] + '\\' + dir_name
     Path(path).mkdir(parents=True, exist_ok=True)
     print("INFO: Generating directory")
-    
+
     ####################################################################################################################
     # Save Setup
     ####################################################################################################################
@@ -97,7 +98,7 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
         # ------------------------------------------
         # Phases
         # ------------------------------------------
-        nameTime  = 'time_' + dir_name + '_' + dt_string + '_AcDc.xlsx'
+        nameTime = 'time_' + dir_name + '_' + dt_string + '_AcDc.xlsx'
         with pd.ExcelWriter(nameTime) as writer:
             time['Sw']['t'].to_excel(writer, sheet_name='time')
             time['Sw'].to_excel(writer, sheet_name='Sw')
@@ -108,8 +109,8 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
         # Switches
         # ------------------------------------------
         for i in range(0, len(id)):
-            nameTime  = 'time_' + dir_name + '_' + dt_string + '_' + id[i] + '.xlsx'
-            with pd.ExcelWriter(nameTime) as writer: 
+            nameTime = 'time_' + dir_name + '_' + dt_string + '_' + id[i] + '.xlsx'
+            with pd.ExcelWriter(nameTime) as writer:
                 time['Sw']['t'].to_excel(writer, sheet_name='time')
                 time['Elec']['sw'][id[i]].to_excel(writer, sheet_name='elec')
                 time['Loss']['sw'][id[i]].to_excel(writer, sheet_name='loss')
@@ -118,9 +119,9 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
         # ------------------------------------------
         # Capacitor
         # ------------------------------------------
-        nameTime  = 'time_' + dir_name + '_' + dt_string + '_C1.xlsx'
+        nameTime = 'time_' + dir_name + '_' + dt_string + '_C1.xlsx'
         with pd.ExcelWriter(nameTime) as writer:
-            time['Sw']['t'].to_excel(writer, sheet_name='time')  
+            time['Sw']['t'].to_excel(writer, sheet_name='time')
             time['Elec']['cap']['C1'].to_excel(writer, sheet_name='elec')
             time['Loss']['cap']['C1'].to_excel(writer, sheet_name='loss')
             pd.DataFrame.from_dict(time['Ther']['cap']['C1']).to_excel(writer, sheet_name='ther')
@@ -131,7 +132,7 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
         print("INFO: Time domain data saved")
 
     except:
-        print("WARN: Couldnt save time domain data")
+        print("WARN: Couldn't save time domain data")
 
     # ==============================================================================
     # Freq Data
@@ -140,9 +141,9 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
         # ------------------------------------------
         # Output
         # ------------------------------------------
-        nameFreq  = 'freq_' + dir_name + '_' + dt_string + '.xlsx'
+        nameFreq = 'freq_' + dir_name + '_' + dt_string + '.xlsx'
         with pd.ExcelWriter(nameFreq) as writer:
-            pd.DataFrame.from_dict(f).to_excel(writer, sheet_name='freq')  
+            pd.DataFrame.from_dict(f).to_excel(writer, sheet_name='freq')
             pd.DataFrame.from_dict(freq['Sw']).to_excel(writer, sheet_name='Sw')
             pd.DataFrame.from_dict(freq['Ac']).to_excel(writer, sheet_name='Ac')
             pd.DataFrame.from_dict(freq['Dc']).to_excel(writer, sheet_name='Dc')
@@ -152,7 +153,7 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
         # ------------------------------------------
         print("INFO: Frequency domain data saved")
     except:
-        print("WARN: Couldnt save frequency domain data")
+        print("WARN: Couldn't save frequency domain data")
 
     # ==============================================================================
     # Sweep Data
@@ -161,8 +162,8 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
         # ------------------------------------------
         # Output
         # ------------------------------------------
-        nameSweep  = 'sweep_' + dir_name + '_' + dt_string + '.xlsx'
-        with pd.ExcelWriter(nameSweep) as writer:  
+        nameSweep = 'sweep_' + dir_name + '_' + dt_string + '.xlsx'
+        with pd.ExcelWriter(nameSweep) as writer:
             pd.DataFrame.from_dict(sweep['Mi']).to_excel(writer, sheet_name='Mi')
             pd.DataFrame.from_dict(sweep['Ac']).to_excel(writer, sheet_name='Ac')
             pd.DataFrame.from_dict(sweep['Dc']).to_excel(writer, sheet_name='Dc')
@@ -172,7 +173,7 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
         # ------------------------------------------
         print("INFO: Sweeping domain data saved")
     except:
-        print("WARN: Couldnt save sweeping domain data")
+        print("WARN: Couldn't save sweeping domain data")
 
     ###################################################################################################################
     # MSG Out
