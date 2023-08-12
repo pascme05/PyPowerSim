@@ -37,7 +37,7 @@ def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     # ==============================================================================
     id = ['A', 'B', 'C']
     fel = setupTopo['fel']
-    K = int(np.round((t[-1] - t[0]) * fel))-1
+    K = int((ende-start-1)*fel*(t[1] - t[0]))
 
     # ==============================================================================
     # Variables

@@ -373,9 +373,9 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Modulation
     plt.subplot(236)
     plt.plot(M_i, distDc['num']['V_dc_thd'])
-    if setupExp['plot'] == 2:
-        plt.plot(M_i, distDc['ana']['V_dc_thd'], 'tab:blue', linestyle="", marker="o")
-        plt.legend(['Numerical', 'Analytical'])
+    #if setupExp['plot'] == 2:
+    #    plt.plot(M_i, distDc['ana']['V_dc_thd'], 'tab:blue', linestyle="", marker="o")
+    #    plt.legend(['Numerical', 'Analytical'])
     plt.title('Distortion Voltage DC-Side')
     plt.ylabel("$V_{dc,rms}^{THD}$ (V)")
     plt.xlabel("$M_{i}$ in (p.u)")

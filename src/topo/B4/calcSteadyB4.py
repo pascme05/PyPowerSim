@@ -59,7 +59,7 @@ def calcSteadyB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
     fel = setupTopo['fel']
     fsim = setupExp['fsim']
     N = int(fsim/fel)
-    K = setupData['stat']['cyc']*2
+    K = setupData['stat']['cyc']
     W = setupData['stat']['W'] 
     Mi = setupData['stat']['Mi']
 
@@ -100,8 +100,8 @@ def calcSteadyB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Start and End
     # ==============================================================================
-    start = int(N * (K/2))
-    ende = int(K*N + 1)
+    start = int(N) * 2
+    ende = int(K * N + 1)
     
     # ==============================================================================
     # Thermal ROM
