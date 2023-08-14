@@ -28,6 +28,7 @@ import matplotlib.pylab as pl
 import matplotlib.gridspec as gridspec
 from scipy.fft import fft
 
+
 #######################################################################################################################
 # Function
 #######################################################################################################################
@@ -71,6 +72,7 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     Vdc = setupData['stat']['Vdc']
     phiE = setupTopo['phiE']
     down = setupData['stat']['cyc'] - 2
+    Ta = setupData['trans']['Tc']
 
     # ==============================================================================
     # Variables
@@ -88,9 +90,9 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Limits
     # ------------------------------------------
-    K = int(np.round((t[-1]-t[0])*fel))
-    start = int((len(t) - 1) / K) * (K - 1)
-    ende = len(t)
+    K = int(np.round((t[-1] - t[0]) * fel))
+    start = 0
+    ende = int((len(t) - 1) / K) + 1
     
     # ------------------------------------------
     # Change time
@@ -133,11 +135,15 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Modulation
     # ------------------------------------------
-    pl.subplot(gs[0, :])
-    pl.plot(t, timeSw['v_ref']/(Vdc/2), t, timeSw['c'])
-    pl.title('Carrier and Reference Waveforms')
+    ax1 = pl.subplot(gs[0, :])
+    ax2 = ax1.twinx()
+    ax1.plot(t, timeSw['c'], 'k')
+    ax2.plot(t, timeSw['v_ref'] / (Vdc / 2), color='tab:blue')
+    pl.title('Carrier and Reference Waveform')
     pl.xlabel('t in (sec)')
-    pl.ylabel('c(t)/r(t) (p.u)')
+    ax1.set_ylabel('c(t)', color='black')
+    ax2.set_ylabel('v(t) (p.u)', color='black')
+    pl.legend(["$c$", "$v_{a}^{*}$"], loc='upper right')
     pl.grid('on')
     
     # ------------------------------------------
@@ -153,7 +159,7 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     
     # Freq-Domain
     pl.subplot(gs[2, 0])
-    pl.stem(f[::down], freqSw['S'][::down])
+    pl.stem(f[::down], freqSw['Sa'][::down])
     pl.xlim(0, 50)
     pl.title('Frequency-domain Switching Function')
     pl.xlabel("$f/f_{1}$ (Hz/Hz)")
@@ -175,7 +181,7 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     
     # Freq-Domain
     pl.subplot(gs[2, 1])
-    pl.stem(f[::down], freqSw['Xs'][::down])
+    pl.stem(f[::down], freqSw['Xas'][::down])
     pl.xlim(0, 50)
     pl.title('Frequency-domain Sampled Reference')
     pl.xlabel("$f/f_{1}$ (Hz/Hz)")
@@ -188,7 +194,7 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # Current/Voltage
     # ==============================================================================
     plt.figure()
-    txt = "Currents and Voltages B2 Bridge for PWM Controll with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
+    txt = "Currents and Voltages B2 Bridge for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
     plt.suptitle(txt, size=18)
     plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
     
@@ -232,7 +238,6 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     plt.xlabel('time in (sec)')
     plt.legend(["$v_{in}$", "$v_{dc}$", "$V_{dc,avg}$"], loc='upper right')
     plt.grid('on')
-    
 
     # ==============================================================================
     # Time-domain Transient
@@ -246,28 +251,28 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # Switches
     # ------------------------------------------
     # Bridge-Leg A
-    plt.subplot(231)
+    plt.subplot(411)
     plt.plot(tel, timeElec['sw']['S1']['v_T'], 'b', tel, timeElec['sw']['S2']['v_T'], 'r', tel, timeElec['sw']['S1']['v_D'], 'b--', tel, timeElec['sw']['S2']['v_D'], 'r--')
     plt.title('Voltages Transistors and Diodes')
     plt.ylabel('Voltage in (V)')
     plt.legend(['T1', 'T2', 'D1', 'D2'])
     plt.grid('on')
 
-    plt.subplot(232)
+    plt.subplot(412)
     plt.plot(tel, timeElec['sw']['S1']['i_T'], 'b', tel, timeElec['sw']['S2']['i_T'], 'r', tel, timeElec['sw']['S1']['i_D'], 'b--', tel, timeElec['sw']['S2']['i_D'], 'r--')
     plt.title('Currents Transistors and Diodes')
     plt.ylabel('Current in (A)')
     plt.legend(['T1', 'T2', 'D1', 'D2'])
     plt.grid('on')
 
-    plt.subplot(233)
+    plt.subplot(413)
     plt.plot(tel, timeLoss['sw']['S1']['p_T_c'], 'b', tel, timeLoss['sw']['S2']['p_T_c'], 'r', tel, timeLoss['sw']['S1']['p_D_c'], 'b--', tel, timeLoss['sw']['S2']['p_D_c'], 'r--')
     plt.title('Conduction Losses Transistors and Diodes')
     plt.ylabel('Power in (W)')
     plt.legend(['T1', 'T2', 'D1', 'D2'])
     plt.grid('on')
 
-    plt.subplot(234)
+    plt.subplot(414)
     plt.plot(tel, timeLoss['sw']['S1']['p_T_s'], 'b', tel, timeLoss['sw']['S2']['p_T_s'], 'r', tel, timeLoss['sw']['S1']['p_D_s'], 'b--', tel, timeLoss['sw']['S2']['p_D_s'], 'r--')
     plt.title('Switching Losses Transistors and Diodes')
     plt.ylabel('Power in (W)')
@@ -275,21 +280,28 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     plt.grid('on')
 
     # Capacitor
-    plt.subplot(235)
-    plt.plot(tel, timeElec['cap']['C1']['v_c'] )
+    plt.figure()
+    txt = "Time domain capacitor B2 bridge for PWM control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+        Mi) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(
+        int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
+    plt.suptitle(txt, size=18)
+    plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
+
+    plt.subplot(311)
+    plt.plot(tel, timeElec['cap']['C1']['v_c'])
     plt.title('Voltage Capacitor')
     plt.ylabel('Voltage in (V)')
     plt.xlabel('time in (sec)')
     plt.grid('on')
 
-    plt.subplot(236)
+    plt.subplot(312)
     plt.plot(tel, timeElec['cap']['C1']['i_c'])
     plt.title('Current Capacitor')
     plt.ylabel('Current in (A)')
     plt.xlabel('time in (sec)')
     plt.grid('on')
 
-    plt.subplot(237)
+    plt.subplot(313)
     plt.plot(tel, timeLoss['cap']['C1']['p_L'])
     plt.title('Losses Capacitor')
     plt.ylabel('Power in (W)')
@@ -309,10 +321,17 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     plt.grid('on')
 
     plt.subplot(222)
-    plt.plot(tel, timeTher['sw']['T1'], 'r', tel, timeTher['sw']['D1'], 'r--', tel, timeTher['sw']['T2'], 'b', tel, timeTher['sw']['D2'], 'b--')
-    plt.title('Thermal Switches')
+    plt.plot(tel, timeTher['sw']['T1'], color='b', linestyle='--')
+    plt.plot(tel, timeTher['sw']['D1'], color='b', linestyle=':')
+    plt.plot(tel, timeTher['sw']['C1'], color='b', linestyle='-')
+    plt.plot(tel, timeTher['sw']['T2'], color='r', linestyle='--')
+    plt.plot(tel, timeTher['sw']['D2'], color='r', linestyle=':')
+    plt.plot(tel, timeTher['sw']['C2'], color='r', linestyle='-')
+    plt.plot(tel, Ta * np.ones(np.size(tel)), color='k', linestyle='-')
+    plt.title('Thermal Switches (A)')
     plt.ylabel('Temperature in (°C)')
-    plt.legend(['T1_j', 'T1_d', 'T2_j', 'T2_d'])
+    plt.xticks([], [])
+    plt.legend(['T1_j', 'T1_d', 'T1_c', 'T2_j', 'T2_d', 'T2_c', 'Ta'])
     plt.grid('on')
 
     # Capacitor

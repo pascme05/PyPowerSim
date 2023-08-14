@@ -329,6 +329,12 @@ def plotTrans_B4(time, freq, setupPara, setupData, setupTopo, setupExp):
 
     # Capacitor
     plt.figure()
+    txt = "Time domain capacitor B4 bridge for PWM control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+        Mi) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(
+        int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
+    plt.suptitle(txt, size=18)
+    plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
+
     plt.subplot(311)
     plt.plot(tel, timeElec['cap']['C1']['v_c'])
     plt.title('Voltage Capacitor')

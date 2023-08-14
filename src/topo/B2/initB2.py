@@ -23,6 +23,7 @@
 import numpy as np
 import pandas as pd
 
+
 #######################################################################################################################
 # Function
 #######################################################################################################################
@@ -33,10 +34,7 @@ def initB2_Data():
     # ==============================================================================
     # General
     # ==============================================================================
-    data = {}
-    data['elec'] = {}
-    data['loss'] = {}
-    data['ther'] = {}
+    data = {'elec': {}, 'loss': {}, 'ther': {}}
 
     # ==============================================================================
     # Switches
@@ -45,20 +43,20 @@ def initB2_Data():
     # Electric
     # ------------------------------------------
     data['elec']['sw'] = {}
-    data['elec']['sw']['S1'] = pd.DataFrame(columns=['i_T','v_T','i_D','v_D'])
-    data['elec']['sw']['S2'] = pd.DataFrame(columns=['i_T','v_T','i_D','v_D'])
+    data['elec']['sw']['S1'] = pd.DataFrame(columns=['i_T', 'v_T', 'i_D', 'v_D'])
+    data['elec']['sw']['S2'] = pd.DataFrame(columns=['i_T', 'v_T', 'i_D', 'v_D'])
 
     # ------------------------------------------
     # Losses
     # ------------------------------------------
     data['loss']['sw'] = {}
-    data['loss']['sw']['S1'] = pd.DataFrame(columns=['p_T_c','p_T_s','p_T','p_D_c','p_D_s','p_D','p_L'])
-    data['loss']['sw']['S2'] = pd.DataFrame(columns=['p_T_c','p_T_s','p_T','p_D_c','p_D_s','p_D','p_L'])
+    data['loss']['sw']['S1'] = pd.DataFrame(columns=['p_T_c', 'p_T_s', 'p_T', 'p_D_c', 'p_D_s', 'p_D', 'p_L'])
+    data['loss']['sw']['S2'] = pd.DataFrame(columns=['p_T_c', 'p_T_s', 'p_T', 'p_D_c', 'p_D_s', 'p_D', 'p_L'])
 
     # ------------------------------------------
     # Thermal
     # ------------------------------------------
-    data['ther']['sw'] = pd.DataFrame(columns=['T1','T2','D1','D2'])
+    data['ther']['sw'] = pd.DataFrame(columns=['T1', 'T2', 'D1', 'D2', 'C1', 'C2'])
 
     # ==============================================================================
     # Capacitor
@@ -67,7 +65,7 @@ def initB2_Data():
     # Electric
     # ------------------------------------------
     data['elec']['cap'] = {}
-    data['elec']['cap']['C1'] = pd.DataFrame(columns=['i_c','v_c'])
+    data['elec']['cap']['C1'] = pd.DataFrame(columns=['i_c', 'v_c'])
 
     # ------------------------------------------
     # Losses
@@ -85,6 +83,7 @@ def initB2_Data():
     ###################################################################################################################
     return data
 
+
 #######################################################################################################################
 # Function
 #######################################################################################################################
@@ -97,28 +96,22 @@ def initB2(W):
     # ==============================================================================
     distAc = {}
     distDc = {}
-    timeElec = {}
-    timeElec['sw'] = {}
-    timeElec['cap'] = {}
-    timeLoss = {}
-    timeLoss['sw'] = {}
-    timeLoss['cap'] = {}
-    timeTher = {}
-    timeTher['sw'] = {}
-    timeTher['cap'] = {}
+    timeElec = {'sw': {}, 'cap': {}}
+    timeLoss = {'sw': {}, 'cap': {}}
+    timeTher = {'sw': {}, 'cap': {}}
 
     # ==============================================================================
     # Output
     # ==============================================================================
-    timeElec['cap']['C1'] = pd.DataFrame(columns=['i_c','v_c'])
-    timeSw = pd.DataFrame(columns=['t','v_ref','e','xs','xsh','s','c'])
-    freqSw = pd.DataFrame(columns=['S','Xs'])
-    freqAc = pd.DataFrame(columns=['I_a','V_a'])
-    freqDc = pd.DataFrame(columns=['I_dc','I_d_p','I_d_m','V_dc'])
-    distAc['num'] = pd.DataFrame(data=np.ones((W,6)), columns=['V_a0_eff','V_a0_v1_eff','V_a0_thd','I_a_eff','I_a_v1_eff','I_a_thd'])
-    distAc['ana'] = pd.DataFrame(data=np.ones((W,6)), columns=['V_a0_eff','V_a0_v1_eff','V_a0_thd','I_a_eff','I_a_v1_eff','I_a_thd'])
-    distDc['num'] = pd.DataFrame(data=np.ones((W,6)), columns=['V_dc_eff','V_dc_v1_eff','V_dc_thd','I_dc_eff','I_dc_v1_eff','I_dc_thd'])
-    distDc['ana'] = pd.DataFrame(data=np.ones((W,6)), columns=['V_dc_eff','V_dc_v1_eff','V_dc_thd','I_dc_eff','I_dc_v1_eff','I_dc_thd'])
+    timeElec['cap']['C1'] = pd.DataFrame(columns=['i_c', 'v_c'])
+    timeSw = pd.DataFrame(columns=['t', 'v_ref', 'e', 'xs', 'xsh', 's', 'c'])
+    freqSw = pd.DataFrame(columns=['S', 'Xs'])
+    freqAc = pd.DataFrame(columns=['I_a', 'V_a'])
+    freqDc = pd.DataFrame(columns=['I_dc', 'I_d_p', 'I_d_m', 'V_dc'])
+    distAc['num'] = pd.DataFrame(data=np.ones((W, 6)), columns=['V_a_eff', 'V_a_v1_eff', 'V_a_thd', 'I_a_eff', 'I_a_v1_eff', 'I_a_thd'])
+    distAc['ana'] = pd.DataFrame(data=np.ones((W, 6)), columns=['V_a_eff', 'V_a_v1_eff', 'V_a_thd', 'I_a_eff', 'I_a_v1_eff', 'I_a_thd'])
+    distDc['num'] = pd.DataFrame(data=np.ones((W, 6)), columns=['V_dc_eff', 'V_dc_v1_eff', 'V_dc_thd', 'I_dc_eff', 'I_dc_v1_eff', 'I_dc_thd'])
+    distDc['ana'] = pd.DataFrame(data=np.ones((W, 6)), columns=['V_dc_eff', 'V_dc_v1_eff', 'V_dc_thd', 'I_dc_eff', 'I_dc_v1_eff', 'I_dc_thd'])
 
     ###################################################################################################################
     # Outputs

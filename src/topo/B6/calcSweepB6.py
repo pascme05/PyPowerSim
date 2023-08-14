@@ -157,7 +157,7 @@ def calcSweepB6(mdl, _, setupTopo, setupData, setupPara, setupExp):
         elif setupPara['PWM']['type'] == "SV":
             [_, _, s, _, _, _] = calcSSeqB6_SV(v_ref, t, M_i[i], setupPara, setupTopo)
         else:
-            [_, _, s, _, _, _] = calcSSeqB6_CB(v_ref, t, Mi, setupPara, setupTopo)
+            [_, _, s, _, _, _] = calcSSeqB6_CB(v_ref, t, M_i[i], setupPara, setupTopo)
 
         # ------------------------------------------
         # Time

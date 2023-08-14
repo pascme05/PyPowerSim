@@ -56,7 +56,7 @@ setupExp['debug'] = 0                                                           
 # Operating Mode
 # ------------------------------------------
 setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled 
-setupExp['type'] = 0                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
+setupExp['type'] = 2                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
 setupExp['loop'] = 'CL'                                                                                                 # (CL): closed-loop, (OL): open-loop
 setupExp['freqPar'] = 'fel'                                                                                              # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
 setupExp['freqAvg'] = 'fs'                                                                                            # (none): no averaging is used (fs): values are averaged over switching cycle, (fel): values are averaged over fundamental cycle
@@ -118,7 +118,7 @@ setupTopo['CapName'] = "Elco"                                                   
 # ------------------------------------------
 # Source
 # ------------------------------------------
-setupTopo['sourceType'] = "B4"                                                                                          # (B2): half bridge, (B4): full bridge, (B6): two-level three phase converter
+setupTopo['sourceType'] = "B2"                                                                                          # (B2): half bridge, (B4): full bridge, (B6): two-level three phase converter
 
 # ------------------------------------------
 # Filter
