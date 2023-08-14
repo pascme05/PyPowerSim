@@ -79,6 +79,10 @@ The software framework is provided under the MIT license.
     - Adding MOSFET devices
     - Revising switching loss calculation
     - Adding output control
+3) v.0.2: (14.08.2023) Second major review and housekeeping
+    - Adding thermal coupling
+    - Bugfix switching sequence
+    - General housekeeping
 
 # References
 [1] Holmes, D. Grahame, and Thomas A. Lipo. Pulse width modulation for power converters: principles and practice. 
