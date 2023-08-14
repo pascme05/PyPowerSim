@@ -3,9 +3,9 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         loadParaCap
-# Date:         01.14.2023
+# Date:         14.08.2023
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.1
+# Version:      V.0.2
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
@@ -23,6 +23,7 @@
 import pandas as pd
 from os.path import join as pjoin
 
+
 #######################################################################################################################
 # Function
 #######################################################################################################################
@@ -38,10 +39,7 @@ def loadParaCap(name, path, setupPara):
     # ==============================================================================
     # Variables
     # ==============================================================================
-    para = {}
-    para['Elec'] = {}
-    para['Ther'] = {}
-    para['Life'] = {}
+    para = {'Elec': {}, 'Ther': {}, 'Life': {}}
     para['Elec']['con'] = {}
     para['Elec']['vec'] = {}
     para['Elec']['tab'] = {}
@@ -54,11 +52,13 @@ def loadParaCap(name, path, setupPara):
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    col = ['Value-1', 'Value-2', 'Value-3', 'Value-4', 'Value-5', 'Value-6', 'Value-7', 'Value-8', 'Value-9', 'Value-10']
-    tab = ['Description', 'Model', 'Symbol', 'Typical', 'Value-1', 'Value-2', 'Value-3', 'Value-4', 'Value-5', 'Value-6']
+    col = ['Value-1', 'Value-2', 'Value-3', 'Value-4', 'Value-5', 'Value-6', 'Value-7', 'Value-8', 'Value-9',
+           'Value-10']
+    tab = ['Description', 'Model', 'Symbol', 'Typical', 'Value-1', 'Value-2', 'Value-3', 'Value-4', 'Value-5',
+           'Value-6']
     lenElec = 10
     lenTher = 4
-    
+
     ###################################################################################################################
     # Loading Data
     ###################################################################################################################
@@ -73,7 +73,7 @@ def loadParaCap(name, path, setupPara):
     # Parameters
     # ==============================================================================
     dataElec = pd.read_excel(filename, sheet_name='electrical')
-    dataTher = pd.read_excel(filename, sheet_name='thermal') 
+    dataTher = pd.read_excel(filename, sheet_name='thermal')
 
     ###################################################################################################################
     # Pre-Processing
@@ -101,7 +101,7 @@ def loadParaCap(name, path, setupPara):
     # ------------------------------------------
     # Constant values
     # ------------------------------------------
-    for i in range(0,len(varElecNamesCon)):
+    for i in range(0, len(varElecNamesCon)):
         para['Elec']['con'][varElecNamesCon[i]] = varElecValueCon[i]
         para['Elec']['vec'][varElecNamesCon[i]] = varElecValueTab.iloc[i]
 
@@ -116,7 +116,7 @@ def loadParaCap(name, path, setupPara):
     # ==============================================================================
     # Thermal
     # ==============================================================================
-    for i in range(0,len(varTherNamesCon)):
+    for i in range(0, len(varTherNamesCon)):
         para['Ther']['con'][varTherNamesCon[i]] = varTherValueCon[i]
         para['Ther']['vec'][varTherNamesCon[i]] = varTherValueTab.iloc[i]
 
@@ -130,24 +130,24 @@ def loadParaCap(name, path, setupPara):
     # Vectors
     # ------------------------------------------
     # Electrical
-    for i in range(0,len(varElecNamesCon)):
-        para['Elec']['vec'][varElecNamesCon[i]] = para['Elec']['vec'][varElecNamesCon[i]].dropna(axis= 0, how='all')
+    for i in range(0, len(varElecNamesCon)):
+        para['Elec']['vec'][varElecNamesCon[i]] = para['Elec']['vec'][varElecNamesCon[i]].dropna(axis=0, how='all')
 
     # Thermal
-    for i in range(0,len(varTherNamesCon)):
-        para['Ther']['vec'][varTherNamesCon[i]] = para['Ther']['vec'][varTherNamesCon[i]].dropna(axis= 0, how='all')
+    for i in range(0, len(varTherNamesCon)):
+        para['Ther']['vec'][varTherNamesCon[i]] = para['Ther']['vec'][varTherNamesCon[i]].dropna(axis=0, how='all')
 
     # ------------------------------------------
     # Matrix
     # ------------------------------------------
-    para['Elec']['tab']['C'] = para['Elec']['tab']['C'].dropna(axis= 0, how='all')
-    para['Elec']['tab']['C'] = para['Elec']['tab']['C'].dropna(axis= 1, how='all')
-    para['Elec']['tab']['tan'] = para['Elec']['tab']['tan'].dropna(axis= 0, how='all')
-    para['Elec']['tab']['tan'] = para['Elec']['tab']['tan'].dropna(axis= 1, how='all')
-    para['Elec']['tab']['Kr'] = para['Elec']['tab']['Kr'].dropna(axis= 0, how='all')
-    para['Elec']['tab']['Kr'] = para['Elec']['tab']['Kr'].dropna(axis= 1, how='all')
-    para['Elec']['tab']['ESR'] = para['Elec']['tab']['ESR'].dropna(axis= 0, how='all')
-    para['Elec']['tab']['ESR'] = para['Elec']['tab']['ESR'].dropna(axis= 1, how='all')
+    para['Elec']['tab']['C'] = para['Elec']['tab']['C'].dropna(axis=0, how='all')
+    para['Elec']['tab']['C'] = para['Elec']['tab']['C'].dropna(axis=1, how='all')
+    para['Elec']['tab']['tan'] = para['Elec']['tab']['tan'].dropna(axis=0, how='all')
+    para['Elec']['tab']['tan'] = para['Elec']['tab']['tan'].dropna(axis=1, how='all')
+    para['Elec']['tab']['Kr'] = para['Elec']['tab']['Kr'].dropna(axis=0, how='all')
+    para['Elec']['tab']['Kr'] = para['Elec']['tab']['Kr'].dropna(axis=1, how='all')
+    para['Elec']['tab']['ESR'] = para['Elec']['tab']['ESR'].dropna(axis=0, how='all')
+    para['Elec']['tab']['ESR'] = para['Elec']['tab']['ESR'].dropna(axis=1, how='all')
 
     # ==============================================================================
     # Losses

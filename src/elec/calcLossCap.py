@@ -3,9 +3,9 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcLossCap
-# Date:         01.14.2023
+# Date:         14.08.2023
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.1
+# Version:      V.0.2
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
@@ -22,8 +22,8 @@
 # ==============================================================================
 import pandas as pd
 import numpy as np
-from scipy.fft import fft
 from scipy import interpolate
+
 
 #######################################################################################################################
 # Function
@@ -36,7 +36,7 @@ def calcLossCap(t, i_c, Tj, para, setupPara, setupTopo):
     # Variables
     # ==============================================================================
     dt = t[1] - t[0]
-    f = np.linspace(0, int(1/dt), int(len(i_c)/2))
+    f = np.linspace(0, int(1 / dt), int(len(i_c) / 2))
     fel = setupTopo['fel']
 
     # ==============================================================================
@@ -48,14 +48,14 @@ def calcLossCap(t, i_c, Tj, para, setupPara, setupTopo):
     # Pre-Processing
     ###################################################################################################################
     # ==============================================================================
-    # Get Fundamentel Frequency
+    # Get Fundamental Frequency
     # ==============================================================================
-    idx = np.argmin(f-2*fel)
+    idx = np.argmin(f - 2 * fel)
 
     # ==============================================================================
     # RMS Capacitor Current
     # ==============================================================================
-    I_c_rms_sq = np.sum(i_c**2)/len(i_c)
+    I_c_rms_sq = np.sum(i_c ** 2) / len(i_c)
 
     # ==============================================================================
     # Extract Parameters
@@ -63,31 +63,35 @@ def calcLossCap(t, i_c, Tj, para, setupPara, setupTopo):
     # ------------------------------------------
     # Constant
     # ------------------------------------------
-    if setupPara['Elec']['CapMdl'] == "con" or setupPara['Elec']['SwiMdl'] == "pwl": 
+    if setupPara['Elec']['CapMdl'] == "con" or setupPara['Elec']['SwiMdl'] == "pwl":
         ESR = para['Cap']['Elec']['con']['ESR']
-        C = para['Cap']['Elec']['con']['C']
-        
+
     # ------------------------------------------
     # Tabular
     # ------------------------------------------
-    if setupPara['Elec']['CapMdl'] == "tab":
+    elif setupPara['Elec']['CapMdl'] == "tab":
         # Matrix 
-        ESR_2d = interpolate.interp2d(para['Cap']['Elec']['vec']['Tj'].to_numpy(), para['Cap']['Elec']['vec']['f'].to_numpy(), para['Cap']['Elec']['tab']['ESR'].to_numpy(), kind='linear')
-        C_2d = interpolate.interp2d(para['Cap']['Elec']['vec']['Tj'].to_numpy(), para['Cap']['Elec']['vec']['f'].to_numpy(), para['Cap']['Elec']['tab']['C'].to_numpy(), kind='linear')
+        ESR_2d = interpolate.interp2d(para['Cap']['Elec']['vec']['Tj'].to_numpy(),
+                                      para['Cap']['Elec']['vec']['f'].to_numpy(),
+                                      para['Cap']['Elec']['tab']['ESR'].to_numpy(), kind='linear')
 
         # Fundamental Value
         ESR = ESR_2d(Tj, f[idx])
-        C = C_2d(Tj, f[idx])
 
         # Static
         ESR = ESR[0]
-        C = C[0]
+
+    # ------------------------------------------
+    # Default
+    # ------------------------------------------
+    else:
+        ESR = para['Cap']['Elec']['con']['ESR']
 
     ###################################################################################################################
     # Calculation
     ###################################################################################################################
     loss = ESR * I_c_rms_sq
-    out['p_L'] = i_c**2 * (loss/(np.mean(i_c**2)))
+    out['p_L'] = i_c ** 2 * (loss / (np.mean(i_c ** 2)))
 
     ###################################################################################################################
     # Post-Processing

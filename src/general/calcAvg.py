@@ -3,9 +3,9 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcAvg
-# Date:         01.14.2023
+# Date:         14.08.2023
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.1
+# Version:      V.0.2
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
@@ -25,6 +25,7 @@ from src.topo.B2.initB2 import initB2_Data
 from src.topo.B4.initB4 import initB4_Data
 from src.topo.B6.initB6 import initB6_Data
 
+
 #######################################################################################################################
 # Function
 #######################################################################################################################
@@ -37,6 +38,8 @@ def calcAvg(data, setupExp, setupTopo, Nsim, Npwm):
     elif setupTopo['sourceType'] == 'B4':
         out = initB4_Data()
     elif setupTopo['sourceType'] == 'B6':
+        out = initB6_Data()
+    else:
         out = initB6_Data()
 
     ###################################################################################################################

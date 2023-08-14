@@ -59,7 +59,6 @@ def calcTransB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # Init
     # ==============================================================================
     id2 = ['S1', 'S2']
-    id3 = ['A', 'A']
     id5 = ['HS', 'LS']
     id6 = ['T1', 'T2']
     id7 = ['D1', 'D2']

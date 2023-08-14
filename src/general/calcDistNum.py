@@ -3,9 +3,9 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcDistNum
-# Date:         01.14.2023
+# Date:         14.08.2023
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.1
+# Version:      V.0.2
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################

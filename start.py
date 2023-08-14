@@ -3,9 +3,9 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         start
-# Date:         01.04.2023
+# Date:         14.08.2023
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.1
+# Version:      V.0.2
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
@@ -56,7 +56,7 @@ setupExp['debug'] = 0                                                           
 # Operating Mode
 # ------------------------------------------
 setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled 
-setupExp['type'] = 2                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
+setupExp['type'] = 0                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
 setupExp['loop'] = 'CL'                                                                                                 # (CL): closed-loop, (OL): open-loop
 setupExp['freqPar'] = 'fel'                                                                                              # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
 setupExp['freqAvg'] = 'fs'                                                                                            # (none): no averaging is used (fs): values are averaged over switching cycle, (fel): values are averaged over fundamental cycle

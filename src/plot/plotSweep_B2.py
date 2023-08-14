@@ -3,9 +3,9 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         plotSweep_B2
-# Date:         01.14.2023
+# Date:         14.08.2023
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.1
+# Version:      V.0.2
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
@@ -280,7 +280,8 @@ def plotSweep_B2(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     plt.plot(M_i, distDc['num']['I_dc_thd'])
     # if setupExp['plot'] == 2:
     #    plt.plot(M_i, distDc['ana']['I_dc_thd'], 'tab:blue', linestyle="", marker="o")
-    #    plt.legend(['Numerical', 'Analytical'])plt.ylim(0, )
+    #    plt.legend(['Numerical', 'Analytical'])
+    plt.ylim(0, )
     plt.title('Distortion Current DC-Side')
     plt.ylabel("$I_{dc,rms}^{THD}$ (A)")
     plt.xlabel("$M_{i}$ in (p.u)")

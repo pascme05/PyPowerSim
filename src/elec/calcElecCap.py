@@ -3,9 +3,9 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcElecCap
-# Date:         01.14.2023
+# Date:         14.08.2023
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.1
+# Version:      V.0.2
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
@@ -21,10 +21,9 @@
 # External
 # ==============================================================================
 import numpy as np
-import pandas as pd
 from scipy import interpolate
-from scipy.fft import fft
 from scipy import signal
+
 
 #######################################################################################################################
 # Function
@@ -51,10 +50,10 @@ def calcElecCap(t, i_c, Tj, para, setupPara, setupTopo):
     # ==============================================================================
     # Double i_c
     # ==============================================================================
-    i_c = np.concatenate((i_c[0:-1], i_c),axis=0)
+    i_c = np.concatenate((i_c[0:-1], i_c), axis=0)
 
     # ==============================================================================
-    # Get Fundamentel Frequency
+    # Get Fundamental Frequency
     # ==============================================================================
     idx = np.argmin(f-2*fel)
 
@@ -71,7 +70,7 @@ def calcElecCap(t, i_c, Tj, para, setupPara, setupTopo):
     # ------------------------------------------
     # Tabular
     # ------------------------------------------
-    if setupPara['Elec']['CapMdl'] == "tab":
+    elif setupPara['Elec']['CapMdl'] == "tab":
         # Matrix 
         ESR_2d = interpolate.interp2d(para['Cap']['Elec']['vec']['Tj'].to_numpy(), para['Cap']['Elec']['vec']['f'].to_numpy(), para['Cap']['Elec']['tab']['ESR'].to_numpy(), kind='linear')
         C_2d = interpolate.interp2d(para['Cap']['Elec']['vec']['Tj'].to_numpy(), para['Cap']['Elec']['vec']['f'].to_numpy(), para['Cap']['Elec']['tab']['C'].to_numpy(), kind='linear')
@@ -83,6 +82,13 @@ def calcElecCap(t, i_c, Tj, para, setupPara, setupTopo):
         # Static
         ESR = ESR[0]
         C = C[0]
+
+    # ------------------------------------------
+    # Default
+    # ------------------------------------------
+    else:
+        ESR = para['Cap']['Elec']['con']['ESR']
+        C = para['Cap']['Elec']['con']['C']
 
     ###################################################################################################################
     # Calculation
