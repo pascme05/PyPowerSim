@@ -58,13 +58,13 @@ setupExp['debug'] = 0                                                           
 setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled 
 setupExp['type'] = 0                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
 setupExp['loop'] = 'CL'                                                                                                 # (CL): closed-loop, (OL): open-loop
-setupExp['freqPar'] = 'fel'                                                                                              # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
-setupExp['freqAvg'] = 'fs'                                                                                            # (none): no averaging is used (fs): values are averaged over switching cycle, (fel): values are averaged over fundamental cycle
+setupExp['freqPar'] = 'fs'                                                                                              # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
+setupExp['freqAvg'] = 'none'                                                                                            # (none): no averaging is used (fs): values are averaged over switching cycle, (fel): values are averaged over fundamental cycle
 
 # ------------------------------------------
 # Numerical
 # ------------------------------------------
-setupExp['fsim'] = 1e6                                                                                                  # simulation frequency (Hz)
+setupExp['fsim'] = 5e5                                                                                                  # simulation frequency (Hz)
 setupExp['tol'] = 1e-6                                                                                                  # tolerance in percent with respect to the previous converged result
 setupExp['eps'] = 1e-12                                                                                                 # small numerical tolerance
 setupExp['int'] = 20                                                                                                    # number of steps for integration
@@ -82,13 +82,13 @@ setupExp['save'] = 0                                                            
 # General
 # ------------------------------------------
 # Transient
-setupData['trans']['tmax'] = 2/50                                                                                       # maximum time for transient analysis (sec)
+setupData['trans']['tmax'] = 10/50                                                                                       # maximum time for transient analysis (sec)
 setupData['trans']['Tc'] = 50.0                                                                                         # reference temperature of all components (°C)
 setupData['trans']['Tj'] = 50.0                                                                                         # core temperature at t=0 of all components (°C)
 
 # Stationary
-setupData['stat']['cyc'] = 5                                                                                            # number of fundamental cycles used for stationary analysis (at least 3)
-setupData['stat']['W'] = 10                                                                                             # number of datapoints for sweep analysis
+setupData['stat']['cyc'] = 4                                                                                            # number of fundamental cycles used for stationary analysis (at least 3)
+setupData['stat']['W'] = 20                                                                                             # number of datapoints for sweep analysis
 setupData['stat']['Tj'] = 50.0                                                                                          # core temperature of all components (°C)
 setupData['stat']['Tc'] = 50.0                                                                                          # reference temperature of all components (°C)
 
@@ -102,7 +102,7 @@ setupData['stat']['Vo'] = 50                                                    
 setupData['stat']['Io'] = 25                                                                                            # output RMS phase current (Io) in (A) for current control
 
 # Input and Output
-setupData['stat']['Mi'] = 0.50                                                                                          # modulation index (Mi) for distortion analysis                                                                                                # power factor cos_phi
+setupData['stat']['Mi'] = 1.00                                                                                          # modulation index (Mi) for distortion analysis                                                                                                # power factor cos_phi
 setupData['stat']['Vdc'] = 400                                                                                          # DC-Link voltage (V)
 setupData['stat']['phi'] = 0.0                                                                                          # load angle output voltage (deg)
 
@@ -118,7 +118,7 @@ setupTopo['CapName'] = "Elco"                                                   
 # ------------------------------------------
 # Source
 # ------------------------------------------
-setupTopo['sourceType'] = "B2"                                                                                          # (B2): half bridge, (B4): full bridge, (B6): two-level three phase converter
+setupTopo['sourceType'] = "B6"                                                                                          # (B2): half bridge, (B4): full bridge, (B6): two-level three phase converter
 
 # ------------------------------------------
 # Filter
@@ -139,7 +139,7 @@ setupTopo['Cout'] = 1e-3                                                        
 # Load
 # ------------------------------------------
 # Parameters
-setupTopo['R'] = 1.0                                                                                                    # resistance in (Ohm)
+setupTopo['R'] = 5.0                                                                                                    # resistance in (Ohm)
 setupTopo['L'] = 5e-3                                                                                                   # inductance in (H)
 setupTopo['E'] = 0                                                                                                      # induced voltage in (V)
 setupTopo['phiE'] = 0                                                                                                   # load angle induced voltage (deg)
@@ -172,7 +172,7 @@ setupPara['PWM']['sw'] = 0                                                      
 # ------------------------------------------
 # Switching Sequence
 # ------------------------------------------
-setupPara['PWM']['fs'] = 2100                                                                                           # PWM switching frequency (Hz)
+setupPara['PWM']['fs'] = 1050                                                                                           # PWM switching frequency (Hz)
 setupPara['PWM']['seq'] = "0127"                                                                                        # PWM switching sequence B6 bridge
 setupPara['PWM']['zero'] = "SVPWM"                                                                                      # PWM method B6 bridge (SPWM, SVPWM, THIPWM4, THIPWM6, DPWM0, DPWM1, DPWM2, DPWM3, DPWMMAX, DPWMMIN)
 
@@ -201,7 +201,7 @@ setupPara['Elec']['CapSeries'] = 1                                              
 # Thermal Parameters
 # ==============================================================================
 setupPara['Ther']['Heatsink'] = 1                                                                                       # 1) using thermal capacities and resistances of heatsink RC model
-setupPara['Ther']['Coupling'] = 1                                                                                       # 0) no thermal coupling between diode and transistor, 1) thermal coupling between diode and transistor
+setupPara['Ther']['Coupling'] = 0                                                                                       # 0) no thermal coupling between diode and transistor, 1) thermal coupling between diode and transistor
 
 #######################################################################################################################
 # Calculations
