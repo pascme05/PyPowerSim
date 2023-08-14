@@ -17,23 +17,26 @@
 # Internal
 # ==============================================================================
 from src.topo.B4.calcSSeqB4 import calcSSeqB4_CB, calcSSeqB4_FF
-from src.topo.B4.calcDistB4 import calcDistB4_Num, calcDistB4_Ana 
+from src.topo.B4.calcDistB4 import calcDistB4_Ana
+from src.general.calcDistNum import calcDistNum
 from src.topo.B4.calcTimeB4 import calcTimeB4
-from src.topo.B4.calcFreqB4 import calcFreqB4
+from src.general.calcFreq import calcFreq
 from src.topo.B4.initB4 import initB4
 from src.general.genWaveform import genWave
+from src.topo.B4.outB4 import outB4_Sweep
 
 # ==============================================================================
 # External
 # ==============================================================================
 import numpy as np
 import math
-from tqdm.auto import trange
+from tqdm import tqdm
+
 
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcSweepB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
+def calcSweepB4(mdl, _, setupTopo, setupData, setupPara, setupExp):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -52,9 +55,9 @@ def calcSweepB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     fel = setupTopo['fel']
     fsim = setupExp['fsim']
-    N = int(fsim/fel)
+    N = int(fsim / fel)
     K = setupData['stat']['cyc']
-    W = setupData['stat']['W'] 
+    W = setupData['stat']['W']
     Mi = setupData['stat']['Mi']
 
     # ==============================================================================
@@ -63,7 +66,7 @@ def calcSweepB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ------------------------------------------
     # Init 
     # ------------------------------------------
-    [timeSw, _, _, _, freqSw, freqDc, freqAc, distAc, distDc] = initB4(W)
+    [_, _, _, _, _, _, _, distAc, distDc] = initB4(W)
 
     # ------------------------------------------
     # Inputs 
@@ -79,10 +82,17 @@ def calcSweepB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Generate Reference Waveform
     # ==============================================================================
-    t = np.linspace(0, K/fel, K*N+1)
-    v_ref['A'] = +(Vdc/2) * Mi * genWave(t, fel, phiV, 0, setupTopo)
-    v_ref['B'] = -(Vdc/2) * Mi * genWave(t, fel, phiV, 0, setupTopo)
-    e_ref = E * genWave(t, fel, phiE, 0, setupTopo) 
+    # ------------------------------------------
+    # Time
+    # ------------------------------------------
+    t = np.linspace(0, K / fel, K * N + 1)
+
+    # ------------------------------------------
+    # Reference
+    # ------------------------------------------
+    v_ref['A'] = +(Vdc / 2) * Mi * genWave(t, fel, phiV, 0, setupTopo)
+    v_ref['B'] = -(Vdc / 2) * Mi * genWave(t, fel, phiV, 0, setupTopo)
+    e_ref = E * genWave(t, fel, phiE, 0, setupTopo)
 
     # ==============================================================================
     # Maximum Modulation Index
@@ -90,14 +100,14 @@ def calcSweepB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
     Mi_max = 1
     if Mi > Mi_max:
         Mi_max = Mi
-    M_i = np.linspace(1e-3, Mi_max-1e-3, W)
-    
+    M_i = np.linspace(1e-3, Mi_max - 1e-3, W)
+
     # ==============================================================================
     # Start and End
     # ==============================================================================
     start = int(N) * 2
     ende = int(K * N + 1)
-    
+
     ###################################################################################################################
     # Calculation
     ###################################################################################################################
@@ -111,6 +121,8 @@ def calcSweepB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
         [xs, xsh, s, c] = calcSSeqB4_FF(v_ref, t, Mi, setupPara, setupTopo)
     elif setupPara['PWM']['type'] == "CB":
         [xs, xsh, s, c] = calcSSeqB4_CB(v_ref, t, Mi, setupPara, setupTopo)
+    else:
+        [xs, xsh, s, c] = calcSSeqB4_CB(v_ref, t, Mi, setupPara, setupTopo)
 
     # ------------------------------------------
     # Time Domain
@@ -120,7 +132,7 @@ def calcSweepB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Sweeping
     # ==============================================================================
-    for i in trange(len(M_i), desc='Sweep'):
+    for i in tqdm(range(len(M_i)), desc='Sweep'):
         # ------------------------------------------
         # Switching
         # ------------------------------------------
@@ -128,18 +140,21 @@ def calcSweepB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
             [_, _, s, _] = calcSSeqB4_FF(v_ref, t, M_i[i], setupPara, setupTopo)
         elif setupPara['PWM']['type'] == "CB":
             [_, _, s, _] = calcSSeqB4_CB(v_ref, t, M_i[i], setupPara, setupTopo)
-        
+        else:
+            [_, _, s, _] = calcSSeqB4_CB(v_ref, t, M_i[i], setupPara, setupTopo)
+
         # ------------------------------------------
         # Time
         # ------------------------------------------
         [tempTimeAc, tempTimeDc] = calcTimeB4(t, s, e_ref, Vdc, M_i[i], mdl, setupTopo, start, ende)
-        
+
         # ------------------------------------------
         # Distortion
         # ------------------------------------------
-        [numDistAc, numDistDc] = calcDistB4_Num(t[start:ende], tempTimeAc['i_a'], tempTimeAc['v_ab'], tempTimeDc['i_dc'], tempTimeDc['v_dc'], Vdc, setupTopo)
+        [numDistAc, numDistDc] = calcDistNum(t[start:ende], tempTimeAc['i_a'], tempTimeAc['v_a'],
+                                             tempTimeDc['i_dc'], tempTimeDc['v_dc'], 2*Vdc, fel)
         [anaTimeAc, anaTimeDc] = calcDistB4_Ana(M_i[i], Vdc, setupTopo, setupPara)
-        
+
         # ------------------------------------------
         # Output
         # ------------------------------------------
@@ -149,48 +164,21 @@ def calcSweepB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
         for c1 in numDistDc:
             distDc['num'][c1][i] = numDistDc[c1]
             distDc['ana'][c1][i] = anaTimeDc[c1]
-           
-                
+
     ###################################################################################################################
     # Post-Processing
     ###################################################################################################################
     # ==============================================================================
     # Frequency domain
     # ==============================================================================
-    [freqSw, freqAc, freqDc] = calcFreqB4(s['A'][start:ende], xs['A'][start:ende], timeAc, timeDc)
-    
+    [freqSw, freqAc, freqDc] = calcFreq(s['A'][start:ende], xs['A'][start:ende], timeAc, timeDc)
+
     # ==============================================================================
     # Output
     # ==============================================================================
-    timeSw['t'] = t[0:(ende-start)]
-    timeSw['v_a_ref'] = v_ref['A'][start:ende]
-    timeSw['v_b_ref'] = v_ref['B'][start:ende]
-    timeSw['e'] = e_ref[start:ende]
-    timeSw['sA'] = s['A'][start:ende]
-    timeSw['sB'] = s['B'][start:ende]
-    timeSw['cA'] = c['A'][start:ende]
-    timeSw['cB'] = c['B'][start:ende]
-    timeSw['xAs'] = xs['A'][start:ende]
-    timeSw['xBs'] = xs['B'][start:ende]
-    timeSw['xAsh'] = xsh['A'][start:ende]
-    timeSw['xBsh'] = xsh['B'][start:ende]
-    
-    # ==============================================================================
-    # Combine
-    # ==============================================================================
-    time = {}
-    time['Sw'] = timeSw
-    time['Ac'] = timeAc
-    time['Dc'] = timeDc
-    freq = {}
-    freq['Sw'] = freqSw
-    freq['Ac'] = freqAc
-    freq['Dc'] = freqDc
-    sweep = {}
-    sweep['Ac'] = distAc
-    sweep['Dc'] = distDc
-    sweep['Mi'] = M_i
-    
+    [time, freq, sweep] = outB4_Sweep(distAc, distDc, timeAc, timeDc, freqSw, freqAc, freqDc, t, v_ref, e_ref, s, c, xs,
+                                      xsh, W, M_i, ende, start)
+
     ###################################################################################################################
     # MSG Out
     ###################################################################################################################

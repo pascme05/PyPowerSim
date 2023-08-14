@@ -23,6 +23,7 @@
 import numpy as np
 import scipy.signal as sig
 
+
 #######################################################################################################################
 # Function
 #######################################################################################################################
@@ -102,7 +103,7 @@ def calcTimeB4(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     timeAc['v_b0'] = v_a0[start:ende]
     timeAc['v_L'] = v_L[start:ende]
     timeAc['v_out'] = v_out[start:ende]
-    timeAc['v_ab'] = v_ab[start:ende]
+    timeAc['v_a'] = v_ab[start:ende]
     timeAc['i_a'] = i_a
     
     # ==============================================================================

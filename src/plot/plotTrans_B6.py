@@ -151,7 +151,7 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     # Switching Waveform
     # ------------------------------------------
     # Time-Domain
-    ax = pl.subplot(gs[1, 0])
+    pl.subplot(gs[1, 0])
     pl.plot(t, timeSw['sA'])
     pl.plot(t, timeSw['sB'])
     pl.plot(t, timeSw['sC'])
@@ -162,7 +162,7 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     pl.grid('on')
 
     # Freq-Domain
-    ax = pl.subplot(gs[2, 0])
+    pl.subplot(gs[2, 0])
     pl.stem(f[::down], freqSw['Sa'][::down])
     pl.xlim(0, 50)
     pl.title('Frequency-domain Switching Function')
@@ -176,7 +176,7 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     # Reference Waveform
     # ------------------------------------------
     # Time-Domain
-    ax = pl.subplot(gs[1, 1])
+    pl.subplot(gs[1, 1])
     pl.plot(t, timeSw['xAs'])
     pl.plot(t, timeSw['xBs'])
     pl.plot(t, timeSw['xCs'])
@@ -187,7 +187,7 @@ def plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     pl.grid('on')
 
     # Freq-Domain
-    ax = pl.subplot(gs[2, 1])
+    pl.subplot(gs[2, 1])
     pl.stem(f[::down], freqSw['Xas'][::down])
     pl.xlim(0, 50)
     pl.title('Frequency-domain Sampled Reference')
