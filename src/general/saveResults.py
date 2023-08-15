@@ -68,6 +68,7 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
     fel = setupTopo['fel']
     fsim = setupExp['fsim']
     f = fsim * np.linspace(0, 0.5, int(len(time['Sw']['t']) / 2)) / fel
+    setupData['stat']['Io'] = abs(setupData['stat']['Io'])
 
     ###################################################################################################################
     # Directory
@@ -98,33 +99,45 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
         # ------------------------------------------
         # Phases
         # ------------------------------------------
-        nameTime = 'time_' + dir_name + '_' + dt_string + '_AcDc.xlsx'
-        with pd.ExcelWriter(nameTime) as writer:
-            time['Sw']['t'].to_excel(writer, sheet_name='time')
-            time['Sw'].to_excel(writer, sheet_name='Sw')
-            pd.DataFrame.from_dict(time['Ac']).to_excel(writer, sheet_name='Ac')
-            pd.DataFrame.from_dict(time['Dc']).to_excel(writer, sheet_name='Dc')
+        try:
+            nameTime = 'time_' + dir_name + '_' + dt_string + '_AcDc.xlsx'
+            with pd.ExcelWriter(nameTime) as writer:
+                time['Sw']['t'].to_excel(writer, sheet_name='time')
+                time['Sw'].to_excel(writer, sheet_name='Sw')
+                pd.DataFrame.from_dict(time['Ac']).to_excel(writer, sheet_name='Ac')
+                pd.DataFrame.from_dict(time['Dc']).to_excel(writer, sheet_name='Dc')
+            print("INFO: Saving per phase results")
+        except:
+            print("WARN: Saving per phase results failed")
 
         # ------------------------------------------
         # Switches
         # ------------------------------------------
-        for i in range(0, len(id)):
-            nameTime = 'time_' + dir_name + '_' + dt_string + '_' + id[i] + '.xlsx'
-            with pd.ExcelWriter(nameTime) as writer:
-                time['Sw']['t'].to_excel(writer, sheet_name='time')
-                time['Elec']['sw'][id[i]].to_excel(writer, sheet_name='elec')
-                time['Loss']['sw'][id[i]].to_excel(writer, sheet_name='loss')
-                pd.DataFrame.from_dict(time['Ther']['sw']).to_excel(writer, sheet_name='ther')
+        try:
+            for i in range(0, len(id)):
+                nameTime = 'time_' + dir_name + '_' + dt_string + '_' + id[i] + '.xlsx'
+                with pd.ExcelWriter(nameTime) as writer:
+                    time['Sw']['t'].to_excel(writer, sheet_name='time')
+                    time['Elec']['sw'][id[i]].to_excel(writer, sheet_name='elec')
+                    time['Loss']['sw'][id[i]].to_excel(writer, sheet_name='loss')
+                    pd.DataFrame.from_dict(time['Ther']['sw']).to_excel(writer, sheet_name='ther')
+            print("INFO: Saving per switch results")
+        except:
+            print("WARN: Saving per switch results failed")
 
         # ------------------------------------------
         # Capacitor
         # ------------------------------------------
-        nameTime = 'time_' + dir_name + '_' + dt_string + '_C1.xlsx'
-        with pd.ExcelWriter(nameTime) as writer:
-            time['Sw']['t'].to_excel(writer, sheet_name='time')
-            time['Elec']['cap']['C1'].to_excel(writer, sheet_name='elec')
-            time['Loss']['cap']['C1'].to_excel(writer, sheet_name='loss')
-            pd.DataFrame.from_dict(time['Ther']['cap']['C1']).to_excel(writer, sheet_name='ther')
+        try:
+            nameTime = 'time_' + dir_name + '_' + dt_string + '_C1.xlsx'
+            with pd.ExcelWriter(nameTime) as writer:
+                time['Sw']['t'].to_excel(writer, sheet_name='time')
+                time['Elec']['cap']['C1'].to_excel(writer, sheet_name='elec')
+                time['Loss']['cap']['C1'].to_excel(writer, sheet_name='loss')
+                pd.DataFrame.from_dict(time['Ther']['cap']['C1']).to_excel(writer, sheet_name='ther')
+            print("INFO: Saving per capacitor results")
+        except:
+            print("WARN: Saving per capacitor results failed")
 
         # ------------------------------------------
         # Output
@@ -165,8 +178,10 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
         nameSweep = 'sweep_' + dir_name + '_' + dt_string + '.xlsx'
         with pd.ExcelWriter(nameSweep) as writer:
             pd.DataFrame.from_dict(sweep['Mi']).to_excel(writer, sheet_name='Mi')
-            pd.DataFrame.from_dict(sweep['Ac']).to_excel(writer, sheet_name='Ac')
-            pd.DataFrame.from_dict(sweep['Dc']).to_excel(writer, sheet_name='Dc')
+            pd.DataFrame.from_dict(sweep['Ac']['ana']).to_excel(writer, sheet_name='Ac_ana')
+            pd.DataFrame.from_dict(sweep['Ac']['num']).to_excel(writer, sheet_name='Ac_num')
+            pd.DataFrame.from_dict(sweep['Dc']['ana']).to_excel(writer, sheet_name='Dc_ana')
+            pd.DataFrame.from_dict(sweep['Dc']['num']).to_excel(writer, sheet_name='Dc_num')
 
         # ------------------------------------------
         # Output
