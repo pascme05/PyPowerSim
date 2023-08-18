@@ -198,7 +198,7 @@ def calcTransB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
 
             # Switch
             for j in range(0, len(id2)):
-                timeElec['sw'][id2[j]] = calcElecSwi(Vdc, id4[j] * timeAc['i_a'], (s[id3[j]][start:ende] == (-1) ** j), Tj[j], id5[j], para, setupPara)
+                timeElec['sw'][id2[j]] = calcElecSwi(Vdc, id4[j] * timeAc['i_a'][start:ende], (s[id3[j]][start:ende] == (-1) ** j), Tj[j], id5[j], para, setupPara)
                 timeLoss['sw'][id2[j]] = calcLossSwi(s[id3[j]][start:ende] * (-1) ** j, timeElec['sw'][id2[j]]['i_T'], timeElec['sw'][id2[j]]['i_D'], timeElec['sw'][id2[j]]['v_T'], timeElec['sw'][id2[j]]['v_D'], Tj[j], para, setupPara, setupExp)
 
                 if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:

@@ -188,7 +188,7 @@ def calcTransB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
 
             # Switch
             for j in range(0, len(id2)):
-                timeElec['sw'][id2[j]] = calcElecSwi(Vdc, timeAc['i_a'], (s[start:ende] == (-1) ** j), Tj[j], id5[j], para, setupPara)
+                timeElec['sw'][id2[j]] = calcElecSwi(Vdc, timeAc['i_a'][start:ende], (s[start:ende] == (-1) ** j), Tj[j], id5[j], para, setupPara)
                 timeLoss['sw'][id2[j]] = calcLossSwi(s[start:ende] * (-1) ** j, timeElec['sw'][id2[j]]['i_T'], timeElec['sw'][id2[j]]['i_D'],
                                                      timeElec['sw'][id2[j]]['v_T'], timeElec['sw'][id2[j]]['v_D'], Tj[j], para, setupPara, setupExp)
 
