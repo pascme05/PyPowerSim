@@ -1,6 +1,6 @@
-pandas~=1.5.3
-numpy~=1.24.2
-scipy~=1.7.1
-matplotlib~=3.4.3
-tqdm~=4.62.3
-psutil~=5.9.4
+pandas
+numpy
+scipy
+matplotlib
+tqdm
+psutil
