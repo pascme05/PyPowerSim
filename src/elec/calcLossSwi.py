@@ -105,7 +105,7 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupExp):
                         para['Swi']['Elec']['con']['tr'] + para['Swi']['Elec']['con']['tf'])
             Erec = 0.25 * para['Swi']['Elec']['con']['Qrr'] * np.max(np.abs(v_D)) * np.ones(np.size(i_T))
 
-            # ------------------------------------------
+    # ------------------------------------------
     # Tabular
     # ------------------------------------------
     if setupPara['Elec']['SwiMdl'] == "tab":
