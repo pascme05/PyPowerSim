@@ -64,8 +64,7 @@ def loadParaSwi(name, path, setupPara):
     # Path
     # ==============================================================================
     name = name + '.xlsx'
-    path = path + '\\Swi'
-    filename = pjoin(path, name)
+    filename = pjoin(path, 'Swi', name)
 
     # ==============================================================================
     # Parameters

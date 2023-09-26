@@ -66,8 +66,7 @@ def loadParaCap(name, path, setupPara):
     # Path
     # ==============================================================================
     name = name + '.xlsx'
-    path = path + '\\Cap'
-    filename = pjoin(path, name)
+    filename = pjoin(path, 'Cap', name)
 
     # ==============================================================================
     # Parameters
