@@ -28,6 +28,8 @@ from src.general.genWaveform import genWave
 from src.therm.initRC import initRC
 from src.elec.calcElecCap import calcElecCap
 from src.topo.B4.outB4 import outB4_Steady
+from src.general.calcAvg import calcAvg
+
 
 # ==============================================================================
 # External
@@ -57,6 +59,7 @@ def calcSteadyB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # Variables
     # ------------------------------------------
     v_ref = {}
+    out = {}
 
     # ------------------------------------------
     # IDs
@@ -72,34 +75,47 @@ def calcSteadyB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Parameters
     # ==============================================================================
+    # ------------------------------------------
+    # General
+    # ------------------------------------------
     fel = setupTopo['fel']
     fsim = setupExp['fsim']
+    fs = setupPara['PWM']['fs']
+    Nsim = int(np.ceil(fsim / fel))
+    Npwm = int(np.ceil(fs / fel))
     N = int(fsim / fel)
     K = setupData['stat']['cyc']
     W = setupData['stat']['W']
     Mi = setupData['stat']['Mi']
+    start = int(N) * 2
+    ende = int(K * N + 1)
 
-    # ==============================================================================
-    # Variables
-    # ==============================================================================
-    # ------------------------------------------
-    # Init 
-    # ------------------------------------------
-    [_, timeElec, timeLoss, timeTher, _, _, _, _, _] = initB4(W)
-
-    # ------------------------------------------
-    # Inputs 
     # ------------------------------------------
     # Electrical
+    # ------------------------------------------
     E = setupTopo['E']
     Vdc = setupData['stat']['Vdc']
     phiE = math.radians(setupTopo['phiE'])
     phiV = math.radians(setupData['stat']['phi'])
 
+    # ------------------------------------------
     # Thermal
-    Tj = setupData['stat']['Tj']
-    Tcap = setupData['stat']['Tj']
+    # ------------------------------------------
     Tc = setupData['stat']['Tc']
+
+    # ------------------------------------------
+    # Solver
+    # ------------------------------------------
+    err = np.inf
+    T_sw = np.ones((5, 1)) * setupData['stat']['Tj']
+    T_ca = setupData['stat']['Tj']
+    T_old = setupData['stat']['Tj']
+    iter = 0
+
+    # ==============================================================================
+    # Variables
+    # ==============================================================================
+    [_, timeElec, timeLoss, timeTher, _, _, _, _, _] = initB4(W)
 
     ###################################################################################################################
     # Pre-Processing
@@ -120,15 +136,20 @@ def calcSteadyB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
     e_ref = E * genWave(t, fel, phiE, 0, setupTopo)
 
     # ==============================================================================
-    # Start and End
-    # ==============================================================================
-    start = int(N) * 2
-    ende = int(K * N + 1)
-
-    # ==============================================================================
     # Thermal ROM
     # ==============================================================================
+    # ------------------------------------------
+    # Load
+    # ------------------------------------------
     [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap] = initRC(para, setupPara)
+
+    # ------------------------------------------
+    # Variables
+    # ------------------------------------------
+    Tinit_T = np.zeros((len(Rth_JA), len(id2)))
+    Tinit_D = np.zeros((len(Rth_DA), len(id2)))
+    Tinit_K = np.zeros((len(Rth_CA), len(id2)))
+    Tinit_C = np.zeros(np.size(Rth_JA_cap))
 
     ###################################################################################################################
     # Calculation (Stationary)
@@ -149,19 +170,25 @@ def calcSteadyB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
     [timeAc, timeDc] = calcTimeB4(t, s, e_ref, Vdc, Mi, mdl, setupTopo, start, ende)
 
     # ==============================================================================
-    # Open-Loop
+    # Msg
     # ==============================================================================
-    if setupExp['loop'] == "OL":
+    print("START: Iterating")
+    print("------------------------------------------")
+
+    # ==============================================================================
+    # Iterating
+    # ==============================================================================
+    while err > setupExp['tol']:
         # ------------------------------------------
         # Electrical
         # ------------------------------------------
         # Switches
         for i in range(0, len(id2)):
-            timeElec['sw'][id2[i]] = calcElecSwi(Vdc, id4[i] * timeAc['i_a'], (s[id3[i]][start:ende] == (-1) ** i), Tj,
+            timeElec['sw'][id2[i]] = calcElecSwi(Vdc, id4[i] * timeAc['i_a'], (s[id3[i]][start:ende] == (-1) ** i), T_sw[i],
                                                  id5[i], para, setupPara)
 
         # Capacitor
-        timeDc['v_dc'] = calcElecCap(t, timeDc['i_c'], Tcap, para, setupPara, setupTopo)
+        timeDc['v_dc'] = calcElecCap(t, timeDc['i_c'], T_ca, para, setupPara, setupTopo)
         timeElec['cap']['C1']['i_c'] = timeDc['i_c']
         timeElec['cap']['C1']['v_c'] = timeDc['v_dc']
 
@@ -172,114 +199,137 @@ def calcSteadyB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
         for i in range(0, len(id2)):
             timeLoss['sw'][id2[i]] = calcLossSwi(s[id3[i]][start:ende] * (-1) ** i, timeElec['sw'][id2[i]]['i_T'],
                                                  timeElec['sw'][id2[i]]['i_D'], timeElec['sw'][id2[i]]['v_T'],
-                                                 timeElec['sw'][id2[i]]['v_D'], Tj, para, setupPara, setupExp)
+                                                 timeElec['sw'][id2[i]]['v_D'], T_sw[i], para, setupPara, setupExp)
 
         # Capacitor
-        timeLoss['cap']['C1'] = calcLossCap(t, timeDc['i_c'], Tcap, para, setupPara, setupTopo)
-
-    # ==============================================================================
-    # Closed-Loop
-    # ==============================================================================
-    if setupExp['loop'] == "CL":
-        # ------------------------------------------
-        # Init
-        # ------------------------------------------
-        err = np.inf
-        T_old = np.ones((5, 1)) * Tj
-        T_new = np.ones((5, 1)) * Tj
-        iter = 0
+        timeLoss['cap']['C1'] = calcLossCap(t, timeDc['i_c'], T_ca, para, setupPara, setupTopo)
 
         # ------------------------------------------
-        # Iterating
+        # Init Thermal
+        # ------------------------------------------
+        if iter == 0:
+            # Switches
+            for i in range(0, len(id2)):
+                Tinit_T[:, i] = np.mean(timeLoss['sw'][id2[i]]['p_T']) * Rth_JA
+                Tinit_D[:, i] = np.mean(timeLoss['sw'][id2[i]]['p_D']) * Rth_DA
+                if setupPara['Ther']['Coupling'] == 1:
+                    Tinit_K[:, i] = np.mean(timeLoss['sw'][id2[i]]['p_L']) * Rth_CA
+
+            # Capacitor
+            Tinit_C = np.mean(timeLoss['cap']['C1']['p_L']) * Rth_JA_cap
+
+        # ------------------------------------------
+        # Thermal
+        # ------------------------------------------
+        # Switches
+        for i in range(0, len(id2)):
+            [timeTher['sw'][id6[i]], Tinit_T[:, i]] = calcTherRC(Tinit_T[:, i], Tc, timeLoss['sw'][id2[i]]['p_T'],
+                                                                 t[start:ende], Rth_JA, Cth_JA)
+            [timeTher['sw'][id7[i]], Tinit_D[:, i]] = calcTherRC(Tinit_D[:, i], Tc, timeLoss['sw'][id2[i]]['p_D'],
+                                                                 t[start:ende], Rth_DA, Cth_DA)
+            if setupPara['Ther']['Coupling'] == 1:
+                [timeTher['sw'][id8[i]], Tinit_K[:, i]] = calcTherRC(Tinit_K[:, i], Tc, timeLoss['sw'][id2[i]]['p_L'],
+                                                                     t[start:ende], Rth_CA, Cth_CA)
+                timeTher['sw'][id6[i]] = timeTher['sw'][id6[i]][:] + timeTher['sw'][id8[i]][:] - Tc
+                timeTher['sw'][id7[i]] = timeTher['sw'][id7[i]][:] + timeTher['sw'][id8[i]][:] - Tc
+            else:
+                timeTher['sw'][id8[i]] = Tc * np.ones(np.size(s['A'][start:ende]))
+
+        # Capacitor
+        [timeTher['cap']['C1'], Tinit_C] = calcTherRC(Tinit_C, Tc, timeLoss['cap']['C1']['p_L'], t[start:ende],
+                                                      Rth_JA_cap, Cth_JA_cap)
+
+        # ------------------------------------------
+        # Error
+        # ------------------------------------------
+        err = np.mean(np.abs(timeTher['sw']['T1'] - T_old)) / np.mean(T_old)
+
+        # ------------------------------------------
+        # Update Para
+        # ------------------------------------------
+        if setupExp['loop'] == "CL":
+            # Switches
+            for i in range(0, len(id2)):
+                T_sw[i] = np.mean(timeTher['sw'][id6[i]])
+
+            # Capacitor
+            T_ca = np.mean(timeTher['cap']['C1'])
+
+        # Iteration
+        iter = iter + 1
+
+        # Previous Temperature
+        T_old = timeTher['sw']['T1']
+
         # ------------------------------------------
         # Msg
-        print("START: Iterating")
-        print("------------------------------------------")
-
-        # Start
-        while err > setupExp['tol']:
-            # Electrical
-            timeElec['sw']['S1'] = calcElecSwi(Vdc, timeAc['i_a'], (s['A'][start:ende] == 1), T_old[0], 'HS', para,
-                                               setupPara)
-            timeElec['sw']['S2'] = calcElecSwi(Vdc, timeAc['i_a'], (s['A'][start:ende] == -1), T_old[1], 'LS', para,
-                                               setupPara)
-            timeElec['sw']['S3'] = calcElecSwi(Vdc, -timeAc['i_a'], (s['B'][start:ende] == 1), T_old[2], 'HS', para,
-                                               setupPara)
-            timeElec['sw']['S4'] = calcElecSwi(Vdc, -timeAc['i_a'], (s['B'][start:ende] == -1), T_old[3], 'LS', para,
-                                               setupPara)
-            timeDc['v_dc'] = calcElecCap(t, timeDc['i_c'], T_old[4], para, setupPara, setupTopo)
-            timeElec['cap']['C1']['i_c'] = timeDc['i_c']
-            timeElec['cap']['C1']['v_c'] = timeDc['v_dc']
-
-            # Losses
-            for i in range(0, len(id2)):
-                timeLoss['sw'][id2[i]] = calcLossSwi(s[id3[i]][start:ende] * (-1) ** i, timeElec['sw'][id2[i]]['i_T'],
-                                                     timeElec['sw'][id2[i]]['i_D'], timeElec['sw'][id2[i]]['v_T'],
-                                                     timeElec['sw'][id2[i]]['v_D'], T_old[i], para, setupPara, setupExp)
-            timeLoss['cap']['C1'] = calcLossCap(t, timeDc['i_c'], T_old[4], para, setupPara, setupTopo)
-
-            # Thermal
-            for i in range(0, len(id2)):
-                if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:
-                    T_new[i] = np.mean(timeLoss['sw'][id2[i]]['p_T']) * np.sum(Rth_JA) + np.mean(
-                        timeLoss['sw'][id2[i]]['p_L']) * np.sum(Rth_CA) + Tc
-                else:
-                    T_new[i] = np.mean(timeLoss['sw'][id2[i]]['p_T']) * np.sum(Rth_JA) + Tc
-            T_new[4] = np.mean(timeLoss['cap']['C1']['p_L']) * np.sum(Rth_JA_cap) + Tc
-
-            # Error
-            err = np.sum(abs(T_old - T_new)) / np.sum(T_old)
-
-            # Update
-            T_old = T_new[:]
-            iter = iter + 1
-
-            # Msg
-            print(
-                "ITER: %d) Stationary temperature T_swi=%.2f (T_cap=%.2f) and P_swi=%.2f (Pv_cap=%.2f) with error: %.3f" % (
-                    iter, T_old[0], T_old[4], np.mean(timeLoss['sw']['S1']['p_L']),
-                    np.mean(timeLoss['cap']['C1']['p_L']), err * 100))
-
         # ------------------------------------------
-        # Converged
-        # ------------------------------------------
-        # Msg
-        print("------------------------------------------")
-        print("INFO: Converged after %d iterations with T_swi=%.2f (T_cap=%.2f) and error: %.3f" % (
-            iter, T_old[0], T_old[2], err * 100))
+        if iter < int(setupExp['int']):
+            print("ITER: %d) Stationary temperature T_swi=%.2f C (T_cap=%.2f C) and P_swi=%.2f W (Pv_cap=%.2f W) with error: %.2f %%" % (
+                  iter, T_sw[0], T_ca, np.mean(timeLoss['sw']['S1']['p_L']), np.mean(timeLoss['cap']['C1']['p_L']), err * 100))
+        else:
+            print("ITER: %d) Maximum iteration reached" % iter)
+            break
 
     # ==============================================================================
-    # Transient Thermal
-    # ==============================================================================
-    # ------------------------------------------
     # Msg
+    # ==============================================================================
+    print("------------------------------------------")
+    print("INFO: Converged after %d iterations with T_swi=%.2f C (T_cap=%.2f C) and error: %.2f %%" % (iter, T_sw[0], T_ca, err * 100))
+
+    ###################################################################################################################
+    # Post-Processing
+    ###################################################################################################################
+    # ==============================================================================
+    # Averaging
+    # ==============================================================================
     # ------------------------------------------
-    print("INFO: Calculating transient temperatures")
+    # Adapt
+    # ------------------------------------------
+    out['elec'] = timeElec
+    out['loss'] = timeLoss
 
     # ------------------------------------------
-    # Thermal
+    # Average
+    # ------------------------------------------
+    out = calcAvg(out, setupExp, setupTopo, Nsim, Npwm)
+
+    # ------------------------------------------
+    # Removing
+    # ------------------------------------------
+    for c0 in out:
+        for c1 in out[c0]:
+            for c2 in out[c0][c1]:
+                out[c0][c1][c2] = out[c0][c1][c2].iloc[0:int(ende - start)]
+                out[c0][c1][c2] = out[c0][c1][c2].reset_index(drop=True)
+
+    # ------------------------------------------
+    # Out
+    # ------------------------------------------
+    timeElec = out['elec']
+    timeLoss = out['loss']
+
+    # ==============================================================================
+    # Update Thermal
+    # ==============================================================================
     # ------------------------------------------
     # Switches
+    # ------------------------------------------
     for i in range(0, len(id2)):
-        [timeTher['sw'][id6[i]], _] = calcTherRC(0, Tc, timeLoss['sw'][id2[i]]['p_T'], t[start:ende], Rth_JA, Cth_JA)
-        [timeTher['sw'][id7[i]], _] = calcTherRC(0, Tc, timeLoss['sw'][id2[i]]['p_D'], t[start:ende], Rth_DA, Cth_DA)
-
-    # Capacitor
-    [timeTher['cap']['C1'], _] = calcTherRC(0, Tc, timeLoss['cap']['C1']['p_L'], t[start:ende], Rth_JA_cap, Cth_JA_cap)
-
-    # Coupling
-    for i in range(0, len(id2)):
-        if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:
-            [timeTher['sw'][id8[i]], _] = calcTherRC(0, Tc, timeLoss['sw'][id2[i]]['p_L'], t[start:ende], Rth_CA,
-                                                     Cth_CA)
+        [timeTher['sw'][id6[i]], _] = calcTherRC(Tinit_T[:, i], Tc, timeLoss['sw'][id2[i]]['p_T'], t[start:ende], Rth_JA, Cth_JA)
+        [timeTher['sw'][id7[i]], _] = calcTherRC(Tinit_D[:, i], Tc, timeLoss['sw'][id2[i]]['p_D'], t[start:ende], Rth_DA, Cth_DA)
+        if setupPara['Ther']['Coupling'] == 1:
+            [timeTher['sw'][id8[i]], _] = calcTherRC(Tinit_K[:, i], Tc, timeLoss['sw'][id2[i]]['p_L'], t[start:ende], Rth_CA, Cth_CA)
             timeTher['sw'][id6[i]] = timeTher['sw'][id6[i]][:] + timeTher['sw'][id8[i]][:] - Tc
             timeTher['sw'][id7[i]] = timeTher['sw'][id7[i]][:] + timeTher['sw'][id8[i]][:] - Tc
         else:
             timeTher['sw'][id8[i]] = Tc * np.ones(np.size(s['A'][start:ende]))
 
-    ###################################################################################################################
-    # Post-Processing
-    ###################################################################################################################
+    # ------------------------------------------
+    # Capacitor
+    # ------------------------------------------
+    [timeTher['cap']['C1'], _] = calcTherRC(Tinit_C, Tc, timeLoss['cap']['C1']['p_L'], t[start:ende], Rth_JA_cap, Cth_JA_cap)
+
     # ==============================================================================
     # Frequency domain
     # ==============================================================================

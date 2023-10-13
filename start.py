@@ -87,7 +87,7 @@ setupData['trans']['Tc'] = 50.0                                                 
 setupData['trans']['Tj'] = 50.0                                                                                         # core temperature at t=0 of all components (°C)
 
 # Stationary
-setupData['stat']['cyc'] = 4                                                                                            # number of fundamental cycles used for stationary analysis (at least 3)
+setupData['stat']['cyc'] = 4                                                                                            # number of fundamental cycles used for stationary analysis (at least 4)
 setupData['stat']['W'] = 20                                                                                             # number of datapoints for sweep analysis
 setupData['stat']['Tj'] = 50.0                                                                                          # core temperature of all components (°C)
 setupData['stat']['Tc'] = 50.0                                                                                          # reference temperature of all components (°C)
