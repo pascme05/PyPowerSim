@@ -65,7 +65,7 @@ setupExp['freqAvg'] = 'none'                                                    
 # Numerical
 # ------------------------------------------
 setupExp['fsim'] = 5e5                                                                                                  # simulation frequency (Hz)
-setupExp['tol'] = 1e-6                                                                                                  # tolerance in percent with respect to the previous converged result
+setupExp['tol'] = 1e-3                                                                                                  # tolerance in percent with respect to the previous converged result
 setupExp['eps'] = 1e-12                                                                                                 # small numerical tolerance
 setupExp['int'] = 20                                                                                                    # number of steps for integration
 
