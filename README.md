@@ -83,7 +83,10 @@ The software framework is provided under the MIT license.
     - Adding thermal coupling
     - Bugfix switching sequence
     - General housekeeping
-
+4) v.0.3: (13.10.2023) Third major review and housekeeping
+    - Fixing steady-state simulation
+    - General housekeeping
+   
 # References
 [1] Holmes, D. Grahame, and Thomas A. Lipo. Pulse width modulation for power converters: principles and practice. 
 Vol. 18. John Wiley & Sons, 2003.
