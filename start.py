@@ -65,7 +65,7 @@ setupExp['freqAvg'] = 'none'                                                    
 # Numerical
 # ------------------------------------------
 setupExp['fsim'] = 5e5                                                                                                  # simulation frequency (Hz)
-setupExp['tol'] = 1e-6                                                                                                  # tolerance in percent with respect to the previous converged result
+setupExp['tol'] = 1e-3                                                                                                  # tolerance in percent with respect to the previous converged result
 setupExp['eps'] = 1e-12                                                                                                 # small numerical tolerance
 setupExp['int'] = 20                                                                                                    # number of steps for integration
 
@@ -87,7 +87,7 @@ setupData['trans']['Tc'] = 50.0                                                 
 setupData['trans']['Tj'] = 50.0                                                                                         # core temperature at t=0 of all components (°C)
 
 # Stationary
-setupData['stat']['cyc'] = 4                                                                                            # number of fundamental cycles used for stationary analysis (at least 3)
+setupData['stat']['cyc'] = 4                                                                                            # number of fundamental cycles used for stationary analysis (at least 4)
 setupData['stat']['W'] = 20                                                                                             # number of datapoints for sweep analysis
 setupData['stat']['Tj'] = 50.0                                                                                          # core temperature of all components (°C)
 setupData['stat']['Tc'] = 50.0                                                                                          # reference temperature of all components (°C)
