@@ -46,7 +46,7 @@ In the following a list of know issues and limitations is provided:
 The architecture implemented in the PyPowerSim toolkit is exemplary illustrated for a B2 
 converter cell in Figure 1. The source code implementation of the PyPowerSim toolkit aims
 to follow the data follow of the implementation in Figure 1 for the interested reader to
-follow the data and signal flow path through the implementation. The complete decription of the
+follow the data and signal flow path through the implementation. The complete description of the
 toolkit can be found in \docu.
 
 ![img_4.png](docu/img_4.png)
