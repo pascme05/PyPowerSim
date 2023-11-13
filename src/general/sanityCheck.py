@@ -92,7 +92,7 @@ def sanityInput(setupExp, setupData, setupTopo, setupPara):
     if (setupPara['PWM']['tmin'] + setupExp['eps']) < (1/setupExp['fsim']):
         setupPara['PWM']['tmin'] = 0
         print("WARN: Minimum pulse width (tmin) smaller than simulation time (tsim)")
-    elif setupPara['PWM']['tmin'] > (1/setupExp['fs']):
+    elif setupPara['PWM']['tmin'] > (1/setupPara['PWM']['fs']):
         setupPara['PWM']['tmin'] = 0
         print("ERROR: Minimum pulse width (tmin) larger than switching time (ts)")
         
@@ -102,7 +102,7 @@ def sanityInput(setupExp, setupData, setupTopo, setupPara):
     if (setupPara['PWM']['td'] + setupExp['eps']) < (1/setupExp['fsim']):
         setupPara['PWM']['td'] = 0
         print("WARN: Dead-time (td) smaller than simulation time (tsim)")
-    elif setupPara['PWM']['td'] > (1/setupExp['fs']):
+    elif setupPara['PWM']['td'] > (1/setupPara['PWM']['fs']):
         setupPara['PWM']['td'] = 0
         print("ERROR: Dead-time (td) larger than switching time (ts)")
     

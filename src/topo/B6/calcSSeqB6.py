@@ -194,7 +194,7 @@ def calcSSeqB6_CB(ref, t, Mi, setupPara, setupTopo):
     for i in range(0, len(id)):
         s[id[i]] = cbInter(xs[id[i]], c, Mi, tmin)
 
-        ###################################################################################################################
+    ###################################################################################################################
     # Post-Processing
     ###################################################################################################################
     # ==============================================================================
@@ -203,6 +203,21 @@ def calcSSeqB6_CB(ref, t, Mi, setupPara, setupTopo):
     if setupPara['PWM']['td'] > 0:
         for i in range(0, len(id)):
             s[id[i]] = deadTime(s[id[i]], td)
+
+    # ==============================================================================
+    # Minimum Pulse Width
+    # ==============================================================================
+    if setupPara['PWM']['tmin'] > 0:
+        for i in range(0, len(id)):
+            hold = tmin
+            for ii in range(0, len(s)):
+                if hold >= tmin:
+                    if Mi != 0:
+                        s[id[i]][ii] = s[id[i]][ii]
+                    hold = 0
+                else:
+                    s[id[i]][i] = s[id[i]][ii - 1]
+                    hold = hold + 1
 
     ###################################################################################################################
     # Return
@@ -317,6 +332,7 @@ def calcSSeqB6_SV(ref, t, Mi, setupPara, setupTopo):
         Ns = 2 * q
     K = int(len(t) / (q * N))
     tmin = int(setupPara['PWM']['tmin'] / (t[1] - t[0]))
+    td = int(setupPara['PWM']['td'] / (t[1] - t[0]))
 
     # ==============================================================================
     # Variables
@@ -437,18 +453,31 @@ def calcSSeqB6_SV(ref, t, Mi, setupPara, setupTopo):
             xsh[id[i]] = np.roll(x0[id[i]], int(len(xs[id[i]]) * fel / fs / 2))
 
     # ==============================================================================
-    # Switching Function
+    # Dead-time
     # ==============================================================================
-    for i in range(0, len(ss)):
-        hold = tmin
-        for ii in range(0, len(id)):
-            if hold >= tmin:
+    if setupPara['PWM']['td'] > 0:
+        for i in range(0, len(id)):
+            s[id[i]] = deadTime(s[id[i]], td)
+
+    # ==============================================================================
+    # Minimum Pulse Width
+    # ==============================================================================
+    if setupPara['PWM']['tmin'] > 0:
+        for i in range(0, len(id)):
+            hold = tmin
+            for ii in range(0, len(ss)):
+                if hold >= tmin:
+                    if Mi != 0:
+                        s[id[i]][ii] = mS[id[i]][int(ss[ii])]
+                    hold = 0
+                else:
+                    s[id[i]][i] = s[id[i]][ii - 1]
+                    hold = hold + 1
+    else:
+        for i in range(0, len(id)):
+            for ii in range(0, len(ss)):
                 if Mi != 0:
-                    s[id[ii]][i] = mS[id[ii]][int(ss[i])]
-                hold = 0
-            else:
-                s[id[ii]][i] = s[id[ii]][i - 1]
-                hold = hold + 1
+                    s[id[i]][ii] = mS[id[i]][int(ss[ii])]
 
     # ==============================================================================
     # Outputs
