@@ -16,7 +16,7 @@
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.topo.B6.calcSSeqB6 import calcSSeqB6_CB, calcSSeqB6_FF, calcSSeqB6_SV
+from src.topo.B6.calcSSeqB6 import calcSSeqB6_CB, calcSSeqB6_FF, calcSSeqB6_SV, calcSSeqB6_OPP
 from src.topo.B6.calcTimeB6 import calcTimeB6
 from src.general.calcFreq import calcFreq
 from src.elec.calcElecSwi import calcElecSwi
@@ -164,6 +164,8 @@ def calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
         [xs, xsh, s, c, x, n0] = calcSSeqB6_CB(v_ref, t, Mi, setupPara, setupTopo)
     elif setupPara['PWM']['type'] == "SV":
         [xs, xsh, s, c, x, n0] = calcSSeqB6_SV(v_ref, t, Mi, setupPara, setupTopo)
+    elif setupPara['PWM']['type'] == "OPP":
+        [xs, xsh, s, c, x, n0] = calcSSeqB6_OPP(v_ref, t, Mi, setupPara, setupTopo)
     else:
         [xs, xsh, s, c, x, n0] = calcSSeqB6_CB(v_ref, t, Mi, setupPara, setupTopo)
 

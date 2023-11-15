@@ -16,7 +16,7 @@
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.topo.B4.calcSSeqB4 import calcSSeqB4_CB, calcSSeqB4_FF
+from src.topo.B4.calcSSeqB4 import calcSSeqB4_CB, calcSSeqB4_FF, calcSSeqB4_OPP
 from src.topo.B4.calcTimeB4 import calcTimeB4
 from src.general.genWaveform import genWave
 from src.topo.B4.initB4 import initB4_Data, initB4
@@ -162,6 +162,8 @@ def calcTransB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
         [xs, xsh, s, c] = calcSSeqB4_FF(v_ref, t_ref, Mi, setupPara, setupTopo)
     elif setupPara['PWM']['type'] == "CB":
         [xs, xsh, s, c] = calcSSeqB4_CB(v_ref, t_ref, Mi, setupPara, setupTopo)
+    elif setupPara['PWM']['type'] == "OPP":
+        [xs, xsh, s, c] = calcSSeqB4_OPP(v_ref, t_ref, Mi, setupPara, setupTopo)
     else:
         [xs, xsh, s, c] = calcSSeqB4_CB(v_ref, t_ref, Mi, setupPara, setupTopo)
 

@@ -16,7 +16,7 @@
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.topo.B6.calcSSeqB6 import calcSSeqB6_CB, calcSSeqB6_FF, calcSSeqB6_SV
+from src.topo.B6.calcSSeqB6 import calcSSeqB6_CB, calcSSeqB6_FF, calcSSeqB6_SV, calcSSeqB6_OPP
 from src.topo.B6.calcDistB6 import calcDistB6_Ana
 from src.topo.B6.calcTimeB6 import calcTimeB6
 from src.general.calcFreq import calcFreq
@@ -135,6 +135,8 @@ def calcSweepB6(mdl, _, setupTopo, setupData, setupPara, setupExp):
         [xs, xsh, s, c, x, n0] = calcSSeqB6_CB(v_ref, t, Mi, setupPara, setupTopo)
     elif setupPara['PWM']['type'] == "SV":
         [xs, xsh, s, c, x, n0] = calcSSeqB6_SV(v_ref, t, Mi, setupPara, setupTopo)
+    elif setupPara['PWM']['type'] == "OPP":
+        [xs, xsh, s, c, x, n0] = calcSSeqB6_OPP(v_ref, t, Mi, setupPara, setupTopo)
     else:
         [xs, xsh, s, c, x, n0] = calcSSeqB6_CB(v_ref, t, Mi, setupPara, setupTopo)
 
@@ -151,18 +153,20 @@ def calcSweepB6(mdl, _, setupTopo, setupData, setupPara, setupExp):
         # Switching
         # ------------------------------------------
         if setupPara['PWM']['type'] == "FF":
-            [_, _, s, _, _, _] = calcSSeqB6_FF(v_ref, t, M_i[i], setupPara, setupTopo)
+            [_, _, s_i, _, _, _] = calcSSeqB6_FF(v_ref, t, M_i[i], setupPara, setupTopo)
         elif setupPara['PWM']['type'] == "CB":
-            [_, _, s, _, _, _] = calcSSeqB6_CB(v_ref, t, M_i[i], setupPara, setupTopo)
+            [_, _, s_i, _, _, _] = calcSSeqB6_CB(v_ref, t, M_i[i], setupPara, setupTopo)
         elif setupPara['PWM']['type'] == "SV":
-            [_, _, s, _, _, _] = calcSSeqB6_SV(v_ref, t, M_i[i], setupPara, setupTopo)
+            [_, _, s_i, _, _, _] = calcSSeqB6_SV(v_ref, t, M_i[i], setupPara, setupTopo)
+        elif setupPara['PWM']['type'] == "OPP":
+            [_, _, s_i, _, _, _] = calcSSeqB6_OPP(v_ref, t, M_i[i], setupPara, setupTopo)
         else:
-            [_, _, s, _, _, _] = calcSSeqB6_CB(v_ref, t, M_i[i], setupPara, setupTopo)
+            [_, _, s_i, _, _, _] = calcSSeqB6_CB(v_ref, t, M_i[i], setupPara, setupTopo)
 
         # ------------------------------------------
         # Time
         # ------------------------------------------
-        [tempTimeAc, tempTimeDc] = calcTimeB6(t, s, e_ref, Vdc, M_i[i], mdl, setupTopo, start, ende)
+        [tempTimeAc, tempTimeDc] = calcTimeB6(t, s_i, e_ref, Vdc, M_i[i], mdl, setupTopo, start, ende)
 
         # ------------------------------------------
         # Distortion
