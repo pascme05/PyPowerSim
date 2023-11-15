@@ -24,7 +24,7 @@ from src.elec.calcLossSwi import calcLossSwi
 from src.elec.calcLossCap import calcLossCap
 from src.therm.calcTherRC import calcTherRC
 from src.topo.B4.initB4 import initB4
-from src.general.genWaveform import genWave
+from src.pwm.genWaveform import genWave
 from src.therm.initRC import initRC
 from src.elec.calcElecCap import calcElecCap
 from src.topo.B4.outB4 import outB4_Steady

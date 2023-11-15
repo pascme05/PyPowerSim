@@ -10,7 +10,7 @@
 # ==============================================================================
 import numpy as np
 from scipy.optimize import minimize, LinearConstraint, NonlinearConstraint
-
+import matplotlib.pyplot as plt
 
 #######################################################################################################################
 # Function
@@ -84,11 +84,6 @@ def Opp(k_max, p0, Mi, alpha0):
         u_fund, _ = ampl_sym_opp(x_eq, 1)
         return u_fund[0]
 
-    # Equality constraint:
-    def eq_con2(x_eq):
-        c = -np.concatenate((np.diff(x_eq), x_eq[0]*np.ones(1)))
-        return c
-
     linear_constraint = LinearConstraint(aineq, lb=[-np.inf]*p_deg, ub=bineq)
     nonlinear_constraint = NonlinearConstraint(eq_con, lb=Mi, ub=Mi)
 
@@ -109,12 +104,15 @@ if __name__ == "__main__":
     u_k, i_k = ampl_sym_opp(np.array([np.pi/6]), 100)
     wthdc = costfuntion(np.array([np.pi/6]))
     Num = 51
-    p = 21
-    thd = np.zeros(Num)
-    Mi = np.linspace(0.00, 4/np.pi, Num)/4*np.pi
-    alpha0 = np.zeros(int((p - 1)/2))
-    for i in range(0, Num):
-        result = Opp(100, p, Mi[i], alpha0)
-        alpha0 = result.x
-        thd[i] = result.fun
-    print(result.message)
+    p0 = 10
+    thd = np.zeros((p0, Num))
+    Mi = np.linspace(0.0, 1, Num)
+    for i in range(2, p0):
+        p = 2*i + 1
+        alpha0 = np.zeros(int((p - 1) / 2))
+        for ii in range(0, Num):
+            result = Opp(100, p, Mi[ii], alpha0)
+            alpha0 = result.x
+            thd[i, ii] = result.fun
+        plt.plot(thd[i, :])
+    plt.show()

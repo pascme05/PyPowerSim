@@ -102,7 +102,7 @@ setupData['stat']['Vo'] = 50                                                    
 setupData['stat']['Io'] = 25                                                                                            # output RMS phase current (Io) in (A) for current control
 
 # Input and Output
-setupData['stat']['Mi'] = 0.75                                                                                          # modulation index (Mi) for distortion analysis                                                                                                # power factor cos_phi
+setupData['stat']['Mi'] = 0.80                                                                                          # modulation index (Mi) for distortion analysis                                                                                                # power factor cos_phi
 setupData['stat']['Vdc'] = 400                                                                                          # DC-Link voltage (V)
 setupData['stat']['phi'] = 0.0                                                                                          # load angle output voltage (deg)
 
@@ -118,7 +118,7 @@ setupTopo['CapName'] = "Elco"                                                   
 # ------------------------------------------
 # Source
 # ------------------------------------------
-setupTopo['sourceType'] = "B2"                                                                                          # (B2): half bridge, (B4): full bridge, (B6): two-level three phase converter
+setupTopo['sourceType'] = "B6"                                                                                          # (B2): half bridge, (B4): full bridge, (B6): two-level three phase converter
 
 # ------------------------------------------
 # Filter

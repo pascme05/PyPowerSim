@@ -19,9 +19,9 @@
 from src.general.helpFnc import deadTime
 from src.general.helpFnc import cbInter
 from src.general.helpFnc import con2dis
-from src.general.genSwSeq import genSwSeq
-from src.general.svPWM import svPWM
-from src.general.oppPWM import oppPWM
+from src.pwm.genSwSeq import genSwSeq
+from src.pwm.svPWM import svPWM
+from src.pwm.oppPWM import oppPWM
 
 # ==============================================================================
 # External

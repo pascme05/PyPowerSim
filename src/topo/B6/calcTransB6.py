@@ -18,7 +18,7 @@
 # ==============================================================================
 from src.topo.B6.calcSSeqB6 import calcSSeqB6_CB, calcSSeqB6_FF, calcSSeqB6_SV, calcSSeqB6_OPP
 from src.topo.B6.calcTimeB6 import calcTimeB6
-from src.general.genWaveform import genWave
+from src.pwm.genWaveform import genWave
 from src.topo.B6.initB6 import initB6_Data, initB6
 from src.topo.B6.outB6 import outB6_Trans
 from src.general.calcFreq import calcFreq

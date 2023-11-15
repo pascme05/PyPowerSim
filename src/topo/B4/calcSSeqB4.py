@@ -17,7 +17,7 @@
 # Internal
 # ==============================================================================
 from src.general.helpFnc import deadTime, cbInter, con2dis
-from src.general.oppPWM import oppPWM
+from src.pwm.oppPWM import oppPWM
 
 # ==============================================================================
 # External

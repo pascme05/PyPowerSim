@@ -22,7 +22,7 @@ from src.general.calcDistNum import calcDistNum
 from src.general.calcFreq import calcFreq
 from src.topo.B2.calcTimeB2 import calcTimeB2
 from src.topo.B2.initB2 import initB2
-from src.general.genWaveform import genWave
+from src.pwm.genWaveform import genWave
 from src.topo.B2.outB2 import outB2_Sweep
 
 # ==============================================================================
