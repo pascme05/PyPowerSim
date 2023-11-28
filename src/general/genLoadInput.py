@@ -47,21 +47,21 @@ def genLoadInput(setupExp, setupTopo, setupData):
     # ------------------------------------------
     Mi = setupData['stat']['Mi']
     Vdc = setupData['stat']['Vdc']
-    phiO = setupData['stat']['phi']
-    
+    phiO = math.radians(setupData['stat']['phi'])
+
     # ------------------------------------------
     # Load
     # ------------------------------------------
     R = setupTopo['R']
     L = setupTopo['L']
     E = setupTopo['E']
-    phiE = setupTopo['phiE']
-    
+    phiE = math.radians(setupTopo['phiE'])
+
     # ------------------------------------------
     # Operating point
     # ------------------------------------------
     fel = setupTopo['fel']
-    
+
     # ==============================================================================
     # Topology
     # ==============================================================================
@@ -80,22 +80,22 @@ def genLoadInput(setupExp, setupTopo, setupData):
     # ==============================================================================
     # Load Parameters
     # ==============================================================================
-    magZ = np.sqrt(R**2 + 2*np.pi*fel*L)
-    angZ = math.atan2(2*np.pi*fel*L, R)
-    Z = complex(R, 2*np.pi*fel*L)
-    EMF = complex(E*np.cos(phiE), E*np.sin(phiE))
-    
+    magZ = np.sqrt(R ** 2 + (2 * np.pi * fel * L) ** 2)
+    angZ = math.atan2(2 * np.pi * fel * L, R)
+    Z = complex(R, 2 * np.pi * fel * L)
+    EMF = complex(E * np.cos(phiE), E * np.sin(phiE)) * Mi
+
     # ==============================================================================
     # Printing Load
     # ==============================================================================
     print(f"INFO: Complex load Z with magnitude {magZ:.2f} (V/A) and angle {math.degrees(angZ):.2f} (deg)")
     print(f"INFO: Back EMF with magnitude {E:.2f} (V/A) and angle {math.degrees(phiE):.2f} (deg)")
-    
+
     ###################################################################################################################
     # Calculation
     ###################################################################################################################
     # ==============================================================================
-    # Modulation index is controlled 
+    # Modulation index is controlled
     # ==============================================================================
     if setupExp['output'] == 'Mi':
         print(f"INFO: Modulation index controlled mode with Mi {setupData['stat']['Mi']:.2f} (p.u.)")
@@ -106,39 +106,39 @@ def genLoadInput(setupExp, setupTopo, setupData):
     elif setupExp['output'] == 'V':
         print(f"INFO: Voltage controlled mode with Vo {setupData['stat']['Vo']:.2f} (V)")
         Mi = setupData['stat']['Vo'] / setupData['stat']['Vdc'] * paraV
-        
+
     # ==============================================================================
-    # Current is controlled 
+    # Current is controlled
     # ==============================================================================
     elif setupExp['output'] == 'I':
         print(f"INFO: Current controlled mode with Io {setupData['stat']['Io']:.2f} (A)")
         Vo = abs(setupData['stat']['Io'] * Z * np.sqrt(2) + EMF)
         Mi = Vo / setupData['stat']['Vdc'] * paraV
-        
+
     # ==============================================================================
     # Active power is controlled
     # ==============================================================================
     elif setupExp['output'] == 'P':
         print(f"INFO: Active power controlled mode with Po {setupData['stat']['Po']:.2f} (W)")
         Io = np.sqrt(setupData['stat']['Po'] / R) * np.sqrt(2)
-        Io = complex(Io*np.cos(angZ), Io*np.sin(angZ))
-        Mi = abs(Io*Z + EMF) / setupData['stat']['Vdc'] * paraV
-        
+        Io = complex(Io * np.cos(angZ), Io * np.sin(angZ))
+        Mi = abs(Io * Z + EMF) / setupData['stat']['Vdc'] * paraV
+
     # ==============================================================================
     # Reactive power is controlled
     # ==============================================================================
     elif setupExp['output'] == 'Q':
         print(f"INFO: Reactive power controlled mode with Qo {setupData['stat']['Qo']:.2f} (W)")
-        Io = np.sqrt(setupData['stat']['Qo'] / (2*np.pi*fel*L)) * np.sqrt(2)
-        Io = complex(Io*np.cos(angZ), Io*np.sin(angZ))
-        Mi = abs(Io*Z + EMF) / setupData['stat']['Vdc'] * paraV
-        
+        Io = np.sqrt(setupData['stat']['Qo'] / (2 * np.pi * fel * L)) * np.sqrt(2)
+        Io = complex(Io * np.cos(angZ), Io * np.sin(angZ))
+        Mi = abs(Io * Z + EMF) / setupData['stat']['Vdc'] * paraV
+
     # ==============================================================================
     # Default
     # ==============================================================================
     else:
         print(f"INFO: Modulation index controlled mode with Mi {setupData['stat']['Mi']:.2f} (p.u.)")
-        
+
     ###################################################################################################################
     # Post-Processing
     ###################################################################################################################
@@ -150,15 +150,16 @@ def genLoadInput(setupExp, setupTopo, setupData):
     So = Vo * Io / np.sqrt(2)
     Po = So.real
     Qo = So.imag
-    
+
     # ==============================================================================
     # Printing
     # ==============================================================================
     print(f"INFO: Modulation index being equal to {Mi:.2f} (p.u.)")
     print(f"INFO: Output rms voltage being equal to {Vo:.2f} (V) and {phiO:.2f} (deg)")
-    print(f"INFO: Output rms current being equal to {cmath.polar(Io)[0]:.2f} (A) and {math.degrees(cmath.polar(Io)[1]):.2f} (deg)")
+    print(
+        f"INFO: Output rms current being equal to {cmath.polar(Io)[0]:.2f} (A) and {math.degrees(cmath.polar(Io)[1]):.2f} (deg)")
     print(f"INFO: Output power being equal to {Po:.2f} (W) and {Qo:.2f} (VAr)")
-    
+
     # ==============================================================================
     # Output
     # ==============================================================================
@@ -167,7 +168,7 @@ def genLoadInput(setupExp, setupTopo, setupData):
     setupData['stat']['Po'] = Po
     setupData['stat']['Qo'] = Qo
     setupData['stat']['Mi'] = Mi
-    
+
     ###################################################################################################################
     # MSG Out
     ###################################################################################################################
