@@ -241,7 +241,8 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     # ==============================================================================
     # Plot Results
     # ==============================================================================
-    plot(time, freq, sweep, setupPara, setupData, setupTopo, setupExp)
+    if setupExp['plot'] != 0:
+        plot(time, freq, sweep, setupPara, setupData, setupTopo, setupExp)
 
     # ==============================================================================
     # MSG OUT
