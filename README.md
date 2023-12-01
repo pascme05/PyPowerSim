@@ -74,7 +74,7 @@ toolkit or spotted any mistake, please contact me via: p.schirmer@herts.ac.uk
 The software framework is provided under the MIT license.
 
 # Version History
-1) v.0.1: (01.04.2023) Initial version of PyPowerSim
+1) v.0.0: (01.04.2023) Initial version of PyPowerSim
 2) v.0.1: (16.06.2023) Major Update and housekeeping
     - Adding MOSFET devices
     - Revising switching loss calculation
@@ -85,6 +85,10 @@ The software framework is provided under the MIT license.
     - General housekeeping
 4) v.0.3: (13.10.2023) Third major review and housekeeping
     - Fixing steady-state simulation
+    - General housekeeping
+5) v.0.4: (01.12.2023) Fourth major review and housekeeping
+    - Fixing bug in switching losses
+    - Adding direct comparison with semiconductor datasheets
     - General housekeeping
    
 # References
