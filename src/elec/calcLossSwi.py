@@ -73,9 +73,9 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupExp):
     if setupPara['Elec']['SwiMdl'] == "con":
         # IGBT
         if setupPara['Elec']['SwiType'] == "IGBT":
-            Eon = para['Swi']['Elec']['con']['Eon'] * np.ones(np.size(i_T)) * np.max(np.abs(i_T)) / para['Swi']['Elec']['con']['Imax'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vmax']
-            Eoff = para['Swi']['Elec']['con']['Eoff'] * np.ones(np.size(i_T)) * np.max(np.abs(i_T)) / para['Swi']['Elec']['con']['Imax'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vmax']
-            Erec = para['Swi']['Elec']['con']['Erec'] * np.ones(np.size(i_T)) * np.max(np.abs(i_T)) / para['Swi']['Elec']['con']['Imax'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vmax']
+            Eon = para['Swi']['Elec']['con']['Eon'] * np.ones(np.size(i_T))
+            Eoff = para['Swi']['Elec']['con']['Eoff'] * np.ones(np.size(i_T))
+            Erec = para['Swi']['Elec']['con']['Erec'] * np.ones(np.size(i_T))
 
         # MOSFET
         if setupPara['Elec']['SwiType'] == "MOSFET":
@@ -184,7 +184,7 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupExp):
     # ------------------------------------------
     # Switching
     # ------------------------------------------
-    out['p_T_s'] = (zoh_easy(Eon, np.diff(i_G, prepend=0)) + np.roll(zoh_easy(Eoff, np.diff(i_G, append=0) * (-1)), 1)) * fs
+    out['p_T_s'] = (zoh_easy(Eon, np.diff(i_G, prepend=0)) + np.roll(zoh_easy(Eoff, np.diff(i_G, append=0) * (-1)), 1)) * fs * 2
 
     # ==============================================================================
     # Diode
@@ -197,7 +197,7 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupExp):
     # ------------------------------------------
     # Switching
     # ------------------------------------------
-    out['p_D_s'] = zoh_easy(Erec, np.diff(i_G, append=0) * (-1)) * fs
+    out['p_D_s'] = (zoh_easy(Erec, np.diff(i_G, prepend=0)) + np.roll(zoh_easy(Erec, np.diff(i_G, append=0) * (-1)), 1)) * fs
 
     # ==============================================================================
     # Total
