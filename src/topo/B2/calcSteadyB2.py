@@ -224,8 +224,8 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
             timeTher['sw']['T2'] = timeTher['sw']['T2'][:] + timeTher['sw']['C2'] - Tc
             timeTher['sw']['D2'] = timeTher['sw']['D2'][:] + timeTher['sw']['C2'] - Tc
         else:
-            timeTher['sw']['C1'] = Tc * np.ones(np.size(s['A'][start:ende]))
-            timeTher['sw']['C2'] = Tc * np.ones(np.size(s['A'][start:ende]))
+            timeTher['sw']['C1'] = Tc * np.ones(np.size(s[start:ende]))
+            timeTher['sw']['C2'] = Tc * np.ones(np.size(s[start:ende]))
 
         # Capacitor
         [timeTher['cap']['C1'], Tinit_C] = calcTherRC(Tinit_C, Tc, timeLoss['cap']['C1']['p_L'], t[start:ende], Rth_JA_cap, Cth_JA_cap)
@@ -321,8 +321,8 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
         timeTher['sw']['T2'] = timeTher['sw']['T2'][:] + timeTher['sw']['C2'] - Tc
         timeTher['sw']['D2'] = timeTher['sw']['D2'][:] + timeTher['sw']['C2'] - Tc
     else:
-        timeTher['sw']['C1'] = Tc * np.ones(np.size(s['A'][start:ende]))
-        timeTher['sw']['C2'] = Tc * np.ones(np.size(s['A'][start:ende]))
+        timeTher['sw']['C1'] = Tc * np.ones(np.size(s[start:ende]))
+        timeTher['sw']['C2'] = Tc * np.ones(np.size(s[start:ende]))
     # ------------------------------------------
     # Capacitor
     # ------------------------------------------
