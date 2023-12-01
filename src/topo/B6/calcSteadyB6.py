@@ -246,7 +246,7 @@ def calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
         # ------------------------------------------
         # Update Para
         # ------------------------------------------
-        if setupExp['loop'] == "CL":
+        if setupExp['therFeed'] == 1:
             # Switches
             for i in range(0, len(id2)):
                 T_sw[i] = np.mean(timeTher['sw'][id6[i]])

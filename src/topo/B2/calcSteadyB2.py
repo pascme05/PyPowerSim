@@ -238,7 +238,7 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
         # ------------------------------------------
         # Update Para
         # ------------------------------------------
-        if setupExp['loop'] == "CL":
+        if setupExp['therFeed'] == 1:
             # Switches
             T_sw[0] = np.mean(timeTher['sw']['T1'])
             T_sw[1] = np.mean(timeTher['sw']['T2'])

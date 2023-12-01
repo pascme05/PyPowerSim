@@ -49,7 +49,7 @@ to follow the data follow of the implementation in Figure 1 for the interested r
 follow the data and signal flow path through the implementation. The complete description of the
 toolkit can be found in \docu.
 
-![img_4.png](docu/img_4.png)
+![img_4.png](docu/images/img_4.png)
 
 
 # Results
@@ -57,11 +57,11 @@ In the following chapter a set of reference results is provided using the B6 con
 architecture and the “init.txt” setup file provide in \setup. For a first test run use start.py to calculate 
 the results presented below.
 
-![img.png](docu/img.png)
+![img.png](docu/images/img.png)
 
-![img_1.png](docu/img_1.png)
+![img_1.png](docu/images/img_1.png)
 
-![img_2.png](docu/img_2.png)
+![img_2.png](docu/images/img_2.png)
 
 
 # Development

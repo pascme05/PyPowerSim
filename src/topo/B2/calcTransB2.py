@@ -98,7 +98,7 @@ def calcTransB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Update Frequency
     # ==============================================================================
-    if setupExp['loop'] == 'OL':
+    if setupExp['therFeed'] == 0:
         iterNel = 1
         iterNpwm = 1
     elif setupExp['freqPar'] == 'fel':
@@ -177,7 +177,7 @@ def calcTransB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
         # ------------------------------------------
         # PWM Period
         # ------------------------------------------
-        for ii in tqdm(range(iterNpwm), desc='PWM-Period', position=1, leave=False):
+        for ii in range(iterNpwm):
             # Init
             [_, timeElec, timeLoss, timeTher, _, _, _, _, _] = initB2(2)
             start = int(ii*(Nsim/iterNpwm))
@@ -209,7 +209,7 @@ def calcTransB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
             dataFel = app_fs(dataFel, timeElec, timeLoss, setupExp)
 
             # Parameter Update
-            if setupExp['loop'] == 'CL':
+            if setupExp['therFeed'] == 1:
                 for j in range(0, len(id2)):
                     Tj[j] = timeTher['sw'][id6[j]][-1]
                 Tcap = timeTher['cap']['C1'][-1]
