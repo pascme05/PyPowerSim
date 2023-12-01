@@ -154,7 +154,7 @@ setupTopo['fel'] = 50                                                           
 # ------------------------------------------
 # General
 # ------------------------------------------
-setupPara['PWM']['type'] = "CB"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based
+setupPara['PWM']['type'] = "SV"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based
 setupPara['PWM']['upd'] = "DE"                                                                                          # (SE): single edge, (DE): double edge 
 setupPara['PWM']['samp'] = "RS"                                                                                         # (NS): natural sampling, (RS): regular sampling
 setupPara['PWM']['tri'] = "SM"                                                                                          # modulation trigger (RE): rising edge, (FE): falling edge, (SM): symmetrical modulation, (AM): asymmetrical modualtion

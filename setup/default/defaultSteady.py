@@ -2,7 +2,7 @@
 #######################################################################################################################
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
-# File:         defaultSweep
+# File:         start
 # Date:         14.08.2023
 # Author:       Dr. Pascal A. Schirmer
 # Version:      V.0.2
@@ -48,7 +48,7 @@ setupPath = initPath('PyPowerSim')
 # ------------------------------------------
 # Experiment
 # ------------------------------------------
-setupExp['Name'] = "defaultSweep"                                                                                       # name of the simulation (str)
+setupExp['Name'] = "defaultSteady"                                                                                      # name of the simulation (str)
 setupExp['Author'] = "Pascal Schirmer"                                                                                  # name of the responsible person (str)
 setupExp['debug'] = 0                                                                                                   # (0): debug mode de-activated, (1): debug mode activated level-1, (2): debug mode activated level-2
 
@@ -56,8 +56,8 @@ setupExp['debug'] = 0                                                           
 # Operating Mode
 # ------------------------------------------
 setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled 
-setupExp['type'] = 0                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
-setupExp['therFeed'] = 0                                                                                                # (0): no thermal coupling with electric losses, (1): thermal-electric coupling
+setupExp['type'] = 1                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
+setupExp['therFeed'] = 1                                                                                                # (0): no thermal coupling with electric losses, (1): thermal-electric coupling
 setupExp['freqPar'] = 'fs'                                                                                              # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
 setupExp['freqAvg'] = 'none'                                                                                            # (none): no averaging is used (fs): values are averaged over switching cycle, (fel): values are averaged over fundamental cycle
 
@@ -201,7 +201,7 @@ setupPara['Elec']['CapSeries'] = 1                                              
 # Thermal Parameters
 # ==============================================================================
 setupPara['Ther']['Heatsink'] = 1                                                                                       # 1) using thermal capacities and resistances of heatsink RC model
-setupPara['Ther']['Coupling'] = 0                                                                                       # 0) no thermal coupling between diode and transistor, 1) thermal coupling between diode and transistor, 2) thermal coupling via whole converter
+setupPara['Ther']['Coupling'] = 1                                                                                       # 0) no thermal coupling between diode and transistor, 1) thermal coupling between diode and transistor, 2) thermal coupling via whole converter
 
 #######################################################################################################################
 # Calculations
