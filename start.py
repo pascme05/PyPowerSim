@@ -2,7 +2,7 @@
 #######################################################################################################################
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
-# File:         defaultSweep
+# File:         start
 # Date:         14.08.2023
 # Author:       Dr. Pascal A. Schirmer
 # Version:      V.0.2
@@ -48,7 +48,7 @@ setupPath = initPath('PyPowerSim')
 # ------------------------------------------
 # Experiment
 # ------------------------------------------
-setupExp['Name'] = "defaultSweep"                                                                                       # name of the simulation (str)
+setupExp['Name'] = "default"                                                                                            # name of the simulation (str)
 setupExp['Author'] = "Pascal Schirmer"                                                                                  # name of the responsible person (str)
 setupExp['debug'] = 0                                                                                                   # (0): debug mode de-activated, (1): debug mode activated level-1, (2): debug mode activated level-2
 
