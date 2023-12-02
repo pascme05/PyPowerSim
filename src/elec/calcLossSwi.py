@@ -199,7 +199,7 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupExp):
     # ------------------------------------------
     # Switching
     # ------------------------------------------
-    out['p_D_s'] = (zoh_easy(Erec, np.diff(i_G, prepend=0))) * fs * 2
+    out['p_D_s'] = (zoh_easy(Erec, np.diff(i_G, prepend=0)) + np.roll(zoh_easy(Erec, np.diff(i_G, append=0) * (-1)), 1)) * fs
 
     # ==============================================================================
     # Total
