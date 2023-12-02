@@ -106,7 +106,7 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     # ==============================================================================
     # Sanity Checks
     # ==============================================================================
-    [setupExp, setupData, setupTopo, setupPara] = sanityInput(setupExp, setupData, setupTopo, setupPara)
+    [setupExp, setupData, setupTopo, setupPara] = sanityInput(para, setupExp, setupData, setupTopo, setupPara)
 
     # ==============================================================================
     # Transfer Functions

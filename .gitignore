@@ -14,3 +14,4 @@ docu/literature/IGBT+Power+Losses+Calculation+using+the+Data+Sheet+Parameters.pd
 docu/literature/New_Physical_Insights_on_Power_MOSFET_Switching_Losses.pdf
 docu/literature/PED4_1042_Report.pdf
 __pycache__
+/docu/datasheets/

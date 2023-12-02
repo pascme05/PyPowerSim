@@ -56,7 +56,7 @@ setupExp['debug'] = 0                                                           
 # Operating Mode
 # ------------------------------------------
 setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled 
-setupExp['type'] = 0                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
+setupExp['type'] = 1                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
 setupExp['therFeed'] = 0                                                                                                # (0): no thermal coupling with electric losses, (1): thermal-electric coupling
 setupExp['freqPar'] = 'fs'                                                                                              # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
 setupExp['freqAvg'] = 'none'                                                                                            # (none): no averaging is used (fs): values are averaged over switching cycle, (fel): values are averaged over fundamental cycle
@@ -102,8 +102,8 @@ setupData['stat']['Vo'] = 50                                                    
 setupData['stat']['Io'] = 25                                                                                            # output RMS phase current (Io) in (A) for current control
 
 # Input and Output
-setupData['stat']['Mi'] = 1.00                                                                                          # modulation index (Mi) for distortion analysis                                                                                                # power factor cos_phi
-setupData['stat']['Vdc'] = 600                                                                                          # DC-Link voltage (V)
+setupData['stat']['Mi'] = 0.80                                                                                          # modulation index (Mi) for distortion analysis                                                                                                # power factor cos_phi
+setupData['stat']['Vdc'] = 200                                                                                          # DC-Link voltage (V)
 setupData['stat']['phi'] = 0.0                                                                                          # load angle output voltage (deg)
 
 # ==============================================================================
@@ -112,13 +112,13 @@ setupData['stat']['phi'] = 0.0                                                  
 # ------------------------------------------
 # Hardware
 # ------------------------------------------
-setupTopo['SwiName'] = "IKQ75N120CS6"                                                                                   # filename of the parameter set
+setupTopo['SwiName'] = "Matlab_IGBT"                                                                                   # filename of the parameter set
 setupTopo['CapName'] = "Elco"                                                                                           # filename of the parameter set
 
 # ------------------------------------------
 # Source
 # ------------------------------------------
-setupTopo['sourceType'] = "B6"                                                                                          # (B2): half bridge, (B4): full bridge, (B6): two-level three phase converter
+setupTopo['sourceType'] = "B2"                                                                                          # (B2): half bridge, (B4): full bridge, (B6): two-level three phase converter
 
 # ------------------------------------------
 # Filter
@@ -139,7 +139,7 @@ setupTopo['Cout'] = 1e-3                                                        
 # Load
 # ------------------------------------------
 # Parameters
-setupTopo['R'] = 5.0                                                                                                    # resistance in (Ohm)
+setupTopo['R'] = 0.0                                                                                                    # resistance in (Ohm)
 setupTopo['L'] = 5e-3                                                                                                   # inductance in (H)
 setupTopo['E'] = 0                                                                                                      # induced voltage in (V)
 setupTopo['phiE'] = 0                                                                                                   # load angle induced voltage (deg)
@@ -154,9 +154,9 @@ setupTopo['fel'] = 50                                                           
 # ------------------------------------------
 # General
 # ------------------------------------------
-setupPara['PWM']['type'] = "SV"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based
+setupPara['PWM']['type'] = "CB"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based
 setupPara['PWM']['upd'] = "DE"                                                                                          # (SE): single edge, (DE): double edge 
-setupPara['PWM']['samp'] = "RS"                                                                                         # (NS): natural sampling, (RS): regular sampling
+setupPara['PWM']['samp'] = "NS"                                                                                         # (NS): natural sampling, (RS): regular sampling
 setupPara['PWM']['tri'] = "SM"                                                                                          # modulation trigger (RE): rising edge, (FE): falling edge, (SM): symmetrical modulation, (AM): asymmetrical modualtion
 setupPara['PWM']['int'] = 0                                                                                             # (0): non-interleaved, (1): interleaving (when multiple carriers are used)
 setupPara['PWM']['td'] = 0                                                                                              # dead time (sec)
@@ -172,7 +172,7 @@ setupPara['PWM']['sw'] = 0                                                      
 # ------------------------------------------
 # Switching Sequence
 # ------------------------------------------
-setupPara['PWM']['fs'] = 1050                                                                                           # PWM switching frequency (Hz)
+setupPara['PWM']['fs'] = 2000                                                                                           # PWM switching frequency (Hz)
 setupPara['PWM']['seq'] = "0127"                                                                                        # PWM switching sequence B6 bridge
 setupPara['PWM']['zero'] = "SVPWM"                                                                                      # PWM method B6 bridge (SPWM, SVPWM, THIPWM4, THIPWM6, DPWM0, DPWM1, DPWM2, DPWM3, DPWMMAX, DPWMMIN)
 
