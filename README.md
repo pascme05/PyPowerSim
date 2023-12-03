@@ -50,18 +50,111 @@ follow the data and signal flow path through the implementation. The complete de
 toolkit can be found in \docu.
 
 ![img_4.png](docu/images/img_4.png)
+Figure 1: Proposed converter architecture as implemented in the PyPowerSim toolkit.
+
+As illustrated in Figure 1 the architecture consists of five blocks namely the source, the input
+filter, the converter cell, the output filter and the load. Each of these blocks can be freely
+configured with the parameter setup described. In the following a short description
+without consideration of the filter elements is provided. For the complete description please 
+refer to the theory guide and the following theoretical works. 
+
+The converter is power by a voltage source having a constant dc voltage of $V_{dc}$. The converter is controlled by a time
+domain switching function $s_a(t)$ translating the constant dc link voltage in a set of high-frequent voltage pulses as
+described in (1):
+
+$v_{a0}(t) = s_{a}(t) \cdot \frac{V_{dc}}{2}$     (1)
+
+The switching function can hereby be described as a set of on- and off-states of the high-side switch $S_{a}^{+}$ and the 
+low-side switch $S_{a}^{-}$ and can be expressed in the time-domain by the Fourier series in (2):
+
+$s_{a}(t) = \sum_{v=1}^{\inf} \left(a_v cos(v \omega_{el} t) +  b_v cos(v \omega_{el} t)  \right) = \sum_{v=1}^{\inf} c_v e^{-j v \omega_{el} t} $ (2)
+
+where $a_v$,$b_v$,$c_v$ are the Fourier series coefficients, $v$ is the harmonic number and $\omega_{el}$ is the 
+electrical circular frequency of the output current. The relation between the current and voltage on the load side can 
+then be expressed by the following differential equation in (3):
+
+$v_{L}(t) = R_{L} i_{L}(t) + L_{L} \frac{di_{L}}{dt} + e(t) $ (3)
+
+where $R_L$,$L_L$ are the resistance and the inductance of the load, $e(t)$ is the induced voltage, and $v_L(t)$, $i_L(t)$ 
+are the load voltage and current respectively.
 
 
 # Results
 In the following chapter a set of reference results is provided using the B6 converter 
-architecture and the default setup file. For a first test run use start.py to calculate 
-the results presented below.
+architecture and the default setup file. For the default operation an IFX switch is chosen (
+IKQ75N120CS6) For a first test run use start.py to calculate the results presented below.
+
+## Model Inputs
+In this Section the utilized models are presented. In detail, it includes the transfer functions, the loss models for
+semiconductors and capacitors, as well as the reduced order thermal models (transient thermal impedance curves).
+
+![bode.png](docu%2Fimages%2Fbode.png)
+Figure 1a: Bode plots for amplitude and phase considering the load, the dc-link, as well as input and output filter.
+
+![model.png](docu%2Fimages%2Fmodel.png)
+Figure 1b: Loss models for the semiconductor switches and the capacitor.
+
+![thermal.png](docu%2Fimages%2Fthermal.png)
+Figure 1c: Thermal models for the semiconductor switches and the capacitor.
+
+## Sweeping Operation
+Below the simulation results of the waveform analysis are displayed. The modulation function is illustrated in Figure 2,
+the load currents and voltages in the time-, frequency- and modulation-domain are illustrated in Figure 3 and Figure 4.
 
 ![img.png](docu/images/img.png)
+Figure 2: Modulation function of a B6 converter using space vector modulation and a standard switching sequence 
+(0127) with a pulse number of $Q$=21 and $M_i$=1.0
 
 ![img_1.png](docu/images/img_1.png)
+Figure 3: Currents of a B6 converter using space vector modulation and a standard switching sequence (0127) with a 
+pulse number of $Q$=21 and $M_i$=1.0. The load angle is equal to $\phi$=17 deg.
 
 ![img_2.png](docu/images/img_2.png)
+Figure 4: Voltages of a B6 converter using space vector modulation and a standard switching sequence (0127) with a 
+pulse number of $Q$=21 and $M_i$=1.0. The load angle is equal to $\phi$=17 deg.
+
+## Steady-State Operation
+In this Section the results for the steady-state analysis are presented, the results are calculated in closed-loop 
+condition, such that the losses are extracted for the stabilized temperature of the junction. The time-domain results
+for the currents, the voltages, as well as the conduction and switching losses for the six switches are illustrated 
+in Figure 5.
+
+![steady2.png](docu%2Fimages%2Fsteady2.png)
+Figure 5: Time-domain currents, voltages, and losses of a B6 converter using space vector modulation and a standard
+switching sequence (0127) with a pulse number of $Q$=21 and $M_i$=1.0. The load angle is equal to $\phi$=17 deg.
+
+![steady1.png](docu%2Fimages%2Fsteady1.png)
+Figure 6: Time-domain losses and temperatures for the six switches and diodes of a B6 converter using space vector 
+modulation and a standard switching sequence (0127) with a pulse number of $Q$=21 and $M_i$=1.0. The load angle is 
+equal to $\phi$=17 deg.
+
+## Transient Operation
+In this Section the results for the steady-state analysis are presented, the results are calculated in closed-loop 
+condition such that the parameters are updated after every fundamental period, i.e. $T_s$=20 ms. The results are averaged
+once over the switching sequence, thus displaying junction temperature swing in Figure 7, and once are average over the
+fundamental cycle thus illustrating the self-heating due to the internal losses in Figure 8. It should also be noted, 
+that in Figure 8 the parameter updates and the positive coupling of the channel resistances and voltages with the 
+junction temperature are visible.
+
+![trans2.png](docu%2Fimages%2Ftrans2.png)
+Figure 7: Transient time-domain losses and temperatures for the six switches and diodes of a B6 converter using space 
+vector modulation and a standard switching sequence (0127) with a pulse number of $Q$=21 and $M_i$=1.0. 
+The values are average over the switching cycle.
+
+
+# Comparison
+To get an indication how well the toolkit compares to commercially available solvers several
+comparisons with Simulink and PLECs have been conducted (see \docu). The results for comparing to
+a Fuji Dual Pack IGBT (2MBI300XBE120) are presented below. The results can be reproduced using the compareFuji.py setup
+file under \setup.
+
+| Losses           | PLECs (W) | PyPowerSim (W) | Error (W) | Error (%) | 
+|------------------|-----------|----------------|-----------|-----------|
+| Transistor (Swi) | 11.1      | 11.5           | 0.40      | 3.60      |
+| Transistor (Con) | 18.0      | 17.4           | 0.60      | 3.33      |
+| Diode (Swi)      | 5.79      | 6.17           | 0.38      | 6.56      |
+| Diode (Con)      | 19.5      | 19.1           | 0.40      | 2.05      |
+| Total            | 54.4      | 54.2           | 0.20      | 3.89      |
 
 
 # Development
