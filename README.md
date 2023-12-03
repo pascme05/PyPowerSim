@@ -49,7 +49,7 @@ to follow the data follow of the implementation in Figure 1 for the interested r
 follow the data and signal flow path through the implementation. The complete description of the
 toolkit can be found in \docu.
 
-![img_4.png](docu/images/img_4.png)
+![img_4.png](docu%2Fimages%2Fimg_4.png)
 Figure 1: Proposed converter architecture as implemented in the PyPowerSim toolkit.
 
 As illustrated in Figure 1 the architecture consists of five blocks namely the source, the input
@@ -101,15 +101,15 @@ Figure 1c: Thermal models for the semiconductor switches and the capacitor.
 Below the simulation results of the waveform analysis are displayed. The modulation function is illustrated in Figure 2,
 the load currents and voltages in the time-, frequency- and modulation-domain are illustrated in Figure 3 and Figure 4.
 
-![img.png](docu/images/img.png)
+![img.png](docu%2Fimages%2Fimg.png)
 Figure 2: Modulation function of a B6 converter using space vector modulation and a standard switching sequence 
 (0127) with a pulse number of $Q$=21 and $M_i$=1.0
 
-![img_1.png](docu/images/img_1.png)
+![img_1.png](docu%2Fimages%2Fimg_1.png)
 Figure 3: Currents of a B6 converter using space vector modulation and a standard switching sequence (0127) with a 
 pulse number of $Q$=21 and $M_i$=1.0. The load angle is equal to $\phi$=17 deg.
 
-![img_2.png](docu/images/img_2.png)
+![img_2.png](docu%2Fimages%2Fimg_2.png)
 Figure 4: Voltages of a B6 converter using space vector modulation and a standard switching sequence (0127) with a 
 pulse number of $Q$=21 and $M_i$=1.0. The load angle is equal to $\phi$=17 deg.
 
