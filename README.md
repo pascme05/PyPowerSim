@@ -124,10 +124,12 @@ for the currents, the voltages, as well as the conduction and switching losses f
 in Figure 5.
 
 ![steady2.png](docu%2Fimages%2Fsteady2.png)
+
 Figure 5: Time-domain currents, voltages, and losses of a B6 converter using space vector modulation and a standard
 switching sequence (0127) with a pulse number of $Q$=21 and $M_i$=1.0. The load angle is equal to $\phi$=17 deg.
 
 ![steady1.png](docu%2Fimages%2Fsteady1.png)
+
 Figure 6: Time-domain losses and temperatures for the six switches and diodes of a B6 converter using space vector 
 modulation and a standard switching sequence (0127) with a pulse number of $Q$=21 and $M_i$=1.0. The load angle is 
 equal to $\phi$=17 deg.
@@ -141,6 +143,7 @@ that in Figure 8 the parameter updates and the positive coupling of the channel 
 junction temperature are visible.
 
 ![trans2.png](docu%2Fimages%2Ftrans2.png)
+
 Figure 7: Transient time-domain losses and temperatures for the six switches and diodes of a B6 converter using space 
 vector modulation and a standard switching sequence (0127) with a pulse number of $Q$=21 and $M_i$=1.0. 
 The values are average over the switching cycle.
