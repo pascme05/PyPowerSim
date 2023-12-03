@@ -56,9 +56,7 @@ As illustrated in Figure 1 the architecture consists of five blocks namely the s
 filter, the converter cell, the output filter and the load. Each of these blocks can be freely
 configured with the parameter setup described. In the following a short description
 without consideration of the filter elements is provided. For the complete description please 
-refer to the theory guide and the following theoretical works. 
-
-The converter is power by a voltage source having a constant dc voltage of $V_{dc}$. The converter is controlled by a time
+refer to the theory guide and the following theoretical works. The converter is power by a voltage source having a constant dc voltage of $V_{dc}$. The converter is controlled by a time
 domain switching function $s_a(t)$ translating the constant dc link voltage in a set of high-frequent voltage pulses as
 described in (1):
 
@@ -89,12 +87,15 @@ In this Section the utilized models are presented. In detail, it includes the tr
 semiconductors and capacitors, as well as the reduced order thermal models (transient thermal impedance curves).
 
 ![bode.png](docu%2Fimages%2Fbode.png)
+
 Figure 1a: Bode plots for amplitude and phase considering the load, the dc-link, as well as input and output filter.
 
 ![model.png](docu%2Fimages%2Fmodel.png)
+
 Figure 1b: Loss models for the semiconductor switches and the capacitor.
 
 ![thermal.png](docu%2Fimages%2Fthermal.png)
+
 Figure 1c: Thermal models for the semiconductor switches and the capacitor.
 
 ## Sweeping Operation
