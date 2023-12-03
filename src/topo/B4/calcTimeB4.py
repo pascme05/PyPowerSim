@@ -53,7 +53,7 @@ def calcTimeB4(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     if setupTopo['outFilter'] == 0:
         v_out = v_ab
     else:
-        _, v_out, _, = sig.lsim(mdl['SS']['Out'], v_ab, t, X0=v_ab[0])
+        _, v_out, _, = sig.lsim(mdl['SS']['Out'], v_ab, t)
     
     # ------------------------------------------
     # Load 

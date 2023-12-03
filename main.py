@@ -33,7 +33,6 @@ from src.general.sanityCheck import sanityInput
 from src.general.saveResults import saveResults
 from src.general.genLoadInput import genLoadInput
 
-
 # ==============================================================================
 # External
 # ==============================================================================
@@ -242,7 +241,7 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     # Plot Results
     # ==============================================================================
     if setupExp['plot'] != 0:
-        plot(time, freq, sweep, setupPara, setupData, setupTopo, setupExp)
+        plot(mdl, para, time, freq, sweep, setupPara, setupData, setupTopo, setupExp)
 
     # ==============================================================================
     # MSG OUT

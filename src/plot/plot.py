@@ -25,23 +25,59 @@ from src.plot.plotTrans_B4 import plotTrans_B4
 from src.plot.plotSweep_B6 import plotSweep_B6
 from src.plot.plotStat_B6 import plotStat_B6
 from src.plot.plotTrans_B6 import plotTrans_B6
+from src.plot.plotGen import plotGenTF, plotGenLoss, plotGenTher
 
 
 # ==============================================================================
 # External
 # ==============================================================================
+import matplotlib.style as mplstyle
+mplstyle.use('fast')
 
 
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def plot(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
+def plot(mdl, para, time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
     print("------------------------------------------")
-    print("START: Plotting waveforms")
+    print("START: Plotting")
     print("------------------------------------------")
+
+    ###################################################################################################################
+    # General
+    ###################################################################################################################
+    if setupExp['plotGen'] == 1:
+        # ------------------------------------------
+        # Msg
+        # ------------------------------------------
+        print("INFO: Plotting general information")
+
+        # ------------------------------------------
+        # Bode Plots
+        # ------------------------------------------
+        try:
+            plotGenTF(mdl, setupPara, setupTopo)
+        except:
+            print("WARN: Bode plots could not been created")
+
+        # ------------------------------------------
+        # Loss Models
+        # ------------------------------------------
+        try:
+            plotGenLoss(para, setupPara, setupData)
+        except:
+            print("WARN: Loss plots could not been created")
+
+        # ------------------------------------------
+        # Thermal Models
+        # ------------------------------------------
+        try:
+            plotGenTher(para)
+        except:
+            print("WARN: Thermal plots could not been created")
 
     ###################################################################################################################
     # B2

@@ -63,7 +63,7 @@ def calcLossCap(t, i_c, Tj, para, setupPara, setupTopo):
     # ------------------------------------------
     # Constant
     # ------------------------------------------
-    if setupPara['Elec']['CapMdl'] == "con" or setupPara['Elec']['SwiMdl'] == "pwl":
+    if setupPara['Elec']['CapMdl'] == "con" or setupPara['Elec']['CapMdl'] == "pwl":
         ESR = para['Cap']['Elec']['con']['ESR']
 
     # ------------------------------------------

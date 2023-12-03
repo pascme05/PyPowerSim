@@ -93,7 +93,7 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupExp):
         if setupPara['Elec']['SwiType'] == "MOSFET":
             Eon = 0.50 * np.max(np.abs(v_T)) * np.max(np.abs(i_T)) * (para['Swi']['Elec']['con']['tr'] + para['Swi']['Elec']['con']['tf']) + 0.5 * para['Swi']['Elec']['con']['Coss'] * np.max(np.abs(v_T)) ** 2 * np.ones(np.size(i_T))
             Eoff = 0.50 * np.max(np.abs(v_T)) * np.max(np.abs(i_T)) * (para['Swi']['Elec']['con']['tr'] + para['Swi']['Elec']['con']['tf']) + 0.5 * para['Swi']['Elec']['con']['Coss'] * np.max(np.abs(v_T)) ** 2 * np.ones(np.size(i_T))
-            Erec = 0.25 * para['Swi']['Elec']['con']['Qrr'] * np.max(np.abs(v_D)) * np.ones(np.size(i_T)) + 0.5 * para['Swi']['Elec']['con']['Crss'] * np.max(np.abs(v_T)) ** 2 * np.ones(np.size(i_T))
+            Erec = 0.25 * para['Swi']['Elec']['con']['Qrr'] * np.max(np.abs(v_D)) * np.ones(np.size(i_T)) + 0.5 * para['Swi']['Elec']['con']['Crss'] * np.max(np.abs(v_D)) ** 2 * np.ones(np.size(i_T))
 
     # ------------------------------------------
     # Piece-wise-linear
@@ -103,7 +103,7 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupExp):
         if setupPara['Elec']['SwiType'] == "IGBT":
             Eon = para['Swi']['Elec']['con']['Eon'] * np.abs(i_T) / para['Swi']['Elec']['con']['Inom'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
             Eoff = para['Swi']['Elec']['con']['Eoff'] * np.abs(i_T) / para['Swi']['Elec']['con']['Inom'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
-            Erec = para['Swi']['Elec']['con']['Erec'] * np.abs(i_T) / para['Swi']['Elec']['con']['Inom'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
+            Erec = para['Swi']['Elec']['con']['Erec'] * np.abs(i_D) / para['Swi']['Elec']['con']['Inom'] * np.max(np.abs(v_D)) / para['Swi']['Elec']['con']['Vnom']
 
         # MOSFET
         if setupPara['Elec']['SwiType'] == "MOSFET":
@@ -130,7 +130,7 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara, setupExp):
             for i in range(0, len(i_T)):
                 Eon[i] = Eon_2d(t_Tj, i_T[i]) * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
                 Eoff[i] = Eoff_2d(t_Tj, i_T[i]) * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
-                Erec[i] = Erec_2d(t_Tj, i_D[i]) * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
+                Erec[i] = Erec_2d(t_Tj, i_D[i]) * np.max(np.abs(v_D)) / para['Swi']['Elec']['con']['Vnom']
 
         # MOSFET
         if setupPara['Elec']['SwiType'] == "MOSFET" and setupPara['PWM']['swloss'] == 1:

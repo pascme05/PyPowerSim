@@ -73,6 +73,7 @@ setupExp['int'] = 20                                                            
 # Output
 # ------------------------------------------
 setupExp['plot'] = 2                                                                                                    # (0): no results are plotted, (1): results are plotted, (2): analytic results are plotted
+setupExp['plotGen'] = 1                                                                                                 # (0): no generic plots, (1): loss and thermal models are plotted
 setupExp['save'] = 0                                                                                                    # (0): no results are saved, (1): results are saved
 
 # ==============================================================================
