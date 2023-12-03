@@ -54,7 +54,7 @@ toolkit can be found in \docu.
 
 # Results
 In the following chapter a set of reference results is provided using the B6 converter 
-architecture and the “init.txt” setup file provide in \setup. For a first test run use start.py to calculate 
+architecture and the default setup file. For a first test run use start.py to calculate 
 the results presented below.
 
 ![img.png](docu/images/img.png)
