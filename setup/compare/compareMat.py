@@ -126,9 +126,9 @@ setupTopo['sourceType'] = "B2"                                                  
 # ------------------------------------------
 # Input
 setupTopo['inpFilter'] = 0                                                                                              # 0) input filter is deactivated, 1) input filter is activated
-setupTopo['Rinp'] = 1e-3                                                                                                # input filter resistance (Ohm)
-setupTopo['Linp'] = 2e-3                                                                                                # input filter inductance (H)
-setupTopo['Cinp'] = 1e-3                                                                                                # input filter capacitance (F)
+setupTopo['Rinp'] = 0.2                                                                                                 # input filter resistance (Ohm)
+setupTopo['Linp'] = 1e-3                                                                                                # input filter inductance (H)
+setupTopo['Cinp'] = 5e-4                                                                                                # input filter capacitance (F)
 
 # Output
 setupTopo['outFilter'] = 0                                                                                              # 0) output filter is deactivated, 1) output filter is activated
