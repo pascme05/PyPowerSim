@@ -69,7 +69,7 @@ low-side switch $S_{a}^{-}$ and can be expressed in the time-domain by the Fouri
 
 $s_{a}(t) = \sum_{v=1}^{\infty} (a_v cos(v \omega_{el} t) + b_v cos(v \omega_{el} t)) = \sum_{v=1}^{\infty} c_v e^{-j v \omega_{el} t} $ (2)
 
-where $a_v$,$b_v$,$c_v$ are the Fourier series coefficients, $v$ is the harmonic number and $\omega_{el}$ is the 
+where $a_v$, $b_v$, $c_v$ are the Fourier series coefficients, $v$ is the harmonic number and $\omega_{el}$ is the 
 electrical circular frequency of the output current. The relation between the current and voltage on the load side can 
 then be expressed by the following differential equation in (3):
 
