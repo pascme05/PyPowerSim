@@ -103,14 +103,17 @@ Below the simulation results of the waveform analysis are displayed. The modulat
 the load currents and voltages in the time-, frequency- and modulation-domain are illustrated in Figure 3 and Figure 4.
 
 ![img.png](docu%2Fimages%2Fimg.png)
+
 Figure 2: Modulation function of a B6 converter using space vector modulation and a standard switching sequence 
 (0127) with a pulse number of $Q$=21 and $M_i$=1.0
 
 ![img_1.png](docu%2Fimages%2Fimg_1.png)
+
 Figure 3: Currents of a B6 converter using space vector modulation and a standard switching sequence (0127) with a 
 pulse number of $Q$=21 and $M_i$=1.0. The load angle is equal to $\phi$=17 deg.
 
 ![img_2.png](docu%2Fimages%2Fimg_2.png)
+
 Figure 4: Voltages of a B6 converter using space vector modulation and a standard switching sequence (0127) with a 
 pulse number of $Q$=21 and $M_i$=1.0. The load angle is equal to $\phi$=17 deg.
 
