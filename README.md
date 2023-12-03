@@ -67,13 +67,13 @@ $v_{a0}(t) = s_{a}(t) \cdot \frac{V_{dc}}{2}$     (1)
 The switching function can hereby be described as a set of on- and off-states of the high-side switch $S_{a}^{+}$ and the 
 low-side switch $S_{a}^{-}$ and can be expressed in the time-domain by the Fourier series in (2):
 
-$s_{a}(t) = \sum_{v=1}^{\infty} (a_v cos(v \omega_{el} t) + b_v cos(v \omega_{el} t)) = \sum_{v=1}^{\infty} c_v e^{-j v \omega_{el} t} $ (2)
+$s_{a}(t) = \sum_{v=1}^{\infty} (a_v cos(v \omega_{el} t) + b_v cos(v \omega_{el} t)) = \sum_{v=1}^{\infty} c_v e^{-j v \omega_{el} t}$ (2)
 
 where $a_v$, $b_v$, $c_v$ are the Fourier series coefficients, $v$ is the harmonic number and $\omega_{el}$ is the 
 electrical circular frequency of the output current. The relation between the current and voltage on the load side can 
 then be expressed by the following differential equation in (3):
 
-$v_{L}(t) = R_{L} i_{L}(t) + L_{L} \frac{di_{L}}{dt} + e(t) $ (3)
+$v_{L}(t) = R_{L} i_{L}(t) + L_{L} \frac{di_{L}}{dt} + e(t)$ (3)
 
 where $R_{L}$, $L_{L}$ are the resistance and the inductance of the load, $e(t)$ is the induced voltage, and $v_{L}(t)$, $i_{L}(t)$ 
 are the load voltage and current respectively.
