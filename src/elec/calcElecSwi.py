@@ -43,12 +43,6 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     RonD = para['Swi']['Elec']['con']['RonD']
 
     # ==============================================================================
-    # Variables
-    # ==============================================================================
-    VfT = np.zeros(np.size(Is))
-    VfD = np.zeros(np.size(Is))
-
-    # ==============================================================================
     # Output
     # ==============================================================================
     out = pd.DataFrame(columns=['i_T', 'v_T', 'i_D', 'v_D'])
@@ -69,28 +63,28 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
             VfD = Vfd * np.ones(np.size(Is))
 
         # MOSFET
-        if setupPara['Elec']['SwiType'] == "MOSFET":
+        else:
             VfT = Vf * np.ones(np.size(Is))
             VfD = Vfd * np.ones(np.size(Is))
 
     # ------------------------------------------
     # Piece-wise linear (tbi)
     # ------------------------------------------
-    if setupPara['Elec']['SwiMdl'] == "pwl":
+    elif setupPara['Elec']['SwiMdl'] == "pwl":
         # IGBT
         if setupPara['Elec']['SwiType'] == "IGBT":
             VfT = Vf + Ron * np.abs(Is)
             VfD = Vfd + RonD * np.abs(Is)
 
         # MOSFET
-        if setupPara['Elec']['SwiType'] == "MOSFET":
+        else:
             VfT = Ron * np.abs(Is)
             VfD = Vfd + RonD * np.abs(Is)
 
     # ------------------------------------------
     # Tabular
     # ------------------------------------------
-    if setupPara['Elec']['SwiMdl'] == "tab":
+    else:
         pool = multiprocessing.Pool(processes=None)
         Vce_2d = partial(para['Swi']['Elec']['tab']['Vce_2d'], Tj)
         Vfd_2d = partial(para['Swi']['Elec']['tab']['Vfd_2d'], Tj)
