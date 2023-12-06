@@ -21,13 +21,15 @@
 # External
 # ==============================================================================
 import pandas as pd
+import numpy as np
 from os.path import join as pjoin
+from scipy import interpolate, integrate
 
 
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def loadParaSwi(name, path, setupPara):
+def loadParaSwi(name, path, setupPara, setupData, setupExp):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -189,6 +191,87 @@ def loadParaSwi(name, path, setupPara):
         para['Elec']['con']['Ciss'] = para['Elec']['con']['Ciss'] * 0
         para['Elec']['con']['Coss'] = para['Elec']['con']['Coss'] * 0
         para['Elec']['con']['Crss'] = para['Elec']['con']['Crss'] * 0
+
+    # ==============================================================================
+    # Interpolation Functions
+    # ==============================================================================
+    try:
+        # ------------------------------------------
+        # Init
+        # ------------------------------------------
+        # General
+        nInt = setupExp['int']
+
+        # Voltages
+        try:
+            V_int = np.linspace(0, int(np.max(para['Elec']['vec']['Vf'].values)), nInt)
+        except:
+            V_int = np.linspace(0, int(np.max(np.abs(setupData['stat']['Vdc']))), nInt)
+
+        # Energies
+        Coss_int = np.zeros((len(para['Elec']['vec']['Tj']), len(V_int)))
+        Crss_int = np.zeros((len(para['Elec']['vec']['Tj']), len(V_int)))
+        Eoss_2d = np.zeros((len(para['Elec']['vec']['Tj']), len(V_int)))
+        Erss_2d = np.zeros((len(para['Elec']['vec']['Tj']), len(V_int)))
+
+        # ------------------------------------------
+        # Elec
+        # ------------------------------------------
+        para['Elec']['tab']['Vce_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
+                                                             para['Elec']['vec']['If'].to_numpy(),
+                                                             para['Elec']['tab']['Vf'].to_numpy(),
+                                                             kind='linear')
+        para['Elec']['tab']['Vfd_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
+                                                             para['Elec']['vec']['Ifd'].to_numpy(),
+                                                             para['Elec']['tab']['Vfd'].to_numpy(),
+                                                             kind='linear')
+
+        # ------------------------------------------
+        # Losses
+        # ------------------------------------------
+        # IGBT
+        if setupPara['Elec']['SwiType'] == "IGBT" or setupPara['PWM']['swloss'] == 0:
+            para['Elec']['tab']['Eon_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
+                                                                 para['Elec']['vec']['If'].to_numpy(),
+                                                                 para['Elec']['tab']['Eon'].to_numpy(),
+                                                                 kind='linear')
+            para['Elec']['tab']['Eoff_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
+                                                                  para['Elec']['vec']['If'].to_numpy(),
+                                                                  para['Elec']['tab']['Eoff'].to_numpy(),
+                                                                  kind='linear')
+            para['Elec']['tab']['Erec_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
+                                                                  para['Elec']['vec']['Ifd'].to_numpy(),
+                                                                  para['Elec']['tab']['Erec'].to_numpy(),
+                                                                  kind='linear')
+
+        # MOSFET
+        if setupPara['Elec']['SwiType'] == "MOSFET" and setupPara['PWM']['swloss'] == 1:
+            para['Elec']['tab']['Coss_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
+                                                                  para['Elec']['vec']['Vf'].to_numpy(),
+                                                                  para['Elec']['tab']['Coss'].to_numpy(),
+                                                                  kind='linear')
+            para['Elec']['tab']['Crss_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
+                                                                  para['Elec']['vec']['Vf'].to_numpy(),
+                                                                  para['Elec']['tab']['Crss'].to_numpy(),
+                                                                  kind='linear')
+
+            for i in range(0, len(para['Elec']['vec']['Tj'])):
+                for ii in range(0, len(V_int)):
+                    Coss_int[i, ii] = para['Elec']['tab']['Coss_2d'](para['Elec']['vec']['Tj'][i], V_int[ii])
+                    Crss_int[i, ii] = para['Elec']['tab']['Crss_2d'](para['Elec']['vec']['Tj'][i], V_int[ii])
+                Qoss = integrate.cumulative_trapezoid(Coss_int[i, :], x=V_int, initial=V_int[0])
+                Qrss = integrate.cumulative_trapezoid(Crss_int[i, :], x=V_int, initial=V_int[0])
+                Eoss_2d[i, :] = integrate.cumulative_trapezoid(Qoss, x=V_int, initial=V_int[0])
+                Erss_2d[i, :] = integrate.cumulative_trapezoid(Qrss, x=V_int, initial=V_int[0])
+
+            para['Elec']['tab']['Eon_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
+                                                                 V_int, np.transpose(Eoss_2d), kind='linear')
+            para['Elec']['tab']['Eoff_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
+                                                                  V_int, np.transpose(Eoss_2d), kind='linear')
+            para['Elec']['tab']['Erec_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
+                                                                  V_int, np.transpose(Erss_2d), kind='linear')
+    except:
+        print("WARN: Two dimensional loss data could not be extracted")
 
     ###################################################################################################################
     # Return

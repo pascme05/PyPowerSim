@@ -23,7 +23,8 @@
 import numpy as np
 import pandas as pd
 import copy
-from scipy import interpolate
+import multiprocessing
+from functools import partial
 
 
 #######################################################################################################################
@@ -90,31 +91,11 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     # Tabular
     # ------------------------------------------
     if setupPara['Elec']['SwiMdl'] == "tab":
-        # IGBT
-        if setupPara['Elec']['SwiType'] == "IGBT":
-            Vce_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),
-                                          para['Swi']['Elec']['vec']['If'].to_numpy(),
-                                          para['Swi']['Elec']['tab']['Vf'].to_numpy(), kind='linear')
-            Vfd_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),
-                                          para['Swi']['Elec']['vec']['Ifd'].to_numpy(),
-                                          para['Swi']['Elec']['tab']['Vfd'].to_numpy(), kind='linear')
-
-            for i in range(0, len(Is)):
-                VfT[i] = Vce_2d(Tj, abs(Is[i]))
-                VfD[i] = Vfd_2d(Tj, abs(Is[i]))
-
-        # MOSFET
-        if setupPara['Elec']['SwiType'] == "MOSFET":
-            Vce_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),
-                                          para['Swi']['Elec']['vec']['If'].to_numpy(),
-                                          para['Swi']['Elec']['tab']['Vf'].to_numpy(), kind='linear')
-            Vfd_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),
-                                          para['Swi']['Elec']['vec']['Ifd'].to_numpy(),
-                                          para['Swi']['Elec']['tab']['Vfd'].to_numpy(), kind='linear')
-
-            for i in range(0, len(Is)):
-                VfT[i] = Vce_2d(Tj, abs(Is[i]))
-                VfD[i] = Vfd_2d(Tj, abs(Is[i]))
+        pool = multiprocessing.Pool(processes=None)
+        Vce_2d = partial(para['Swi']['Elec']['tab']['Vce_2d'], Tj)
+        Vfd_2d = partial(para['Swi']['Elec']['tab']['Vfd_2d'], Tj)
+        VfT = np.array(pool.map(Vce_2d, abs(Is)))[:, 0]
+        VfD = np.array(pool.map(Vfd_2d, abs(Is)))[:, 0]
 
     # ==============================================================================
     # Parameterize PWM Method

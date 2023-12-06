@@ -202,7 +202,7 @@ def calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
         for i in range(0, len(id2)):
             timeLoss['sw'][id2[i]] = calcLossSwi(s[id3[i]][start:ende] * (-1) ** i, timeElec['sw'][id2[i]]['i_T'],
                                                  timeElec['sw'][id2[i]]['i_D'], timeElec['sw'][id2[i]]['v_T'],
-                                                 timeElec['sw'][id2[i]]['v_D'], T_sw[i], para, setupPara, setupExp)
+                                                 timeElec['sw'][id2[i]]['v_D'], T_sw[i], para, setupPara)
 
         # Capacitor
         timeLoss['cap']['C1'] = calcLossCap(t, timeDc['i_c'], T_ca, para, setupPara, setupTopo)

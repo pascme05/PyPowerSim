@@ -190,7 +190,7 @@ def calcTransB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
             for j in range(0, len(id2)):
                 timeElec['sw'][id2[j]] = calcElecSwi(Vdc, timeAc['i_a'][start:ende], (s[start:ende] == (-1) ** j), Tj[j], id5[j], para, setupPara)
                 timeLoss['sw'][id2[j]] = calcLossSwi(s[start:ende] * (-1) ** j, timeElec['sw'][id2[j]]['i_T'], timeElec['sw'][id2[j]]['i_D'],
-                                                     timeElec['sw'][id2[j]]['v_T'], timeElec['sw'][id2[j]]['v_D'], Tj[j], para, setupPara, setupExp)
+                                                     timeElec['sw'][id2[j]]['v_T'], timeElec['sw'][id2[j]]['v_D'], Tj[j], para, setupPara)
 
                 if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:
                     [timeTher['sw'][id6[j]], Tinit_T[:, j]] = calcTherRC(Tinit_T[:, j], Ta, timeLoss['sw'][id2[j]]['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)

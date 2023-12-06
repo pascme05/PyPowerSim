@@ -80,7 +80,7 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     # Parameter
     # ==============================================================================
     try:
-        para = loadPara(setupTopo, setupPath, setupPara)
+        para = loadPara(setupTopo, setupPath, setupPara, setupData, setupExp)
     except:
         sys.exit('ERROR: Parameters could not be loaded')
 

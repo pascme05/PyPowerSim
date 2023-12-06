@@ -207,4 +207,5 @@ setupPara['Ther']['Coupling'] = 1                                               
 #######################################################################################################################
 # Calculations
 #######################################################################################################################
-main(setupExp, setupData, setupTopo, setupPara, setupPath)
+if __name__ == '__main__':
+    main(setupExp, setupData, setupTopo, setupPara, setupPath)

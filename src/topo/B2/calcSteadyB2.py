@@ -183,10 +183,10 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
         # Switches
         timeLoss['sw']['S1'] = calcLossSwi(s[start:ende] * (+1), timeElec['sw']['S1']['i_T'],
                                            timeElec['sw']['S1']['i_D'], timeElec['sw']['S1']['v_T'],
-                                           timeElec['sw']['S1']['v_D'], T_sw[0], para, setupPara, setupExp)
+                                           timeElec['sw']['S1']['v_D'], T_sw[0], para, setupPara)
         timeLoss['sw']['S2'] = calcLossSwi(s[start:ende] * (-1), timeElec['sw']['S2']['i_T'],
                                            timeElec['sw']['S2']['i_D'], timeElec['sw']['S2']['v_T'],
-                                           timeElec['sw']['S2']['v_D'], T_sw[1], para, setupPara, setupExp)
+                                           timeElec['sw']['S2']['v_D'], T_sw[1], para, setupPara)
 
         # Capacitor
         timeLoss['cap']['C1'] = calcLossCap(t, timeDc['i_c'], T_ca, para, setupPara, setupTopo)
