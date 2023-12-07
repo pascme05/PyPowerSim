@@ -23,7 +23,8 @@
 import pandas as pd
 import numpy as np
 from os.path import join as pjoin
-from scipy import interpolate, integrate
+from scipy import integrate
+from scipy.interpolate import griddata, RegularGridInterpolator
 
 
 #######################################################################################################################
@@ -217,43 +218,62 @@ def loadParaSwi(name, path, setupPara, setupData, setupExp):
         # ------------------------------------------
         # Elec
         # ------------------------------------------
-        para['Elec']['tab']['Vce_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
-                                                             para['Elec']['vec']['If'].to_numpy(),
-                                                             para['Elec']['tab']['Vf'].to_numpy(),
-                                                             kind='linear')
-        para['Elec']['tab']['Vfd_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
-                                                             para['Elec']['vec']['Ifd'].to_numpy(),
-                                                             para['Elec']['tab']['Vfd'].to_numpy(),
-                                                             kind='linear')
+        # Transistor
+        x = (para['Elec']['vec']['Tj'].to_numpy() * np.ones((len(para['Elec']['vec']['If'].to_numpy()), len(para['Elec']['vec']['Tj'].to_numpy())))).flatten(order='F')
+        y = np.tile(para['Elec']['vec']['If'].to_numpy(), len(para['Elec']['vec']['Tj'].to_numpy()))
+        z = para['Elec']['tab']['Vf'].to_numpy('float').flatten(order='F')
+        xi = np.linspace(np.min(x), np.max(x), 20)
+        yi = np.linspace(np.min(y), np.max(y), 20)
+        xg, yg = np.meshgrid(yi, xi)
+        zi = griddata((y, x), z, (xg, yg), method='linear')
+        para['Elec']['tab']['Vce_2d'] = RegularGridInterpolator((xi, yi), zi)
+
+        # Diode
+        x = (para['Elec']['vec']['Tj'].to_numpy() * np.ones((len(para['Elec']['vec']['Ifd'].to_numpy()), len(para['Elec']['vec']['Tj'].to_numpy())))).flatten(order='F')
+        y = np.tile(para['Elec']['vec']['Ifd'].to_numpy(), len(para['Elec']['vec']['Tj'].to_numpy()))
+        z = para['Elec']['tab']['Vfd'].to_numpy('float').flatten(order='F')
+        xi = np.linspace(np.min(x), np.max(x), 20)
+        yi = np.linspace(np.min(y), np.max(y), 20)
+        xg, yg = np.meshgrid(yi, xi)
+        zi = griddata((y, x), z, (xg, yg), method='linear')
+        para['Elec']['tab']['Vfd_2d'] = RegularGridInterpolator((xi, yi), zi)
 
         # ------------------------------------------
         # Losses
         # ------------------------------------------
         # IGBT
         if setupPara['Elec']['SwiType'] == "IGBT" or setupPara['PWM']['swloss'] == 0:
-            para['Elec']['tab']['Eon_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
-                                                                 para['Elec']['vec']['If'].to_numpy(),
-                                                                 para['Elec']['tab']['Eon'].to_numpy(),
-                                                                 kind='linear')
-            para['Elec']['tab']['Eoff_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
-                                                                  para['Elec']['vec']['If'].to_numpy(),
-                                                                  para['Elec']['tab']['Eoff'].to_numpy(),
-                                                                  kind='linear')
-            para['Elec']['tab']['Erec_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
-                                                                  para['Elec']['vec']['Ifd'].to_numpy(),
-                                                                  para['Elec']['tab']['Erec'].to_numpy(),
-                                                                  kind='linear')
+            x = (para['Elec']['vec']['Tj'].to_numpy() * np.ones((len(para['Elec']['vec']['If'].to_numpy()), len(para['Elec']['vec']['Tj'].to_numpy())))).flatten(order='F')
+            y = np.tile(para['Elec']['vec']['If'].to_numpy(), len(para['Elec']['vec']['Tj'].to_numpy()))
+            z = para['Elec']['tab']['Eon'].to_numpy('float').flatten(order='F')
+            xi = np.linspace(np.min(x), np.max(x), 20)
+            yi = np.linspace(np.min(y), np.max(y), 20)
+            xg, yg = np.meshgrid(yi, xi)
+            zi = griddata((y, x), z, (xg, yg), method='linear')
+            para['Elec']['tab']['Eon_2d'] = RegularGridInterpolator((xi, yi), zi)
+
+            z = para['Elec']['tab']['Eoff'].to_numpy('float').flatten(order='F')
+            zi = griddata((y, x), z, (xg, yg), method='linear')
+            para['Elec']['tab']['Eoff_2d'] = RegularGridInterpolator((xi, yi), zi)
+
+            z = para['Elec']['tab']['Erec'].to_numpy('float').flatten(order='F')
+            zi = griddata((y, x), z, (xg, yg), method='linear')
+            para['Elec']['tab']['Erec_2d'] = RegularGridInterpolator((xi, yi), zi)
 
         # MOSFET
         if setupPara['Elec']['SwiType'] == "MOSFET" and setupPara['PWM']['swloss'] == 1:
-            para['Elec']['tab']['Coss_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
-                                                                  para['Elec']['vec']['Vf'].to_numpy(),
-                                                                  para['Elec']['tab']['Coss'].to_numpy(),
-                                                                  kind='linear')
-            para['Elec']['tab']['Crss_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
-                                                                  para['Elec']['vec']['Vf'].to_numpy(),
-                                                                  para['Elec']['tab']['Crss'].to_numpy(),
-                                                                  kind='linear')
+            x = (para['Elec']['vec']['Tj'].to_numpy() * np.ones((len(para['Elec']['vec']['Vf'].to_numpy()), len(para['Elec']['vec']['Tj'].to_numpy())))).flatten(order='F')
+            y = np.tile(para['Elec']['vec']['Vf'].to_numpy(), len(para['Elec']['vec']['Tj'].to_numpy()))
+            z = para['Elec']['tab']['Coss'].to_numpy('float').flatten(order='F')
+            xi = np.linspace(np.min(x), np.max(x), 20)
+            yi = np.linspace(np.min(y), np.max(y), 20)
+            xg, yg = np.meshgrid(yi, xi)
+            zi = griddata((y, x), z, (xg, yg), method='linear')
+            para['Elec']['tab']['Coss_2d'] = RegularGridInterpolator((xi, yi), zi)
+
+            z = para['Elec']['tab']['Crss'].to_numpy('float').flatten(order='F')
+            zi = griddata((y, x), z, (xg, yg), method='linear')
+            para['Elec']['tab']['Crss_2d'] = RegularGridInterpolator((xi, yi), zi)
 
             for i in range(0, len(para['Elec']['vec']['Tj'])):
                 for ii in range(0, len(V_int)):
@@ -264,12 +284,22 @@ def loadParaSwi(name, path, setupPara, setupData, setupExp):
                 Eoss_2d[i, :] = integrate.cumulative_trapezoid(Qoss, x=V_int, initial=V_int[0])
                 Erss_2d[i, :] = integrate.cumulative_trapezoid(Qrss, x=V_int, initial=V_int[0])
 
-            para['Elec']['tab']['Eon_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
-                                                                 V_int, np.transpose(Eoss_2d), kind='linear')
-            para['Elec']['tab']['Eoff_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
-                                                                  V_int, np.transpose(Eoss_2d), kind='linear')
-            para['Elec']['tab']['Erec_2d'] = interpolate.interp2d(para['Elec']['vec']['Tj'].to_numpy(),
-                                                                  V_int, np.transpose(Erss_2d), kind='linear')
+            x = (para['Elec']['vec']['Tj'].to_numpy() * np.ones((len(V_int), len(para['Elec']['vec']['Tj'].to_numpy())))).flatten(order='F')
+            y = np.tile(V_int, len(para['Elec']['vec']['Tj'].to_numpy()))
+            z = np.transpose(Eoss_2d).flatten(order='F')
+            xi = np.linspace(np.min(x), np.max(x), 20)
+            yi = np.linspace(np.min(y), np.max(y), 20)
+            xg, yg = np.meshgrid(yi, xi)
+            zi = griddata((y, x), z, (xg, yg), method='linear')
+            para['Elec']['tab']['Eon_2d'] = RegularGridInterpolator((xi, yi), zi)
+
+            z = np.transpose(Eoss_2d).flatten(order='F')
+            zi = griddata((y, x), z, (xg, yg), method='linear')
+            para['Elec']['tab']['Eoff_2d'] = RegularGridInterpolator((xi, yi), zi)
+
+            z = np.transpose(Erss_2d).flatten(order='F')
+            zi = griddata((y, x), z, (xg, yg), method='linear')
+            para['Elec']['tab']['Erec_2d'] = RegularGridInterpolator((xi, yi), zi)
     except:
         print("WARN: Two dimensional loss data could not be extracted")
 

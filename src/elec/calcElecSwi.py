@@ -23,8 +23,6 @@
 import numpy as np
 import pandas as pd
 import copy
-import multiprocessing
-from functools import partial
 
 
 #######################################################################################################################
@@ -85,11 +83,8 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     # Tabular
     # ------------------------------------------
     else:
-        pool = multiprocessing.Pool(processes=None)
-        Vce_2d = partial(para['Swi']['Elec']['tab']['Vce_2d'], Tj)
-        Vfd_2d = partial(para['Swi']['Elec']['tab']['Vfd_2d'], Tj)
-        VfT = np.array(pool.map(Vce_2d, abs(Is)))[:, 0]
-        VfD = np.array(pool.map(Vfd_2d, abs(Is)))[:, 0]
+        VfT = para['Swi']['Elec']['tab']['Vce_2d']((Tj, abs(Is)))
+        VfD = para['Swi']['Elec']['tab']['Vfd_2d']((Tj, abs(Is)))
 
     # ==============================================================================
     # Parameterize PWM Method

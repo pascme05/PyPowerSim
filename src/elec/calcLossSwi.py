@@ -23,8 +23,6 @@ from src.general.helpFnc import zoh_easy
 # ==============================================================================
 import numpy as np
 import pandas as pd
-import multiprocessing
-from functools import partial
 
 
 #######################################################################################################################
@@ -88,30 +86,20 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara):
     else:
         # IGBT
         if setupPara['Elec']['SwiType'] == "IGBT" or setupPara['PWM']['swloss'] == 0:
-            pool = multiprocessing.Pool(processes=None)
-            Eon_2d = partial(para['Swi']['Elec']['tab']['Eon_2d'], t_Tj)
-            Eoff_2d = partial(para['Swi']['Elec']['tab']['Eoff_2d'], t_Tj)
-            Erec_2d = partial(para['Swi']['Elec']['tab']['Erec_2d'], t_Tj)
-            Eon = np.array(pool.map(Eon_2d, abs(i_T)))[:, 0] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
-            Eoff = np.array(pool.map(Eoff_2d, abs(i_T)))[:, 0] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
-            Erec = np.array(pool.map(Erec_2d, abs(i_D)))[:, 0] * np.max(np.abs(v_D)) / para['Swi']['Elec']['con']['Vnom']
+            Eon = para['Swi']['Elec']['tab']['Eon_2d']((t_Tj, abs(i_T))) * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
+            Eoff = para['Swi']['Elec']['tab']['Eoff_2d']((t_Tj, abs(i_T))) * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
+            Erec = para['Swi']['Elec']['tab']['Erec_2d']((t_Tj, abs(i_D))) * np.max(np.abs(v_D)) / para['Swi']['Elec']['con']['Vnom']
 
         # MOSFET
         else:
             IGon = (para['Swi']['Elec']['con']['Vg'] - para['Swi']['Elec']['con']['Vpl']) / para['Swi']['Elec']['con']['Rg']
             IGoff = para['Swi']['Elec']['con']['Vpl'] / para['Swi']['Elec']['con']['Rg']
 
-            pool = multiprocessing.Pool(processes=None)
-            Eon_2d = partial(para['Swi']['Elec']['tab']['Eon_2d'], t_Tj)
-            Eoff_2d = partial(para['Swi']['Elec']['tab']['Eoff_2d'], t_Tj)
-            Erec_2d = partial(para['Swi']['Elec']['tab']['Erec_2d'], t_Tj)
-            Crss_2d = partial(para['Swi']['Elec']['tab']['Crss_2d'], t_Tj)
-
-            Eon = np.array(pool.map(Eon_2d, abs(v_T)))[:, 0]
-            Eoff = np.array(pool.map(Eoff_2d, abs(v_T)))[:, 0]
-            Erec = np.array(pool.map(Erec_2d, abs(v_D)))[:, 0]
-            Crss1 = np.array(pool.map(Crss_2d, abs(v_T)))[:, 0]
-            Crss2 = np.array(pool.map(Crss_2d, np.max(np.abs(v_T))))[:, 0]
+            Eon = para['Swi']['Elec']['tab']['Eon_2d']((t_Tj, abs(v_T)))
+            Eoff = para['Swi']['Elec']['tab']['Eon_2d']((t_Tj, abs(v_T)))
+            Erec = para['Swi']['Elec']['tab']['Eon_2d']((t_Tj, abs(v_D)))
+            Crss1 = para['Swi']['Elec']['tab']['Crss_2d']((t_Tj, abs(v_T)))
+            Crss2 = para['Swi']['Elec']['tab']['Crss_2d']((t_Tj, np.max(np.abs(v_T))*np.ones(len(v_T))))
 
             tf1 = (np.max(np.abs(v_T)) - np.abs(v_T)) * (Crss1 / IGon)
             tf2 = (np.max(np.abs(v_T)) - np.abs(v_T)) * (Crss2 / IGon)
