@@ -189,12 +189,15 @@ def calcTransB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
             # Switch
             for j in range(0, len(id2)):
                 timeElec['sw'][id2[j]] = calcElecSwi(Vdc, timeAc['i_a'][start:ende], (s[start:ende] == (-1) ** j), Tj[j], id5[j], para, setupPara)
-                timeLoss['sw'][id2[j]] = calcLossSwi(s[start:ende] * (-1) ** j, timeElec['sw'][id2[j]]['i_T'], timeElec['sw'][id2[j]]['i_D'],
-                                                     timeElec['sw'][id2[j]]['v_T'], timeElec['sw'][id2[j]]['v_D'], Tj[j], para, setupPara)
+                timeLoss['sw'][id2[j]] = calcLossSwi(s[start:ende] * (-1) ** j, timeElec['sw'][id2[j]]['i_T'], timeElec['sw'][id2[j]]['i_D'], timeElec['sw'][id2[j]]['v_T'], timeElec['sw'][id2[j]]['v_D'], Tj[j], para, setupPara)
 
-                if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:
+                if setupPara['Ther']['Heatsink'] == 1 and setupPara['Ther']['Coupling'] == 1:
                     [timeTher['sw'][id6[j]], Tinit_T[:, j]] = calcTherRC(Tinit_T[:, j], Ta, timeLoss['sw'][id2[j]]['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
                     [timeTher['sw'][id8[j]], Tinit_C[:, j]] = calcTherRC(Tinit_C[:, j], Ta, timeLoss['sw'][id2[j]]['p_L'], t_ref[start:ende], Rth_CA, Cth_CA)
+                    timeTher['sw'][id6[j]] = timeTher['sw'][id6[j]][:] + timeTher['sw'][id8[j]][:] - Ta
+                elif setupPara['Ther']['Heatsink'] == 1 and setupPara['Ther']['Coupling'] == 2:
+                    [timeTher['sw'][id6[j]], Tinit_T[:, j]] = calcTherRC(Tinit_T[:, j], Ta, timeLoss['sw'][id2[j]]['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
+                    [timeTher['sw'][id8[j]], Tinit_C[:, j]] = calcTherRC(Tinit_C[:, j], Ta, np.mean(timeLoss['sw'][id2[j]]['p_L']) * np.ones(np.size(timeLoss['sw'][id2[j]]['p_L'])), t_ref[start:ende], Rth_CA, Cth_CA)
                     timeTher['sw'][id6[j]] = timeTher['sw'][id6[j]][:] + timeTher['sw'][id8[j]][:] - Ta
                 else:
                     [timeTher['sw'][id6[j]], Tinit_T[:, j]] = calcTherRC(Tinit_T[:, j], Ta, timeLoss['sw'][id2[j]]['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
@@ -245,8 +248,13 @@ def calcTransB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
 
     # Coupling
     for i in range(0, len(id2)):
-        if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:
+        if setupPara['Ther']['Heatsink'] == 1 and setupPara['Ther']['Coupling'] == 1:
             [out['ther']['sw'][id8[i]], _] = calcTherRC(0, Ta, out['loss']['sw'][id2[i]]['p_L'].values, t, Rth_CA, Cth_CA)
+            out['ther']['sw'][id6[i]] = out['ther']['sw'][id6[i]][:] + out['ther']['sw'][id8[i]][:] - Ta
+            out['ther']['sw'][id7[i]] = out['ther']['sw'][id7[i]][:] + out['ther']['sw'][id8[i]][:] - Ta
+        elif setupPara['Ther']['Heatsink'] == 1 and setupPara['Ther']['Coupling'] == 2:
+            Pv_Base = np.mean((out['loss']['sw']['S1']['p_L'] + out['loss']['sw']['S2']['p_L'])) / 2
+            [out['ther']['sw'][id8[i]], _] = calcTherRC(0, Ta, Pv_Base*np.ones(np.size(out['loss']['sw']['S1']['p_L'])), t, Rth_CA, Cth_CA)
             out['ther']['sw'][id6[i]] = out['ther']['sw'][id6[i]][:] + out['ther']['sw'][id8[i]][:] - Ta
             out['ther']['sw'][id7[i]] = out['ther']['sw'][id7[i]][:] + out['ther']['sw'][id8[i]][:] - Ta
         else:

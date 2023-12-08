@@ -212,7 +212,7 @@ def calcSteadyB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
             for i in range(0, len(id2)):
                 Tinit_T[:, i] = np.mean(timeLoss['sw'][id2[i]]['p_T']) * Rth_JA
                 Tinit_D[:, i] = np.mean(timeLoss['sw'][id2[i]]['p_D']) * Rth_DA
-                if setupPara['Ther']['Coupling'] == 1:
+                if setupPara['Ther']['Coupling'] != 0:
                     Tinit_K[:, i] = np.mean(timeLoss['sw'][id2[i]]['p_L']) * Rth_CA
 
             # Capacitor
@@ -221,23 +221,30 @@ def calcSteadyB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
         # ------------------------------------------
         # Thermal
         # ------------------------------------------
+        # Baseplate
+        if setupPara['Ther']['Coupling'] == 2:
+            Pv_Base = np.mean((timeLoss['sw']['S1']['p_L'] + timeLoss['sw']['S2']['p_L'] + timeLoss['sw']['S3']['p_L'] + timeLoss['sw']['S4']['p_L'])) / 4
+        else:
+            Pv_Base = 0
+
         # Switches
         for i in range(0, len(id2)):
-            [timeTher['sw'][id6[i]], Tinit_T[:, i]] = calcTherRC(Tinit_T[:, i], Tc, timeLoss['sw'][id2[i]]['p_T'],
-                                                                 t[start:ende], Rth_JA, Cth_JA)
-            [timeTher['sw'][id7[i]], Tinit_D[:, i]] = calcTherRC(Tinit_D[:, i], Tc, timeLoss['sw'][id2[i]]['p_D'],
-                                                                 t[start:ende], Rth_DA, Cth_DA)
+            [timeTher['sw'][id6[i]], Tinit_T[:, i]] = calcTherRC(Tinit_T[:, i], Tc, timeLoss['sw'][id2[i]]['p_T'], t[start:ende], Rth_JA, Cth_JA)
+            [timeTher['sw'][id7[i]], Tinit_D[:, i]] = calcTherRC(Tinit_D[:, i], Tc, timeLoss['sw'][id2[i]]['p_D'], t[start:ende], Rth_DA, Cth_DA)
             if setupPara['Ther']['Coupling'] == 1:
-                [timeTher['sw'][id8[i]], Tinit_K[:, i]] = calcTherRC(Tinit_K[:, i], Tc, timeLoss['sw'][id2[i]]['p_L'],
-                                                                     t[start:ende], Rth_CA, Cth_CA)
+                [timeTher['sw'][id8[i]], Tinit_K[:, i]] = calcTherRC(Tinit_K[:, i], Tc, timeLoss['sw'][id2[i]]['p_L'], t[start:ende], Rth_CA, Cth_CA)
                 timeTher['sw'][id6[i]] = timeTher['sw'][id6[i]][:] + timeTher['sw'][id8[i]][:] - Tc
                 timeTher['sw'][id7[i]] = timeTher['sw'][id7[i]][:] + timeTher['sw'][id8[i]][:] - Tc
+            elif setupPara['Ther']['Coupling'] == 2:
+                dT_Base = Rth_CA * Pv_Base
+                timeTher['sw'][id6[i]] = timeTher['sw'][id6[i]][:] + dT_Base
+                timeTher['sw'][id7[i]] = timeTher['sw'][id7[i]][:] + dT_Base
+                timeTher['sw'][id8[i]] = Tc * np.ones(np.size(s['A'][start:ende])) + dT_Base
             else:
                 timeTher['sw'][id8[i]] = Tc * np.ones(np.size(s['A'][start:ende]))
 
         # Capacitor
-        [timeTher['cap']['C1'], Tinit_C] = calcTherRC(Tinit_C, Tc, timeLoss['cap']['C1']['p_L'], t[start:ende],
-                                                      Rth_JA_cap, Cth_JA_cap)
+        [timeTher['cap']['C1'], Tinit_C] = calcTherRC(Tinit_C, Tc, timeLoss['cap']['C1']['p_L'], t[start:ende], Rth_JA_cap, Cth_JA_cap)
 
         # ------------------------------------------
         # Error
@@ -313,6 +320,14 @@ def calcSteadyB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # Update Thermal
     # ==============================================================================
     # ------------------------------------------
+    # Baseplate
+    # ------------------------------------------
+    if setupPara['Ther']['Coupling'] == 2:
+        Pv_Base = np.mean((timeLoss['sw']['S1']['p_L'] + timeLoss['sw']['S2']['p_L'] + timeLoss['sw']['S3']['p_L'] + timeLoss['sw']['S4']['p_L'])) / 4
+    else:
+        Pv_Base = 0
+
+    # ------------------------------------------
     # Switches
     # ------------------------------------------
     for i in range(0, len(id2)):
@@ -322,6 +337,11 @@ def calcSteadyB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
             [timeTher['sw'][id8[i]], _] = calcTherRC(Tinit_K[:, i], Tc, timeLoss['sw'][id2[i]]['p_L'], t[start:ende], Rth_CA, Cth_CA)
             timeTher['sw'][id6[i]] = timeTher['sw'][id6[i]][:] + timeTher['sw'][id8[i]][:] - Tc
             timeTher['sw'][id7[i]] = timeTher['sw'][id7[i]][:] + timeTher['sw'][id8[i]][:] - Tc
+        elif setupPara['Ther']['Coupling'] == 2:
+            dT_Base = Rth_CA * Pv_Base
+            timeTher['sw'][id6[i]] = timeTher['sw'][id6[i]][:] + dT_Base
+            timeTher['sw'][id7[i]] = timeTher['sw'][id7[i]][:] + dT_Base
+            timeTher['sw'][id8[i]] = Tc * np.ones(np.size(s['A'][start:ende])) + dT_Base
         else:
             timeTher['sw'][id8[i]] = Tc * np.ones(np.size(s['A'][start:ende]))
 

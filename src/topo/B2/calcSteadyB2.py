@@ -200,7 +200,7 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
             Tinit_D[:, 0] = np.mean(timeLoss['sw']['S1']['p_D']) * Rth_DA
             Tinit_T[:, 1] = np.mean(timeLoss['sw']['S2']['p_T']) * Rth_JA
             Tinit_D[:, 1] = np.mean(timeLoss['sw']['S2']['p_D']) * Rth_DA
-            if setupPara['Ther']['Coupling'] == 1:
+            if setupPara['Ther']['Coupling'] != 1:
                 Tinit_K[:, 0] = np.mean(timeLoss['sw']['S1']['p_L']) * Rth_CA
                 Tinit_K[:, 1] = np.mean(timeLoss['sw']['S2']['p_L']) * Rth_CA
 
@@ -210,6 +210,12 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
         # ------------------------------------------
         # Thermal
         # ------------------------------------------
+        # Baseplate
+        if setupPara['Ther']['Coupling'] == 2:
+            Pv_Base = np.mean((timeLoss['sw']['S1']['p_L'] + timeLoss['sw']['S2']['p_L'])) / 2
+        else:
+            Pv_Base = 0
+
         # Switches
         [timeTher['sw']['T1'], Tinit_T[:, 0]] = calcTherRC(Tinit_T[:, 0], Tc, timeLoss['sw']['S1']['p_T'], t[start:ende], Rth_JA, Cth_JA)
         [timeTher['sw']['T2'], Tinit_T[:, 1]] = calcTherRC(Tinit_T[:, 1], Tc, timeLoss['sw']['S2']['p_T'], t[start:ende], Rth_JA, Cth_JA)
@@ -223,6 +229,14 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
             timeTher['sw']['D1'] = timeTher['sw']['D1'][:] + timeTher['sw']['C1'] - Tc
             timeTher['sw']['T2'] = timeTher['sw']['T2'][:] + timeTher['sw']['C2'] - Tc
             timeTher['sw']['D2'] = timeTher['sw']['D2'][:] + timeTher['sw']['C2'] - Tc
+        elif setupPara['Ther']['Coupling'] == 2:
+            dT_Base = Rth_CA * Pv_Base
+            timeTher['sw']['T1'] = timeTher['sw']['T1'][:] + dT_Base
+            timeTher['sw']['T2'] = timeTher['sw']['T2'][:] + dT_Base
+            timeTher['sw']['D1'] = timeTher['sw']['D1'][:] + dT_Base
+            timeTher['sw']['D2'] = timeTher['sw']['D2'][:] + dT_Base
+            timeTher['sw']['C1'] = Tc * np.ones(np.size(s[start:ende])) + dT_Base
+            timeTher['sw']['C2'] = Tc * np.ones(np.size(s[start:ende])) + dT_Base
         else:
             timeTher['sw']['C1'] = Tc * np.ones(np.size(s[start:ende]))
             timeTher['sw']['C2'] = Tc * np.ones(np.size(s[start:ende]))
@@ -304,6 +318,14 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # Update Thermal
     # ==============================================================================
     # ------------------------------------------
+    # Baseplate
+    # ------------------------------------------
+    if setupPara['Ther']['Coupling'] == 2:
+        Pv_Base = np.mean((timeLoss['sw']['S1']['p_L'] + timeLoss['sw']['S2']['p_L'])) / 2
+    else:
+        Pv_Base = 0
+
+    # ------------------------------------------
     # Switches
     # ------------------------------------------
     # Normal
@@ -320,6 +342,14 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
         timeTher['sw']['D1'] = timeTher['sw']['D1'][:] + timeTher['sw']['C1'] - Tc
         timeTher['sw']['T2'] = timeTher['sw']['T2'][:] + timeTher['sw']['C2'] - Tc
         timeTher['sw']['D2'] = timeTher['sw']['D2'][:] + timeTher['sw']['C2'] - Tc
+    elif setupPara['Ther']['Coupling'] == 2:
+        dT_Base = Rth_CA * Pv_Base
+        timeTher['sw']['T1'] = timeTher['sw']['T1'][:] + dT_Base
+        timeTher['sw']['T2'] = timeTher['sw']['T2'][:] + dT_Base
+        timeTher['sw']['D1'] = timeTher['sw']['D1'][:] + dT_Base
+        timeTher['sw']['D2'] = timeTher['sw']['D2'][:] + dT_Base
+        timeTher['sw']['C1'] = Tc * np.ones(np.size(s[start:ende])) + dT_Base
+        timeTher['sw']['C2'] = Tc * np.ones(np.size(s[start:ende])) + dT_Base
     else:
         timeTher['sw']['C1'] = Tc * np.ones(np.size(s[start:ende]))
         timeTher['sw']['C2'] = Tc * np.ones(np.size(s[start:ende]))
