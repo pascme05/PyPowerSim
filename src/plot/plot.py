@@ -65,6 +65,11 @@ def plot(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
         if setupExp['type'] == 2:
             plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp)
 
+        # ------------------------------------------
+        # Transient
+        # ------------------------------------------
+        if setupExp['type'] == 3:
+            plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp)
     ###################################################################################################################
     # B4
     ###################################################################################################################

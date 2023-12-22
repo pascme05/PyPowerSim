@@ -56,8 +56,8 @@ setupExp['debug'] = 0                                                           
 # Operating Mode
 # ------------------------------------------
 setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled 
-setupExp['type'] = 0                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
-setupExp['loop'] = 'CL'                                                                                                 # (CL): closed-loop, (OL): open-loop
+setupExp['type'] = 3                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis, (3): Closed-Loop Control (Hysteresis)
+setupExp['loop'] = 'CL'                                                                                                 # (CL): closed-loop, (OL): open-loop (for temperature calculation)
 setupExp['freqPar'] = 'fs'                                                                                              # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
 setupExp['freqAvg'] = 'none'                                                                                            # (none): no averaging is used (fs): values are averaged over switching cycle, (fel): values are averaged over fundamental cycle
 
@@ -82,7 +82,7 @@ setupExp['save'] = 0                                                            
 # General
 # ------------------------------------------
 # Transient
-setupData['trans']['tmax'] = 10/50                                                                                       # maximum time for transient analysis (sec)
+setupData['trans']['tmax'] = 1/50                                                                                      # maximum time for transient analysis (sec)
 setupData['trans']['Tc'] = 50.0                                                                                         # reference temperature of all components (°C)
 setupData['trans']['Tj'] = 50.0                                                                                         # core temperature at t=0 of all components (°C)
 
@@ -118,7 +118,7 @@ setupTopo['CapName'] = "Elco"                                                   
 # ------------------------------------------
 # Source
 # ------------------------------------------
-setupTopo['sourceType'] = "B6"                                                                                          # (B2): half bridge, (B4): full bridge, (B6): two-level three phase converter
+setupTopo['sourceType'] = "B2"                                                                                          # (B2): half bridge, (B4): full bridge, (B6): two-level three phase converter
 
 # ------------------------------------------
 # Filter
@@ -154,7 +154,7 @@ setupTopo['fel'] = 50                                                           
 # ------------------------------------------
 # General
 # ------------------------------------------
-setupPara['PWM']['type'] = "SV"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based
+setupPara['PWM']['type'] = "CB"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based
 setupPara['PWM']['upd'] = "DE"                                                                                          # (SE): single edge, (DE): double edge 
 setupPara['PWM']['samp'] = "RS"                                                                                         # (NS): natural sampling, (RS): regular sampling
 setupPara['PWM']['tri'] = "SM"                                                                                          # modulation trigger (RE): rising edge, (FE): falling edge, (SM): symmetrical modulation, (AM): asymmetrical modualtion
@@ -172,7 +172,7 @@ setupPara['PWM']['sw'] = 0                                                      
 # ------------------------------------------
 # Switching Sequence
 # ------------------------------------------
-setupPara['PWM']['fs'] = 1050                                                                                           # PWM switching frequency (Hz)
+setupPara['PWM']['fs'] = 5000    #1000                                                                                       # PWM switching frequency (Hz)
 setupPara['PWM']['seq'] = "0127"                                                                                        # PWM switching sequence B6 bridge
 setupPara['PWM']['zero'] = "SVPWM"                                                                                      # PWM method B6 bridge (SPWM, SVPWM, THIPWM4, THIPWM6, DPWM0, DPWM1, DPWM2, DPWM3, DPWMMAX, DPWMMIN)
 

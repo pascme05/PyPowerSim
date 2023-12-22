@@ -17,6 +17,7 @@
 # Internal
 # ==============================================================================
 from src.data.loadPara import loadPara
+from src.topo.B2.calcCLB2 import calcCLB2
 from src.topo.B2.calcSweepB2 import calcSweepB2
 from src.topo.B4.calcSweepB4 import calcSweepB4
 from src.topo.B6.calcSweepB6 import calcSweepB6
@@ -157,6 +158,12 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
         # ------------------------------------------
         if setupExp['type'] == 2:
             [time, freq] = calcTransB2(mdl, para, setupTopo, setupData, setupPara, setupExp)
+
+        # ------------------------------------------
+        # Closed-Loop Control
+        # ------------------------------------------
+        if setupExp['type'] == 3:
+            [time, freq] = calcCLB2(mdl, para, setupTopo, setupData, setupPara, setupExp)
 
     # ==============================================================================
     # B4 
