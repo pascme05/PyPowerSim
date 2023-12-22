@@ -42,8 +42,8 @@ def ampl_sym_opp(alpha_a, k):
 # Cost function:
 def costfuntion(alpha):
 
-    u_kc, i_kc = ampl_sym_opp(alpha,100)
-    u_ak_sq = np.power(np.divide(u_kc[1:],i_kc[1:]), 2)
+    u_kc, i_kc = ampl_sym_opp(alpha, 100)
+    u_ak_sq = np.power(np.divide(u_kc[1:], i_kc[1:]), 2)
     wthd = np.sqrt(np.sum(u_ak_sq))
     cost = wthd
 
@@ -103,10 +103,10 @@ if __name__ == "__main__":
 
     u_k, i_k = ampl_sym_opp(np.array([np.pi/6]), 100)
     wthdc = costfuntion(np.array([np.pi/6]))
-    Num = 51
+    Num = 100
     p0 = 10
     thd = np.zeros((p0, Num))
-    Mi = np.linspace(0.0, 1, Num)
+    Mi = np.linspace(0.0, 4/np.pi, Num)
     for i in range(2, p0):
         p = 2*i + 1
         alpha0 = np.zeros(int((p - 1) / 2))

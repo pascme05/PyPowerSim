@@ -48,7 +48,7 @@ def ampl_sym_opp(alpha_a, k):
     # Theory
     # ------------------------------------------
     swi_alpha = [-2 if idx % 2 == 1 else 2 for idx, _ in enumerate(alpha_a)]
-    i_ak = [x for x in range(1, k+1, 2) if x % 3 != 0]                                                                    # Fundamental and relevant harmonic components only
+    i_ak = [x for x in range(1, k+1, 2)]                                                                    # Fundamental and relevant harmonic components only
     u_ak = [0]*len(i_ak)
 
     # ------------------------------------------
