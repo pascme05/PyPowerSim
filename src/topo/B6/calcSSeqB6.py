@@ -19,8 +19,8 @@
 from src.general.helpFnc import deadTime
 from src.general.helpFnc import cbInter
 from src.general.helpFnc import con2dis
-from src.general.genSwSeq import genSwSeq
-from src.general.svPWM import svPWM
+from src.pwm.genSwSeq import genSwSeq
+from src.pwm.svPWM import svPWM
 
 # ==============================================================================
 # External
@@ -410,10 +410,71 @@ def calcSSeqB6_SV(ref, t, Mi, setupPara, setupTopo):
     # Switching times
     # ==============================================================================
     if setupPara['PWM']['upd'] == "SE":
-        st = np.hstack((t0, t0 + t1, 1 - t7, np.ones((Ns * N, 1)), 1 + t7, 1 + t7 + t2, 2 - t0, 2 * np.ones((Ns * N, 1))))
+        # ------------------------------------------
+        # 0121
+        # ------------------------------------------
+        if setupPara['PWM']['seq'] == "0121":
+            st = np.hstack((t0, t0 + t1/2, 1 - t1/2, np.ones((Ns * N, 1)), 1 + t1/2, 1 + t1/2 + t2, 2 - t0, 2 * np.ones((Ns * N, 1))))
+
+        # ------------------------------------------
+        # 7212
+        # ------------------------------------------
+        elif setupPara['PWM']['seq'] == "7212":
+            st = np.hstack((t7, t7 + t2/2, 1 - t2/2, np.ones((Ns * N, 1)), 1 + t2/2, 1 + t2/2 + t1, 2 - t7, 2 * np.ones((Ns * N, 1))))
+
+        # ------------------------------------------
+        # 1012
+        # ------------------------------------------
+        elif setupPara['PWM']['seq'] == "1012":
+            st = np.hstack((t1/2, t1/2 + t0, 1 - t2, np.ones((Ns * N, 1)), 1 + t2, 1 + t1/2 + t2, 2 - t1/2, 2 * np.ones((Ns * N, 1))))
+
+        # ------------------------------------------
+        # 2721
+        # ------------------------------------------
+        elif setupPara['PWM']['seq'] == "2721":
+            st = np.hstack((t2/2, t2/2 + t7, 1 - t1, np.ones((Ns * N, 1)), 1 + t1, 1 + t1 + t2/2, 2 - t2/2, 2 * np.ones((Ns * N, 1))))
+
+        # ------------------------------------------
+        # 0127
+        # ------------------------------------------
+        else:
+            st = np.hstack((t0, t0 + t1, 1 - t7, np.ones((Ns * N, 1)), 1 + t7, 1 + t7 + t2, 2 - t0, 2 * np.ones((Ns * N, 1))))
     else:
-        st1 = np.hstack((t0, t0 + t1, 1 - t7, np.ones((Ns * N, 1))))
-        st2 = np.roll(np.hstack((1 + t7, 1 + t7 + t2, 2 - t0, 2 * np.ones((Ns * N, 1)))), -1, axis=0)
+        # ------------------------------------------
+        # 0121
+        # ------------------------------------------
+        if setupPara['PWM']['seq'] == "0121":
+            st1 = np.hstack((t0, t0 + t1/2, 1 - t1/2, np.ones((Ns * N, 1))))
+            st2 = np.roll(np.hstack((1 + t1/2, 1 + t1/2 + t2, 2 - t0, 2 * np.ones((Ns * N, 1)))), -1, axis=0)
+
+        # ------------------------------------------
+        # 7212
+        # ------------------------------------------
+        elif setupPara['PWM']['seq'] == "7212":
+            st1 = np.hstack((t7, t7 + t2/2, 1 - t2/2, np.ones((Ns * N, 1))))
+            st2 = np.roll(np.hstack((1 + t2/2, 1 + t2/2 + t1, 2 - t7, 2 * np.ones((Ns * N, 1)))), -1, axis=0)
+
+        # ------------------------------------------
+        # 1012
+        # ------------------------------------------
+        elif setupPara['PWM']['seq'] == "1012":
+            st1 = np.hstack((t1/2, t1/2 + t0, 1 - t2, np.ones((Ns * N, 1))))
+            st2 = np.roll(np.hstack((1 + t2, 1 + t2 + t1/2, 2 - t1/2, 2 * np.ones((Ns * N, 1)))), -1, axis=0)
+
+        # ------------------------------------------
+        # 2721
+        # ------------------------------------------
+        elif setupPara['PWM']['seq'] == "2721":
+            st1 = np.hstack((t2/2, t2/2 + t7, 1 - t1, np.ones((Ns * N, 1))))
+            st2 = np.roll(np.hstack((1 + t1, 1 + t1 + t2/2, 2 - t2/2, 2 * np.ones((Ns * N, 1)))), -1, axis=0)
+
+        # ------------------------------------------
+        # 0127
+        # ------------------------------------------
+        else:
+            st1 = np.hstack((t0, t0 + t1, 1 - t7, np.ones((Ns * N, 1))))
+            st2 = np.roll(np.hstack((1 + t7, 1 + t7 + t2, 2 - t0, 2 * np.ones((Ns * N, 1)))), -1, axis=0)
+
         st = np.hstack((st1, st2))
         st = st[::2]
         rr = rr[::2]
