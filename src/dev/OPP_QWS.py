@@ -9,14 +9,16 @@
 # External
 # ==============================================================================
 import numpy as np
-from scipy.optimize import minimize, LinearConstraint, NonlinearConstraint
+from scipy.optimize import minimize, LinearConstraint, NonlinearConstraint, basinhopping
 import matplotlib.pyplot as plt
+import random
+
 
 #######################################################################################################################
 # Function
 #######################################################################################################################
 # Voltage amplitude function:
-def ampl_sym_opp(alpha_a, k):
+def ampl_sym_opp(alpha_a, k, sign):
     '''
     Calkulates the voltage amplitudes of a quarter-wave symmetrical pulse-pattern for a three-phase system.
     Inputs:
@@ -29,12 +31,13 @@ def ampl_sym_opp(alpha_a, k):
 
     swi_alpha = [-2 if idx % 2 == 1 else 2 for idx,_ in enumerate(alpha_a)]
     i_ak = [x for x in range(1,k+1,2) if x % 3 != 0] # Fundamental and relevant harmonic components only
+    #i_ak = [x for x in range(1, k + 1, 2)]
     u_ak = [0]*len(i_ak)
 
     for idxk, ikk in enumerate(i_ak):
         # Run over all relevant frequency components
         ka = np.cos(ikk*alpha_a)
-        u_ak[idxk] = (np.dot(swi_alpha, ka)-1) / ikk
+        u_ak[idxk] = sign * (np.dot(swi_alpha, ka)-1) / ikk
 
     return u_ak, i_ak
 
@@ -42,7 +45,7 @@ def ampl_sym_opp(alpha_a, k):
 # Cost function:
 def costfuntion(alpha):
 
-    u_kc, i_kc = ampl_sym_opp(alpha, 100)
+    u_kc, i_kc = ampl_sym_opp(alpha, 100, sign=1)
     u_ak_sq = np.power(np.divide(u_kc[1:], i_kc[1:]), 2)
     wthd = np.sqrt(np.sum(u_ak_sq))
     cost = wthd
@@ -81,7 +84,7 @@ def Opp(k_max, p0, Mi, alpha0):
 
     # Equality constraint:
     def eq_con(x_eq):
-        u_fund, _ = ampl_sym_opp(x_eq, 1)
+        u_fund, _ = ampl_sym_opp(x_eq, 1, sign=1)
         return u_fund[0]
 
     linear_constraint = LinearConstraint(aineq, lb=[-np.inf]*p_deg, ub=bineq)
@@ -90,8 +93,12 @@ def Opp(k_max, p0, Mi, alpha0):
     ###################################################################################################################
     # Calculation
     ###################################################################################################################
-    opt_result = minimize(costfuntion, alpha0, bounds=bounds,
-                          constraints=[linear_constraint, nonlinear_constraint])
+    minimizer_kwargs = {"method": "SLSQP", "bounds": bounds, "constraints": [linear_constraint, nonlinear_constraint]}
+
+    opt_result = basinhopping(costfuntion, alpha0, minimizer_kwargs=minimizer_kwargs, niter=20)
+
+    #opt_result = minimize(costfuntion, alpha0, bounds=bounds,
+    #                      constraints=[linear_constraint, nonlinear_constraint])
 
     ###################################################################################################################
     # Return
@@ -101,18 +108,22 @@ def Opp(k_max, p0, Mi, alpha0):
 
 if __name__ == "__main__":
 
-    u_k, i_k = ampl_sym_opp(np.array([np.pi/6]), 100)
+    u_k, i_k = ampl_sym_opp(np.array([np.pi/6]), 100, sign=1)
     wthdc = costfuntion(np.array([np.pi/6]))
-    Num = 100
-    p0 = 10
+    Num = 20
+    p0 = 3
     thd = np.zeros((p0, Num))
-    Mi = np.linspace(0.0, 4/np.pi, Num)
+    alpha = np.zeros((2*p0+1, p0, Num))
+    Mi = np.linspace(0.0, 1, Num)
     for i in range(2, p0):
         p = 2*i + 1
         alpha0 = np.zeros(int((p - 1) / 2))
         for ii in range(0, Num):
             result = Opp(100, p, Mi[ii], alpha0)
-            alpha0 = result.x
+            alpha[0:len(result.x), i, ii] = result.x
+            #alpha0 = result.x
             thd[i, ii] = result.fun
         plt.plot(thd[i, :])
+        plt.figure()
+        plt.plot(np.transpose(alpha[:, -1, :]))
     plt.show()

@@ -21,7 +21,7 @@
 # External
 # ==============================================================================
 import numpy as np
-from scipy.optimize import minimize, LinearConstraint, NonlinearConstraint
+from scipy.optimize import minimize, LinearConstraint, NonlinearConstraint, basinhopping
 
 
 #######################################################################################################################
@@ -48,7 +48,8 @@ def ampl_sym_opp(alpha_a, k):
     # Theory
     # ------------------------------------------
     swi_alpha = [-2 if idx % 2 == 1 else 2 for idx, _ in enumerate(alpha_a)]
-    i_ak = [x for x in range(1, k+1, 2)]                                                                    # Fundamental and relevant harmonic components only
+    #i_ak = [x for x in range(1, k+1, 2)]
+    i_ak = [x for x in range(1,k+1,2) if x % 3 != 0]
     u_ak = [0]*len(i_ak)
 
     # ------------------------------------------
@@ -132,8 +133,12 @@ def oppPWM(k_max, p0, Mi, sym):
     ###################################################################################################################
     for i in range(0, len(Mi_iter)):
         nonlinear_constraint = NonlinearConstraint(eq_con, lb=Mi_iter[i], ub=Mi_iter[i])
-        opt_result = minimize(costfuntion, alpha0, method='SLSQP', bounds=bounds,
-                              constraints=[linear_constraint, nonlinear_constraint])
+        minimizer_kwargs = {"method": "SLSQP", "bounds": bounds,
+                            "constraints": [linear_constraint, nonlinear_constraint]}
+
+        opt_result = basinhopping(costfuntion, alpha0, minimizer_kwargs=minimizer_kwargs, niter=20)
+        #opt_result = minimize(costfuntion, alpha0, method='SLSQP', bounds=bounds,
+         #                     constraints=[linear_constraint, nonlinear_constraint])
         alpha0 = opt_result.x
 
     ###################################################################################################################
