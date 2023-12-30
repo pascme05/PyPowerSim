@@ -16,7 +16,7 @@
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.topo.B4.calcSSeqB4 import calcSSeqB4_CB, calcSSeqB4_FF
+from src.topo.B4.calcSSeqB4 import calcSSeqB4_CB, calcSSeqB4_FF, calcSSeqB4_OPP
 from src.topo.B4.calcTimeB4 import calcTimeB4
 from src.general.calcFreq import calcFreq
 from src.elec.calcElecSwi import calcElecSwi
@@ -24,7 +24,7 @@ from src.elec.calcLossSwi import calcLossSwi
 from src.elec.calcLossCap import calcLossCap
 from src.therm.calcTherRC import calcTherRC
 from src.topo.B4.initB4 import initB4
-from src.general.genWaveform import genWave
+from src.pwm.genWaveform import genWave
 from src.therm.initRC import initRC
 from src.elec.calcElecCap import calcElecCap
 from src.topo.B4.outB4 import outB4_Steady
@@ -161,6 +161,8 @@ def calcSteadyB4(mdl, para, setupTopo, setupData, setupPara, setupExp):
         [xs, xsh, s, c] = calcSSeqB4_FF(v_ref, t, Mi, setupPara, setupTopo)
     elif setupPara['PWM']['type'] == "CB":
         [xs, xsh, s, c] = calcSSeqB4_CB(v_ref, t, Mi, setupPara, setupTopo)
+    elif setupPara['PWM']['type'] == "OPP":
+        [xs, xsh, s, c] = calcSSeqB4_OPP(v_ref, t, Mi, setupPara, setupTopo)
     else:
         [xs, xsh, s, c] = calcSSeqB4_CB(v_ref, t, Mi, setupPara, setupTopo)
 

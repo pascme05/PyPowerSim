@@ -16,13 +16,13 @@
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.topo.B2.calcSSeqB2 import calcSSeqB2_CB, calcSSeqB2_FF
+from src.topo.B2.calcSSeqB2 import calcSSeqB2_CB, calcSSeqB2_FF, calcSSeqB2_OPP
 from src.topo.B2.calcDistB2 import calcDistB2_Ana
 from src.general.calcDistNum import calcDistNum
 from src.general.calcFreq import calcFreq
 from src.topo.B2.calcTimeB2 import calcTimeB2
 from src.topo.B2.initB2 import initB2
-from src.general.genWaveform import genWave
+from src.pwm.genWaveform import genWave
 from src.topo.B2.outB2 import outB2_Sweep
 
 # ==============================================================================
@@ -115,6 +115,8 @@ def calcSweepB2(mdl, _, setupTopo, setupData, setupPara, setupExp):
         [xs, xsh, s, c] = calcSSeqB2_FF(v_ref, t, Mi, setupPara, setupTopo)
     elif setupPara['PWM']['type'] == "CB":
         [xs, xsh, s, c] = calcSSeqB2_CB(v_ref, t, Mi, setupPara, setupTopo)
+    elif setupPara['PWM']['type'] == "OPP":
+        [xs, xsh, s, c] = calcSSeqB2_OPP(v_ref, t, Mi, setupPara, setupTopo)
     else:
         [xs, xsh, s, c] = calcSSeqB2_CB(v_ref, t, Mi, setupPara, setupTopo)
 
@@ -131,16 +133,18 @@ def calcSweepB2(mdl, _, setupTopo, setupData, setupPara, setupExp):
         # Switching
         # ------------------------------------------
         if setupPara['PWM']['type'] == "FF":
-            [_, _, s, _] = calcSSeqB2_FF(v_ref, t, M_i[i], setupPara, setupTopo)
+            [_, _, s_i, _] = calcSSeqB2_FF(v_ref, t, M_i[i], setupPara, setupTopo)
         elif setupPara['PWM']['type'] == "CB":
-            [_, _, s, _] = calcSSeqB2_CB(v_ref, t, M_i[i], setupPara, setupTopo)
+            [_, _, s_i, _] = calcSSeqB2_CB(v_ref, t, M_i[i], setupPara, setupTopo)
+        elif setupPara['PWM']['type'] == "OPP":
+            [_, _, s_i, _] = calcSSeqB2_OPP(v_ref, t, M_i[i], setupPara, setupTopo)
         else:
-            [_, _, s, _] = calcSSeqB2_CB(v_ref, t, M_i[i], setupPara, setupTopo)
+            [_, _, s_i, _] = calcSSeqB2_CB(v_ref, t, M_i[i], setupPara, setupTopo)
         
         # ------------------------------------------
         # Time
         # ------------------------------------------
-        [tempTimeAc, tempTimeDc] = calcTimeB2(t, s, e_ref, Vdc, M_i[i], mdl, setupTopo, start, ende)
+        [tempTimeAc, tempTimeDc] = calcTimeB2(t, s_i, e_ref, Vdc, M_i[i], mdl, setupTopo, start, ende)
         
         # ------------------------------------------
         # Distortion
