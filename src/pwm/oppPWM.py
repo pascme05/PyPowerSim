@@ -234,7 +234,7 @@ def oppPWM(kmax, p0, Mi, sym, setupTopo):
         # ==============================================================================
         minimizer_kwargs = {"method": "SLSQP", "bounds": bounds, "args": (kmax, setupTopo['sourceType']),
                             "constraints": [linear_constraint, nonlinear_constraint]}
-        opt_result = basinhopping(costfunction, alpha0, minimizer_kwargs=minimizer_kwargs, niter=200)
+        opt_result = basinhopping(costfunction, alpha0, minimizer_kwargs=minimizer_kwargs, niter=100)
 
         # ==============================================================================
         # Out

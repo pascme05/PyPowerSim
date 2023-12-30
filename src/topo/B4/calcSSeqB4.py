@@ -229,10 +229,6 @@ def calcSSeqB4_OPP(ref, t, Mi, setupPara, setupTopo):
     q = int(fs / fel)
     kmax = 10 * q
     N = int((t[-1] - t[0]) / Tel)
-    if setupPara['PWM']['upd'] == "SE":
-        Ns = q
-    else:
-        Ns = 2 * q
     tmin = int(setupPara['PWM']['tmin'] / (t[1] - t[0]))
     td = int(setupPara['PWM']['td'] / (t[1] - t[0]))
     id = ['A', 'B']
@@ -325,8 +321,6 @@ def calcSSeqB4_OPP(ref, t, Mi, setupPara, setupTopo):
     # ------------------------------------------
     # Interleaved
     # ------------------------------------------
-    #for i in range(0, len(id)):
-     #   s[id[i]] = np.roll(ss, -int(np.floor(i * 180 / 360 / N * len(ss))))
     s['B'] = np.roll(s['A'], -int(np.floor(180 / 360 / N * len(ss))))
     c['B'] = np.roll(c['A'], -int(np.floor(180 / 360 / N * len(ss))))
 
@@ -335,7 +329,6 @@ def calcSSeqB4_OPP(ref, t, Mi, setupPara, setupTopo):
     # ------------------------------------------
     if setupPara['PWM']['int'] == 0:
         c['B'] = c['A']
-        #s['B'] = -s['A']
 
     # ==============================================================================
     # Sampling
