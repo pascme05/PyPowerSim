@@ -227,6 +227,7 @@ def calcSSeqB4_OPP(ref, t, Mi, setupPara, setupTopo):
     fel = setupTopo['fel']
     Tel = 1 / fel
     q = int(fs / fel)
+    kmax = 10 * q
     N = int((t[-1] - t[0]) / Tel)
     if setupPara['PWM']['upd'] == "SE":
         Ns = q
@@ -240,7 +241,8 @@ def calcSSeqB4_OPP(ref, t, Mi, setupPara, setupTopo):
     # Variables
     # ==============================================================================
     c['A'] = np.zeros(np.size(t))
-    ss = (-1) * np.ones(np.size(t))
+    s['A'] = np.ones(np.size(t))
+    ss = np.zeros(np.size(t))
     ang = np.linspace(0, np.pi * 2 * N, np.size(t))
     ang_total = []
     val_total = []
@@ -260,7 +262,7 @@ def calcSSeqB4_OPP(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Fundamental Angles (0, 2pi)
     # ==============================================================================
-    [ang_fun, val_fun, _] = oppPWM(100, q, Mi/4*np.pi, 4)
+    [ang_fun, val_fun, _] = oppPWM(kmax, q*2, Mi/4*np.pi, 4, setupTopo)
 
     # ==============================================================================
     # Complete Angles
@@ -286,27 +288,54 @@ def calcSSeqB4_OPP(ref, t, Mi, setupPara, setupTopo):
     # ------------------------------------------
     # Switching Function
     # ------------------------------------------
+    ang2 = ang
     for i in range(1, len(ss)):
-        if c['A'][i] == 0:
-            ss[i] = ss[i - 1]
+        if ang2[i] < np.pi:
+            if c['A'][i] == 0:
+                ss[i] = ss[i - 1]
+            else:
+                if c['A'][i] > 0:
+                    ss[i] = 1
+                else:
+                    ss[i] = 0
         else:
-            ss[i] = c['A'][i]
+            if c['A'][i] == 0:
+                ss[i] = ss[i - 1]
+            else:
+                if c['A'][i] > 0:
+                    ss[i] = -1
+                else:
+                    ss[i] = 0
 
-    # ------------------------------------------
-    # Direction
-    # ------------------------------------------
-    for i in range(1, len(ss)):
-        if ref['A'][i] >= 0:
-            ss[i] = ss[i] * (+1)
-        else:
-            ss[i] = ss[i] * (-1)
+        if ang2[i] > 2*np.pi:
+            ang2 = ang2 - 2*np.pi
 
     # ==============================================================================
     # Two Phases
     # ==============================================================================
-    for i in range(0, len(id)):
-        s[id[i]] = np.roll(ss, -int(np.floor(i * 180 / 360 / N * len(ss))))
+    # ------------------------------------------
+    # Direction
+    # ------------------------------------------
+    for i in range(1, len(ss)):
+        if ss[i] >= 0:
+            s['A'][i] = 1
+        elif ss[i] < 0:
+            s['A'][i] = -1
+
+    # ------------------------------------------
+    # Interleaved
+    # ------------------------------------------
+    #for i in range(0, len(id)):
+     #   s[id[i]] = np.roll(ss, -int(np.floor(i * 180 / 360 / N * len(ss))))
+    s['B'] = np.roll(s['A'], -int(np.floor(180 / 360 / N * len(ss))))
     c['B'] = np.roll(c['A'], -int(np.floor(180 / 360 / N * len(ss))))
+
+    # ------------------------------------------
+    # Non-Interleaved
+    # ------------------------------------------
+    if setupPara['PWM']['int'] == 0:
+        c['B'] = c['A']
+        #s['B'] = -s['A']
 
     # ==============================================================================
     # Sampling

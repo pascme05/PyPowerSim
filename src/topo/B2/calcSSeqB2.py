@@ -134,6 +134,7 @@ def calcSSeqB2_OPP(ref, t, Mi, setupPara, setupTopo):
     Tel = 1 / fel
     q = int(fs / fel)
     N = int((t[-1] - t[0]) / Tel)
+    kmax = 10 * q
 
     # ==============================================================================
     # Variables
@@ -161,7 +162,7 @@ def calcSSeqB2_OPP(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Fundamental Angles (0, 2pi)
     # ==============================================================================
-    [ang_fun, val_fun, _] = oppPWM(100, q, Mi/4*np.pi, 4)
+    [ang_fun, val_fun, _] = oppPWM(kmax, q, Mi/4*np.pi, 4, setupTopo)
 
     # ==============================================================================
     # Complete Angles
@@ -198,9 +199,9 @@ def calcSSeqB2_OPP(ref, t, Mi, setupPara, setupTopo):
     # ------------------------------------------
     for i in range(1, len(s)):
         if ref[i] >= 0:
-            s[i] = s[i] * (+1)
-        else:
             s[i] = s[i] * (-1)
+        else:
+            s[i] = s[i] * (+1)
 
     # ==============================================================================
     # Sampling

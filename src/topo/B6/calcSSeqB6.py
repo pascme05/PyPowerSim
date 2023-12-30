@@ -522,6 +522,7 @@ def calcSSeqB6_OPP(ref, t, Mi, setupPara, setupTopo):
     # PWM
     # ------------------------------------------
     q = int(fs / fel)
+    kmax = 10 * q
     N = int((t[-1] - t[0]) / Tel)
     if setupPara['PWM']['upd'] == "SE":
         Ns = q
@@ -569,7 +570,7 @@ def calcSSeqB6_OPP(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Fundamental Angles (0, 2pi)
     # ==============================================================================
-    [ang_fun, val_fun, _] = oppPWM(100, q, Mi/4*np.pi, 4)
+    [ang_fun, val_fun, _] = oppPWM(kmax, q, Mi/4*np.pi, 4, setupTopo)
 
     # ==============================================================================
     # Complete Angles
@@ -657,8 +658,8 @@ def calcSSeqB6_OPP(ref, t, Mi, setupPara, setupTopo):
     # Dead-time
     # ==============================================================================
     if setupPara['PWM']['td'] > 0:
-        s['A'] = deadTime(s['A'], td)
-        s['B'] = deadTime(s['B'], td)
+        for i in range(0, len(id)):
+            s[id[i]] = deadTime(s[id[i]], td)
 
     ###################################################################################################################
     # Return

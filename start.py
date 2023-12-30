@@ -118,7 +118,7 @@ setupTopo['CapName'] = "Elco"                                                   
 # ------------------------------------------
 # Source
 # ------------------------------------------
-setupTopo['sourceType'] = "B2"                                                                                          # (B2): half bridge, (B4): full bridge, (B6): two-level three phase converter
+setupTopo['sourceType'] = "B6"                                                                                          # (B2): half bridge, (B4): full bridge, (B6): two-level three phase converter
 
 # ------------------------------------------
 # Filter
@@ -139,7 +139,7 @@ setupTopo['Cout'] = 1e-3                                                        
 # Load
 # ------------------------------------------
 # Parameters
-setupTopo['R'] = 0.0                                                                                                    # resistance in (Ohm)
+setupTopo['R'] = 5.0                                                                                                    # resistance in (Ohm)
 setupTopo['L'] = 5e-3                                                                                                   # inductance in (H)
 setupTopo['E'] = 0                                                                                                      # induced voltage in (V)
 setupTopo['phiE'] = 0                                                                                                   # load angle induced voltage (deg)
@@ -154,7 +154,7 @@ setupTopo['fel'] = 50                                                           
 # ------------------------------------------
 # General
 # ------------------------------------------
-setupPara['PWM']['type'] = "OPP"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based, (OPP): optimal pulse patterns
+setupPara['PWM']['type'] = "CB"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based, (OPP): optimal pulse patterns
 setupPara['PWM']['upd'] = "DE"                                                                                          # (SE): single edge, (DE): double edge
 setupPara['PWM']['samp'] = "RS"                                                                                         # (NS): natural sampling, (RS): regular sampling
 setupPara['PWM']['tri'] = "SM"                                                                                          # modulation trigger (RE): rising edge, (FE): falling edge, (SM): symmetrical modulation, (AM): asymmetrical modulation
@@ -172,7 +172,7 @@ setupPara['PWM']['sw'] = 0                                                      
 # ------------------------------------------
 # Switching Sequence
 # ------------------------------------------
-setupPara['PWM']['fs'] = 350                                                                                           # PWM switching frequency (Hz)
+setupPara['PWM']['fs'] = 750                                                                                            # PWM switching frequency (Hz)
 setupPara['PWM']['seq'] = "0127"                                                                                        # PWM switching sequence B6 bridge
 setupPara['PWM']['zero'] = "SVPWM"                                                                                      # PWM method B6 bridge (SPWM, SVPWM, THIPWM4, THIPWM6, DPWM0, DPWM1, DPWM2, DPWM3, DPWMMAX, DPWMMIN)
 

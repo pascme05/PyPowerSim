@@ -21,7 +21,7 @@
 # External
 # ==============================================================================
 import numpy as np
-from scipy.optimize import minimize, LinearConstraint, NonlinearConstraint, basinhopping
+from scipy.optimize import LinearConstraint, NonlinearConstraint, basinhopping
 
 
 #######################################################################################################################
@@ -30,31 +30,62 @@ from scipy.optimize import minimize, LinearConstraint, NonlinearConstraint, basi
 # ==============================================================================
 # Voltage amplitude function
 # ==============================================================================
-def ampl_sym_opp(alpha_a, k):
-    # ------------------------------------------
-    # Theory
-    # ------------------------------------------
-    """
-    Calculates the voltage amplitudes of a quarter-wave symmetrical pulse-pattern for a three-phase system.
-    Inputs:
-    alpha_a: switching angles as numpy array
-    k: highest Fourier-coefficient to be evaluated
-    Output:
-    u_ak(ki): Voltage amplitude over relative frequency ki
-    i_ak(ki): Frequency in relation to fundamental frequency
-    """
-
-    # ------------------------------------------
-    # Theory
-    # ------------------------------------------
+# ------------------------------------------
+# B6
+# ------------------------------------------
+def ampl_sym_B6(alpha_a, kmax):
+    # Switching angles
     swi_alpha = [-2 if idx % 2 == 1 else 2 for idx, _ in enumerate(alpha_a)]
-    #i_ak = [x for x in range(1, k+1, 2)]
-    i_ak = [x for x in range(1,k+1,2) if x % 3 != 0]
+
+    # Harmonics
+    i_ak = [x for x in range(1, kmax + 1, 2) if x % 3 != 0]
+
+    # Init
     u_ak = [0]*len(i_ak)
 
-    # ------------------------------------------
     # Relevant frequency components
-    # ------------------------------------------
+    for idxk, ikk in enumerate(i_ak):
+        ka = np.cos(ikk*alpha_a)
+        u_ak[idxk] = (np.dot(swi_alpha, ka)-1) / ikk
+
+    return u_ak, i_ak
+
+
+# ------------------------------------------
+# B4
+# ------------------------------------------
+def ampl_sym_B4(alpha_a, kmax):
+    # Switching angles
+    swi_alpha = [-1 if idx % 2 == 1 else 1 for idx, _ in enumerate(alpha_a)]
+
+    # Harmonics
+    i_ak = [x for x in range(1, kmax + 1, 2)]
+
+    # Init
+    u_ak = [0]*len(i_ak)
+
+    # Relevant frequency components
+    for idxk, ikk in enumerate(i_ak):
+        ka = np.cos(ikk*alpha_a)
+        u_ak[idxk] = (np.dot(swi_alpha, ka)) / ikk
+
+    return u_ak, i_ak
+
+
+# ------------------------------------------
+# B2
+# ------------------------------------------
+def ampl_sym_B2(alpha_a, kmax):
+    # Switching angles
+    swi_alpha = [-2 if idx % 2 == 1 else 2 for idx, _ in enumerate(alpha_a)]
+
+    # Harmonics
+    i_ak = [x for x in range(1, kmax + 1, 2)]
+
+    # Init
+    u_ak = [0]*len(i_ak)
+
+    # Relevant frequency components
     for idxk, ikk in enumerate(i_ak):
         ka = np.cos(ikk*alpha_a)
         u_ak[idxk] = (np.dot(swi_alpha, ka)-1) / ikk
@@ -65,9 +96,28 @@ def ampl_sym_opp(alpha_a, k):
 # ==============================================================================
 # Cost function:
 # ==============================================================================
-def costfuntion(alpha):
+def costfunction(alpha, kmax, topo):
+    # ------------------------------------------
+    # B2
+    # ------------------------------------------
+    if topo == 'B2':
+        u_kc, i_kc = ampl_sym_B2(alpha, kmax)
 
-    u_kc, i_kc = ampl_sym_opp(alpha, 100)
+    # ------------------------------------------
+    # B4
+    # ------------------------------------------
+    elif topo == 'B4':
+        u_kc, i_kc = ampl_sym_B4(alpha, kmax)
+
+    # ------------------------------------------
+    # B6
+    # ------------------------------------------
+    else:
+        u_kc, i_kc = ampl_sym_B6(alpha, kmax)
+
+    # ------------------------------------------
+    # WTHD
+    # ------------------------------------------
     u_ak_sq = np.power(np.divide(u_kc[1:], i_kc[1:]), 2)
     wthd = np.sqrt(np.sum(u_ak_sq))
 
@@ -77,23 +127,48 @@ def costfuntion(alpha):
 # ==============================================================================
 # Equality constraint
 # ==============================================================================
-def eq_con(x_eq):
+# ------------------------------------------
+# B6
+# ------------------------------------------
+def eq_B6(x_eq):
+    swi_alpha = [-2 if idx % 2 == 1 else 2 for idx, _ in enumerate(x_eq)]
+    ka = np.cos(x_eq)
+    u1 = abs(np.sum((np.dot(swi_alpha, ka) - 1)))
 
-    u_fund, _ = ampl_sym_opp(x_eq, 1)
+    return u1
 
-    return u_fund[0]
+
+# ------------------------------------------
+# B6
+# ------------------------------------------
+def eq_B4(x_eq):
+    swi_alpha = [-1 if idx % 2 == 1 else 1 for idx, _ in enumerate(x_eq)]
+    u1 = np.sum(np.dot(swi_alpha, np.cos(x_eq)))
+
+    return u1
+
+
+# ------------------------------------------
+# B2
+# ------------------------------------------
+def eq_B2(x_eq):
+    swi_alpha = [-2 if idx % 2 == 1 else 2 for idx, _ in enumerate(x_eq)]
+    ka = np.cos(x_eq)
+    u1 = abs(np.sum((np.dot(swi_alpha, ka) - 1)))
+
+    return u1
 
 
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def oppPWM(k_max, p0, Mi, sym):
+def oppPWM(kmax, p0, Mi, sym, setupTopo):
     ###################################################################################################################
     # Theory
     ###################################################################################################################
     """
     Calculates the optimal switch-on and -off angles according to the following input parameters:
-    k_max: Maximum order of harmonics, which are taken into account
+    kmax: Maximum order of harmonics, which are taken into account
     p0: Number of switching instances in one fundamental period
     Mi: Modulation index [0 ... 4/pi]
     sym: symmetrical boundary, e.g. quarter-wave
@@ -102,21 +177,22 @@ def oppPWM(k_max, p0, Mi, sym):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
-    p_deg = np.int16((p0 - 1)/2)        # Degrees of freedom (quarter wave symmetry)
-    bmin = 0                            # Minimum angle between switching instances (tbd.)
-    lbmin = bmin                        # Minimum angle (lower bound for optimisation)
-    ubmax = (np.pi - bmin)/2            # Maximum angle (upper bound for optimisation)
-    alpha0 = [lbmin]*p_deg              # Starting point of alpha-values for optimisation
-    ub = [ubmax]*p_deg                  # Upper bound list
-    lb = [lbmin]*p_deg                  # Lower bound list
-    Mi_iter = np.linspace(0, Mi, 20)
-    bounds = list(zip(lb, ub))          # Bounds as a list of tuples
+    p_deg = np.int16((p0 - 1)/2)                                                                                        # Degrees of freedom (quarter wave symmetry)
+    bmin = 0                                                                                                            # Minimum angle between switching instances (tbd.)
+    lbmin = bmin                                                                                                        # Minimum angle (lower bound for optimisation)
+    ubmax = (np.pi - bmin)/2                                                                                            # Maximum angle (upper bound for optimisation)
+    alpha0 = [lbmin]*p_deg                                                                                              # Starting point of alpha-values for optimisation
+    ub = [ubmax]*p_deg                                                                                                  # Upper bound list
+    lb = [lbmin]*p_deg                                                                                                  # Lower bound list
+    Mi_iter = np.linspace(0, Mi, 20)                                                                                    # Iteration for Modulation Index
+    bounds = list(zip(lb, ub))                                                                                          # Bounds as a list of tuples
+    opt_result = []
 
     ###################################################################################################################
     # Pre-processing
     ###################################################################################################################
     # ==============================================================================
-    # Init
+    # Inequality constraints
     # ==============================================================================
     aineq = np.concatenate((np.eye(p_deg-1, p_deg) -
                             np.concatenate((np.zeros((p_deg-1, 1)), np.eye(p_deg-1)), axis=1),
@@ -132,13 +208,37 @@ def oppPWM(k_max, p0, Mi, sym):
     # Calculation
     ###################################################################################################################
     for i in range(0, len(Mi_iter)):
-        nonlinear_constraint = NonlinearConstraint(eq_con, lb=Mi_iter[i], ub=Mi_iter[i])
-        minimizer_kwargs = {"method": "SLSQP", "bounds": bounds,
-                            "constraints": [linear_constraint, nonlinear_constraint]}
+        # ==============================================================================
+        # Constraint
+        # ==============================================================================
+        # ------------------------------------------
+        # B2
+        # ------------------------------------------
+        if setupTopo['sourceType'] == 'B2':
+            nonlinear_constraint = NonlinearConstraint(eq_B2, lb=Mi, ub=Mi)
 
-        opt_result = basinhopping(costfuntion, alpha0, minimizer_kwargs=minimizer_kwargs, niter=20)
-        #opt_result = minimize(costfuntion, alpha0, method='SLSQP', bounds=bounds,
-         #                     constraints=[linear_constraint, nonlinear_constraint])
+        # ------------------------------------------
+        # B2
+        # ------------------------------------------
+        elif setupTopo['sourceType'] == 'B4':
+            nonlinear_constraint = NonlinearConstraint(eq_B4, lb=Mi, ub=Mi)
+
+        # ------------------------------------------
+        # B2
+        # ------------------------------------------
+        else:
+            nonlinear_constraint = NonlinearConstraint(eq_B6, lb=Mi, ub=Mi)
+
+        # ==============================================================================
+        # Solve
+        # ==============================================================================
+        minimizer_kwargs = {"method": "SLSQP", "bounds": bounds, "args": (kmax, setupTopo['sourceType']),
+                            "constraints": [linear_constraint, nonlinear_constraint]}
+        opt_result = basinhopping(costfunction, alpha0, minimizer_kwargs=minimizer_kwargs, niter=200)
+
+        # ==============================================================================
+        # Out
+        # ==============================================================================
         alpha0 = opt_result.x
 
     ###################################################################################################################
