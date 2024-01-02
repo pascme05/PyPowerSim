@@ -171,7 +171,7 @@ toolkit or spotted any mistake, please contact me via: p.schirmer@herts.ac.uk
 
 
 # License
-The software framework is provided under the MIT license.
+The software framework is provided under the Creative Commons Attribution-NonCommercial (CC BY-NC) license.
 
 # Version History
 1) v.0.0: (01.04.2023) Initial version of PyPowerSim
