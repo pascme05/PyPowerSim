@@ -610,12 +610,13 @@ def calcSSeqB6_OPP(ref, t, Mi, setupPara, setupTopo):
             ss[i] = ss[i] * (+1)
         else:
             ss[i] = ss[i] * (-1)
+    ss = -ss
 
     # ==============================================================================
     # Three Phases
     # ==============================================================================
     for i in range(0, len(id)):
-        s[id[i]] = np.roll(ss, -int(np.floor(i * 120 / 360 / N * len(ss))))
+        s[id[i]] = np.roll(ss, int(np.floor(i * 120 / 360 / N * len(ss))))
 
     # ==============================================================================
     # Sampled waveform
