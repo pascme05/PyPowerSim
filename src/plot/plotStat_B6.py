@@ -82,7 +82,10 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     Vdc = setupData['stat']['Vdc']
     phiE = setupTopo['phiE']
     down = setupData['stat']['cyc'] - 2
+    down2 = int(fsim / fs / 200)
     Ta = setupData['stat']['Tc']
+    if down2 < 1:
+        down2 = 1
 
     # ==============================================================================
     # Variables
@@ -165,10 +168,10 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     ax1 = pl.subplot(gs[0, :])
     ax2 = ax1.twinx()
-    ax1.plot(t, timeSw['c'], 'black')
-    ax2.plot(t, timeSw['v_a_ref'] / (Vdc / 2), color='tab:blue')
-    ax2.plot(t, timeSw['xA'], '--', color='tab:blue')
-    ax2.plot(t, timeSw['n0'], '-.', color='tab:blue')
+    ax1.plot(t[::down2], timeSw['c'][::down2], 'black')
+    ax2.plot(t[::down2], timeSw['v_a_ref'][::down2] / (Vdc / 2), color='tab:blue')
+    ax2.plot(t[::down2], timeSw['xA'][::down2], '--', color='tab:blue')
+    ax2.plot(t[::down2], timeSw['n0'][::down2], '-.', color='tab:blue')
     pl.title('Carrier and Reference Waveform')
     pl.xlabel('t in (sec)')
     ax1.set_ylabel('c(t)/s(t)', color='black')
@@ -181,9 +184,9 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time-Domain
     pl.subplot(gs[1, 0])
-    pl.plot(t, timeSw['sA'])
-    pl.plot(t, timeSw['sB'])
-    pl.plot(t, timeSw['sC'])
+    pl.plot(t[::down2], timeSw['sA'][::down2])
+    pl.plot(t[::down2], timeSw['sB'][::down2])
+    pl.plot(t[::down2], timeSw['sC'][::down2])
     pl.title('Time-domain Switching Functions')
     pl.xlabel('t in (sec)')
     pl.ylabel("$s_{a,b,c}(t)$ (p.u)")
@@ -192,7 +195,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
     # Freq-Domain
     pl.subplot(gs[2, 0])
-    pl.stem(f[::down], freqSw['Sa'][::down])
+    pl.stem(f[::down][0:50], freqSw['Sa'][::down][0:50])
     pl.xlim(0, 50)
     pl.title('Frequency-domain Switching Function')
     pl.xlabel("$f/f_{1}$ (Hz/Hz)")
@@ -206,9 +209,9 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time-Domain
     pl.subplot(gs[1, 1])
-    pl.plot(t, timeSw['xAs'])
-    pl.plot(t, timeSw['xBs'])
-    pl.plot(t, timeSw['xCs'])
+    pl.plot(t[::down2], timeSw['xAs'][::down2])
+    pl.plot(t[::down2], timeSw['xBs'][::down2])
+    pl.plot(t[::down2], timeSw['xCs'][::down2])
     pl.title('Time-domain Sampled References')
     pl.xlabel('t in (sec)')
     pl.ylabel("$x_{a,b,c}(t)$ (p.u)")
@@ -217,7 +220,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
     # Freq-Domain
     pl.subplot(gs[2, 1])
-    pl.stem(f[::down], freqSw['Xas'][::down])
+    pl.stem(f[::down][0:50], freqSw['Xas'][::down][0:50])
     pl.xlim(0, 50)
     pl.title('Frequency-domain Sampled Reference')
     pl.xlabel("$f/f_{1}$ (Hz/Hz)")
@@ -241,9 +244,9 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time
     plt.subplot(2, 2, 1)
-    plt.plot(t, timeAc['i_a'])
-    plt.plot(t, timeAc['i_b'])
-    plt.plot(t, timeAc['i_c'])
+    plt.plot(t[::down2], timeAc['i_a'][::down2])
+    plt.plot(t[::down2], timeAc['i_b'][::down2])
+    plt.plot(t[::down2], timeAc['i_c'][::down2])
     plt.ylabel("$i_{a,b,c}(t)$ (A)")
     plt.title('Time-domain Currents AC-Side')
     plt.xlabel('time in (sec)')
@@ -252,7 +255,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
     # Frequency
     ax = plt.subplot(2, 2, 2)
-    plt.stem(f[::down], freqAc['I_a'][::down])
+    plt.stem(f[::down][0:50], freqAc['I_a'][::down][0:50])
     plt.ylabel("$I_{a}(f)$ (A)")
     plt.xlim(0, 50)
     plt.title('Frequency-domain Current AC-Side')
@@ -268,7 +271,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time
     plt.subplot(2, 2, 3)
-    plt.plot(t, timeDc['i_dc'], t, np.mean(timeDc['i_dc']) * np.ones(np.size(timeDc['i_dc'])), '--')
+    plt.plot(t[::down2], timeDc['i_dc'][::down2], t[::down2], np.mean(timeDc['i_dc']) * np.ones(np.size(timeDc['i_dc'][::down2])), '--')
     plt.ylabel("$i_{dc}(t)$ (A)")
     plt.title('Time-domain Currents DC-Side')
     plt.xlabel('time in (sec)')
@@ -277,7 +280,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
     # Frequency
     ax = plt.subplot(2, 2, 4)
-    plt.stem(f[::down], freqDc['I_dc'][::down])
+    plt.stem(f[::down][0:50], freqDc['I_dc'][::down][0:50])
     plt.ylabel("$I_{dc}(f)$ (A)")
     plt.xlim(0, 50)
     plt.title('Frequency-domain Current DC-Side')
@@ -303,7 +306,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time
     plt.subplot(2, 2, 1)
-    plt.plot(t, timeAc['v_a'], t, timeAc['v_a0'], t, timeAc['v_a_out'], t, timeSw['e_a'])
+    plt.plot(t[::down2], timeAc['v_a'][::down2], t[::down2], timeAc['v_a0'][::down2], t[::down2], timeAc['v_a_out'][::down2], t[::down2], timeSw['e_a'][::down2])
     plt.ylabel("$v_{a}(t)$ (V)")
     plt.title('Time-domain Voltages AC-Side')
     plt.xlabel('time in (sec)')
@@ -312,7 +315,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
     # Frequency
     ax = plt.subplot(2, 2, 2)
-    plt.stem(f[::down], freqAc['V_a'][::down])
+    plt.stem(f[::down][0:50], freqAc['V_a'][::down][0:50])
     # plt.stem(f, freqAc['V_a0'])
     plt.ylabel("$V_{a}(f)$ (V)")
     plt.xlim(0, 50)
@@ -330,7 +333,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time
     plt.subplot(2, 2, 3)
-    plt.plot(t, timeDc['v_in'], t, timeDc['v_dc'], t, np.mean(timeDc['v_dc']) * np.ones(np.size(timeDc['v_dc'])), '--')
+    plt.plot(t[::down2], timeDc['v_in'][::down2], t[::down2], timeDc['v_dc'][::down2], t[::down2], np.mean(timeDc['v_dc']) * np.ones(np.size(timeDc['v_dc'][::down2])), '--')
     plt.ylabel("$v_{dc}(t)$ (V)")
     plt.title('Time-domain Voltages DC-Side')
     plt.xlabel('time in (sec)')
@@ -339,7 +342,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
     # Frequency
     ax = plt.subplot(2, 2, 4)
-    plt.stem(f[::down], freqDc['V_dc'][::down])
+    plt.stem(f[::down][0:50], freqDc['V_dc'][::down][0:50])
     plt.ylabel("$V_{dc}(f)$ (A)")
     plt.xlim(0, 50)
     plt.title('Frequency-domain Voltages DC-Side')
@@ -365,7 +368,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     for i in range(0, 6):
         plt.subplot(6, 4, 4 * i + 1)
-        plt.plot(t, timeElec['sw'][id[i]]['i_T'], t, timeElec['sw'][id[i]]['i_D'])
+        plt.plot(t[::down2], timeElec['sw'][id[i]]['i_T'][::down2], t[::down2], timeElec['sw'][id[i]]['i_D'][::down2])
         plt.ylabel("$i(t)$ (A)")
         txt = 'Time-domain Currents Switch ' + str(id[i])
         plt.title(txt)
@@ -378,7 +381,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
         # Voltage
         plt.subplot(6, 4, 4 * i + 2)
-        plt.plot(t, timeElec['sw'][id[i]]['v_T'], t, timeElec['sw'][id[i]]['v_D'])
+        plt.plot(t[::down2], timeElec['sw'][id[i]]['v_T'][::down2], t[::down2], timeElec['sw'][id[i]]['v_D'][::down2])
         plt.ylabel("$v(t)$ (V)")
         txt = 'Time-domain Voltages Switch ' + str(id[i])
         plt.title(txt)
@@ -391,7 +394,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
         # Losses
         plt.subplot(6, 4, 4 * i + 3)
-        plt.plot(t, timeLoss['sw'][id[i]]['p_T_c'], t, timeLoss['sw'][id[i]]['p_D_c'])
+        plt.plot(t[::down2], timeLoss['sw'][id[i]]['p_T_c'][::down2], t[::down2], timeLoss['sw'][id[i]]['p_D_c'][::down2])
         plt.ylabel("$p(t)$ (W)")
         txt = 'Time-domain Conduction Losses Switch ' + str(id[i])
         plt.title(txt)
@@ -404,7 +407,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
         # Losses
         plt.subplot(6, 4, 4 * i + 4)
-        plt.plot(t, timeLoss['sw'][id[i]]['p_T_s'], t, timeLoss['sw'][id[i]]['p_D_s'])
+        plt.plot(t[::down2], timeLoss['sw'][id[i]]['p_T_s'][::down2], t[::down2], timeLoss['sw'][id[i]]['p_D_s'][::down2])
         plt.ylabel("$p(t)$ (W)")
         txt = 'Time-domain Switching Losses Switch ' + str(id[i])
         plt.title(txt)
@@ -422,7 +425,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     for i in range(0, 3):
         # Losses
         plt.subplot(4, 3, i + 1)
-        plt.plot(t, timeLoss['sw'][id[i * 2]]['p_T'], t, timeLoss['sw'][id[i * 2]]['p_D'])
+        plt.plot(t[::down2], timeLoss['sw'][id[i * 2]]['p_T'][::down2], t[::down2], timeLoss['sw'][id[i * 2]]['p_D'][::down2])
         plt.ylabel("$p(t)$ (W)")
         txt = 'Time-domain Total Losses Switch ' + str(id[i * 2])
         plt.title(txt)
@@ -432,8 +435,8 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
         # Temperature
         plt.subplot(4, 3, i + 4)
-        plt.plot(t, timeTher['sw'][idT[i * 2]], t, timeTher['sw'][idD[i * 2]], t, timeTher['sw'][idC[i * 2]], t,
-                 Ta * np.ones(np.size(t)))
+        plt.plot(t[::down2], timeTher['sw'][idT[i * 2]][::down2], t[::down2], timeTher['sw'][idD[i * 2]][::down2], t[::down2], timeTher['sw'][idC[i * 2]][::down2], t[::down2],
+                 Ta * np.ones(np.size(t[::down2])))
         plt.ylabel("$\Theta(t)$ (°C)")
         txt = 'Time-domain Thermal Switch ' + str(id[i * 2])
         plt.title(txt)
@@ -443,7 +446,7 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
         # Losses
         plt.subplot(4, 3, i + 7)
-        plt.plot(t, timeLoss['sw'][id[i * 2 + 1]]['p_T'], t, timeLoss['sw'][id[i * 2 + 1]]['p_D'])
+        plt.plot(t[::down2], timeLoss['sw'][id[i * 2 + 1]]['p_T'][::down2], t[::down2], timeLoss['sw'][id[i * 2 + 1]]['p_D'][::down2])
         plt.ylabel("$p(t)$ (W)")
         txt = 'Time-domain Total Losses Switch ' + str(id[i * 2 + 1])
         plt.title(txt)
@@ -453,8 +456,8 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
 
         # Temperature
         plt.subplot(4, 3, i + 10)
-        plt.plot(t, timeTher['sw'][idT[i * 2 + 1]], t, timeTher['sw'][idD[i * 2 + 1]], t,
-                 timeTher['sw'][idC[i * 2 + 1]], t, Ta * np.ones(np.size(t)))
+        plt.plot(t[::down2], timeTher['sw'][idT[i * 2 + 1]][::down2], t[::down2], timeTher['sw'][idD[i * 2 + 1]][::down2], t[::down2],
+                 timeTher['sw'][idC[i * 2 + 1]][::down2], t[::down2], Ta * np.ones(np.size(t[::down2])))
         plt.ylabel("$\Theta(t)$ (°C)")
         txt = 'Time-domain Thermal Switch ' + str(id[i * 2 + 1])
         plt.title(txt)
@@ -477,28 +480,28 @@ def plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Current
     plt.subplot(4, 1, 1)
-    plt.plot(t, timeDc['i_c'])
+    plt.plot(t[::down2], timeDc['i_c'][::down2])
     plt.ylabel("$i(t)$ (A)")
     plt.title('Time-domain Currents DC-Link Capacitor')
     plt.grid('on')
 
     # Voltage
     plt.subplot(4, 1, 2)
-    plt.plot(t, timeDc['v_dc'])
+    plt.plot(t[::down2], timeDc['v_dc'][::down2])
     plt.ylabel("$v(t)$ (V)")
     plt.title('Time-domain Voltages DC-Link Capacitor')
     plt.grid('on')
 
     # Losses
     plt.subplot(4, 1, 3)
-    plt.plot(t, timeLoss['cap']['C1']['p_L'])
+    plt.plot(t[::down2], timeLoss['cap']['C1']['p_L'][::down2])
     plt.ylabel("$p(t)$ (W)")
     plt.title('Time-domain Losses DC-Link Capacitor')
     plt.grid('on')
 
     # Temperature
     plt.subplot(4, 1, 4)
-    plt.plot(t, timeTher['cap']['C1'])
+    plt.plot(t[::down2], timeTher['cap']['C1'][::down2])
     plt.ylabel("$\Theta(t)$ (°C)")
     plt.title('Time-domain Thermal DC-Link Capacitor')
     plt.xlabel('time in (sec)')

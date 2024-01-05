@@ -56,7 +56,6 @@ setupExp['debug'] = 0                                                           
 # Operating Mode
 # ------------------------------------------
 setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled
-setupExp['type'] = 0                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
 setupExp['therFeed'] = 0                                                                                                # (0): no thermal coupling with electric losses, (1): thermal-electric coupling
 setupExp['freqPar'] = 'fs'                                                                                              # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
 setupExp['freqAvg'] = 'none'                                                                                            # (none): no averaging is used (fs): values are averaged over switching cycle, (fel): values are averaged over fundamental cycle
@@ -119,7 +118,6 @@ setupTopo['CapName'] = "Elco"                                                   
 # ------------------------------------------
 # Source
 # ------------------------------------------
-setupTopo['sourceType'] = "B6"                                                                                          # (B2): half bridge, (B4): full bridge, (B6): two-level three phase converter
 
 # ------------------------------------------
 # Filter
@@ -155,7 +153,7 @@ setupTopo['fel'] = 50                                                           
 # ------------------------------------------
 # General
 # ------------------------------------------
-setupPara['PWM']['type'] = "SV"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based
+setupPara['PWM']['type'] = "SV"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based, (OPP): optimal pulse pattern
 setupPara['PWM']['upd'] = "DE"                                                                                          # (SE): single edge, (DE): double edge
 setupPara['PWM']['samp'] = "RS"                                                                                         # (NS): natural sampling, (RS): regular sampling
 setupPara['PWM']['tri'] = "SM"                                                                                          # modulation trigger (RE): rising edge, (FE): falling edge, (SM): symmetrical modulation, (AM): asymmetrical modualtion
