@@ -327,11 +327,13 @@ def calcSSeqB6_SV(ref, t, Mi, setupPara, setupTopo):
     # ------------------------------------------
     q = int(fs / fel)
     N = int((t[-1] - t[0]) / Tel)
+    K = int(len(t) / (q * N))
     if setupPara['PWM']['upd'] == "SE":
         Ns = q
+        Terr = -K / 2
     else:
         Ns = 2 * q
-    K = int(len(t) / (q * N))
+        Terr = -K / 4
     tmin = int(setupPara['PWM']['tmin'] / (t[1] - t[0]))
     td = int(setupPara['PWM']['td'] / (t[1] - t[0]))
 
@@ -366,8 +368,8 @@ def calcSSeqB6_SV(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Clark Transform
     # ==============================================================================
-    ref['alpha'] = ref['A'] - 0.5 * ref['B'] - 0.5 * ref['C']
-    ref['beta'] = np.sqrt(3) / 2 * ref['B'] - np.sqrt(3) / 2 * ref['C']
+    ref['alpha'] = 2/3 * (ref['A'] - 0.5 * ref['B'] - 0.5 * ref['C'])
+    ref['beta'] = 2/3 * (np.sqrt(3) / 2 * ref['B'] - np.sqrt(3) / 2 * ref['C'])
     phi = np.arctan2(ref['beta'], ref['alpha'])
 
     # ==============================================================================
@@ -387,6 +389,7 @@ def calcSSeqB6_SV(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     for i in range(0, len(t)):
         alpha = i * N / len(t) * 2 * np.pi + phi[0] + 2 * np.pi
+        alpha = alpha + Terr / len(t) * N * (2 * np.pi)
         [d0, d1, d2, d7, _] = svPWM(k, alpha, Mi)
         xN0[i] = (-d0 - d1 / 3 + d2 / 3 + d7)
 
@@ -405,6 +408,7 @@ def calcSSeqB6_SV(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     for i in range(0, Ns * N):
         alpha = i / Ns * 2 * np.pi + phi[0] + 2 * np.pi
+        alpha = alpha + Terr / len(t) * N * (2 * np.pi)
         [t0[i], t1[i], t2[i], t7[i], rr[i]] = svPWM(k, alpha, Mi)
 
     # ==============================================================================
