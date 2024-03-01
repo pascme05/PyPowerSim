@@ -60,7 +60,7 @@ def calcTimeB2(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     v_a = v_L - Mi * e
 
     # Current
-    if setupTopo['wave'] == "con":
+    if setupTopo['wave'] == "con": # if clause um CL-erweitern
         _, i_a, _, = sig.lsim(mdl['SS']['Load'], v_a, t)
         i_a = i_a[start:ende]
     else:

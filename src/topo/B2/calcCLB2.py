@@ -162,7 +162,7 @@ def calcCLB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
 
     # Current reference i_ref needed
-    i_ref = v_ref/6 # For Testing                                                                                       !!!!!
+    i_ref = v_ref/6 # For Testing, could use setupData['stat']['Io'] = 25   in start                                                                                       !!!!!
     # Other Control options than Mi?
     dTs = int(Nsim / Npwm) #Time Steps of one Switching Period (make sure this is a whole number!)
 
