@@ -16,7 +16,7 @@
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.topo.B2.calcSSeqB2 import calcSSeqB2_CB, calcSSeqB2_FF
+from src.topo.B2.calcSSeqB2 import calcSSeqB2_CB, calcSSeqB2_FF, calcSSeqB2_OPP
 from src.topo.B2.calcTimeB2 import calcTimeB2
 from src.general.calcFreq import calcFreq
 from src.elec.calcElecSwi import calcElecSwi
@@ -24,7 +24,7 @@ from src.elec.calcLossSwi import calcLossSwi
 from src.elec.calcLossCap import calcLossCap
 from src.therm.calcTherRC import calcTherRC
 from src.topo.B2.initB2 import initB2
-from src.general.genWaveform import genWave
+from src.pwm.genWaveform import genWave
 from src.therm.initRC import initRC
 from src.elec.calcElecCap import calcElecCap
 from src.topo.B2.outB2 import outB2_Steady
@@ -147,6 +147,8 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
         [xs, xsh, s, c] = calcSSeqB2_FF(v_ref, t, Mi, setupPara, setupTopo)
     elif setupPara['PWM']['type'] == "CB":
         [xs, xsh, s, c] = calcSSeqB2_CB(v_ref, t, Mi, setupPara, setupTopo)
+    elif setupPara['PWM']['type'] == "OPP":
+        [xs, xsh, s, c] = calcSSeqB2_OPP(v_ref, t, Mi, setupPara, setupTopo)
     else:
         [xs, xsh, s, c] = calcSSeqB2_CB(v_ref, t, Mi, setupPara, setupTopo)
 
@@ -183,10 +185,10 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
         # Switches
         timeLoss['sw']['S1'] = calcLossSwi(s[start:ende] * (+1), timeElec['sw']['S1']['i_T'],
                                            timeElec['sw']['S1']['i_D'], timeElec['sw']['S1']['v_T'],
-                                           timeElec['sw']['S1']['v_D'], T_sw[0], para, setupPara, setupExp)
+                                           timeElec['sw']['S1']['v_D'], T_sw[0], para, setupPara)
         timeLoss['sw']['S2'] = calcLossSwi(s[start:ende] * (-1), timeElec['sw']['S2']['i_T'],
                                            timeElec['sw']['S2']['i_D'], timeElec['sw']['S2']['v_T'],
-                                           timeElec['sw']['S2']['v_D'], T_sw[1], para, setupPara, setupExp)
+                                           timeElec['sw']['S2']['v_D'], T_sw[1], para, setupPara)
 
         # Capacitor
         timeLoss['cap']['C1'] = calcLossCap(t, timeDc['i_c'], T_ca, para, setupPara, setupTopo)
@@ -200,7 +202,7 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
             Tinit_D[:, 0] = np.mean(timeLoss['sw']['S1']['p_D']) * Rth_DA
             Tinit_T[:, 1] = np.mean(timeLoss['sw']['S2']['p_T']) * Rth_JA
             Tinit_D[:, 1] = np.mean(timeLoss['sw']['S2']['p_D']) * Rth_DA
-            if setupPara['Ther']['Coupling'] == 1:
+            if setupPara['Ther']['Coupling'] != 1:
                 Tinit_K[:, 0] = np.mean(timeLoss['sw']['S1']['p_L']) * Rth_CA
                 Tinit_K[:, 1] = np.mean(timeLoss['sw']['S2']['p_L']) * Rth_CA
 
@@ -210,6 +212,12 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
         # ------------------------------------------
         # Thermal
         # ------------------------------------------
+        # Baseplate
+        if setupPara['Ther']['Coupling'] == 2:
+            Pv_Base = np.mean((timeLoss['sw']['S1']['p_L'] + timeLoss['sw']['S2']['p_L'])) / 2
+        else:
+            Pv_Base = 0
+
         # Switches
         [timeTher['sw']['T1'], Tinit_T[:, 0]] = calcTherRC(Tinit_T[:, 0], Tc, timeLoss['sw']['S1']['p_T'], t[start:ende], Rth_JA, Cth_JA)
         [timeTher['sw']['T2'], Tinit_T[:, 1]] = calcTherRC(Tinit_T[:, 1], Tc, timeLoss['sw']['S2']['p_T'], t[start:ende], Rth_JA, Cth_JA)
@@ -223,9 +231,17 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
             timeTher['sw']['D1'] = timeTher['sw']['D1'][:] + timeTher['sw']['C1'] - Tc
             timeTher['sw']['T2'] = timeTher['sw']['T2'][:] + timeTher['sw']['C2'] - Tc
             timeTher['sw']['D2'] = timeTher['sw']['D2'][:] + timeTher['sw']['C2'] - Tc
+        elif setupPara['Ther']['Coupling'] == 2:
+            dT_Base = Rth_CA * Pv_Base
+            timeTher['sw']['T1'] = timeTher['sw']['T1'][:] + dT_Base
+            timeTher['sw']['T2'] = timeTher['sw']['T2'][:] + dT_Base
+            timeTher['sw']['D1'] = timeTher['sw']['D1'][:] + dT_Base
+            timeTher['sw']['D2'] = timeTher['sw']['D2'][:] + dT_Base
+            timeTher['sw']['C1'] = Tc * np.ones(np.size(s[start:ende])) + dT_Base
+            timeTher['sw']['C2'] = Tc * np.ones(np.size(s[start:ende])) + dT_Base
         else:
-            timeTher['sw']['C1'] = Tc * np.ones(np.size(s['A'][start:ende]))
-            timeTher['sw']['C2'] = Tc * np.ones(np.size(s['A'][start:ende]))
+            timeTher['sw']['C1'] = Tc * np.ones(np.size(s[start:ende]))
+            timeTher['sw']['C2'] = Tc * np.ones(np.size(s[start:ende]))
 
         # Capacitor
         [timeTher['cap']['C1'], Tinit_C] = calcTherRC(Tinit_C, Tc, timeLoss['cap']['C1']['p_L'], t[start:ende], Rth_JA_cap, Cth_JA_cap)
@@ -238,7 +254,7 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
         # ------------------------------------------
         # Update Para
         # ------------------------------------------
-        if setupExp['loop'] == "CL":
+        if setupExp['therFeed'] == 1:
             # Switches
             T_sw[0] = np.mean(timeTher['sw']['T1'])
             T_sw[1] = np.mean(timeTher['sw']['T2'])
@@ -304,6 +320,14 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # Update Thermal
     # ==============================================================================
     # ------------------------------------------
+    # Baseplate
+    # ------------------------------------------
+    if setupPara['Ther']['Coupling'] == 2:
+        Pv_Base = np.mean((timeLoss['sw']['S1']['p_L'] + timeLoss['sw']['S2']['p_L'])) / 2
+    else:
+        Pv_Base = 0
+
+    # ------------------------------------------
     # Switches
     # ------------------------------------------
     # Normal
@@ -320,9 +344,17 @@ def calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp):
         timeTher['sw']['D1'] = timeTher['sw']['D1'][:] + timeTher['sw']['C1'] - Tc
         timeTher['sw']['T2'] = timeTher['sw']['T2'][:] + timeTher['sw']['C2'] - Tc
         timeTher['sw']['D2'] = timeTher['sw']['D2'][:] + timeTher['sw']['C2'] - Tc
+    elif setupPara['Ther']['Coupling'] == 2:
+        dT_Base = Rth_CA * Pv_Base
+        timeTher['sw']['T1'] = timeTher['sw']['T1'][:] + dT_Base
+        timeTher['sw']['T2'] = timeTher['sw']['T2'][:] + dT_Base
+        timeTher['sw']['D1'] = timeTher['sw']['D1'][:] + dT_Base
+        timeTher['sw']['D2'] = timeTher['sw']['D2'][:] + dT_Base
+        timeTher['sw']['C1'] = Tc * np.ones(np.size(s[start:ende])) + dT_Base
+        timeTher['sw']['C2'] = Tc * np.ones(np.size(s[start:ende])) + dT_Base
     else:
-        timeTher['sw']['C1'] = Tc * np.ones(np.size(s['A'][start:ende]))
-        timeTher['sw']['C2'] = Tc * np.ones(np.size(s['A'][start:ende]))
+        timeTher['sw']['C1'] = Tc * np.ones(np.size(s[start:ende]))
+        timeTher['sw']['C2'] = Tc * np.ones(np.size(s[start:ende]))
     # ------------------------------------------
     # Capacitor
     # ------------------------------------------

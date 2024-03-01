@@ -27,7 +27,7 @@ import numpy as np
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def sanityInput(setupExp, setupData, setupTopo, setupPara):
+def sanityInput(para, setupExp, setupData, setupTopo, setupPara):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -115,6 +115,13 @@ def sanityInput(setupExp, setupData, setupTopo, setupPara):
     # ==============================================================================
     # Electrical
     # ==============================================================================
+    # ------------------------------------------
+    # Switching Losses
+    # ------------------------------------------
+    if setupData['stat']['Vdc'] != para['Swi']['Elec']['con']['Vnom']:
+        print("INFO: DC-link voltage is not equal to nominal voltage of switching loss parameters (linear scaling)")
+    else:
+        print("INFO: DC-link voltage is  equal to nominal voltage of switching loss parameters")
     
     # ==============================================================================
     # Thermal

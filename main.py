@@ -34,7 +34,6 @@ from src.general.sanityCheck import sanityInput
 from src.general.saveResults import saveResults
 from src.general.genLoadInput import genLoadInput
 
-
 # ==============================================================================
 # External
 # ==============================================================================
@@ -82,7 +81,7 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     # Parameter
     # ==============================================================================
     try:
-        para = loadPara(setupTopo, setupPath, setupPara)
+        para = loadPara(setupTopo, setupPath, setupPara, setupData, setupExp)
     except:
         sys.exit('ERROR: Parameters could not be loaded')
 
@@ -107,7 +106,7 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     # ==============================================================================
     # Sanity Checks
     # ==============================================================================
-    [setupExp, setupData, setupTopo, setupPara] = sanityInput(setupExp, setupData, setupTopo, setupPara)
+    [setupExp, setupData, setupTopo, setupPara] = sanityInput(para, setupExp, setupData, setupTopo, setupPara)
 
     # ==============================================================================
     # Transfer Functions
@@ -249,7 +248,7 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     # Plot Results
     # ==============================================================================
     if setupExp['plot'] != 0:
-        plot(time, freq, sweep, setupPara, setupData, setupTopo, setupExp)
+        plot(mdl, para, time, freq, sweep, setupPara, setupData, setupTopo, setupExp)
 
     # ==============================================================================
     # MSG OUT

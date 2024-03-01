@@ -16,9 +16,9 @@
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.topo.B6.calcSSeqB6 import calcSSeqB6_CB, calcSSeqB6_FF, calcSSeqB6_SV
+from src.topo.B6.calcSSeqB6 import calcSSeqB6_CB, calcSSeqB6_FF, calcSSeqB6_SV, calcSSeqB6_OPP
 from src.topo.B6.calcTimeB6 import calcTimeB6
-from src.general.genWaveform import genWave
+from src.pwm.genWaveform import genWave
 from src.topo.B6.initB6 import initB6_Data, initB6
 from src.topo.B6.outB6 import outB6_Trans
 from src.general.calcFreq import calcFreq
@@ -109,7 +109,7 @@ def calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Update Frequency
     # ==============================================================================
-    if setupExp['loop'] == 'OL':
+    if setupExp['therFeed'] == 0:
         iterNel = 1
         iterNpwm = 1
     elif setupExp['freqPar'] == 'fel':
@@ -169,6 +169,8 @@ def calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
         [xs, xsh, s, c, x, n0] = calcSSeqB6_CB(v_ref, t_ref, Mi, setupPara, setupTopo)
     elif setupPara['PWM']['type'] == "SV":
         [xs, xsh, s, c, x, n0] = calcSSeqB6_SV(v_ref, t_ref, Mi, setupPara, setupTopo)
+    elif setupPara['PWM']['type'] == "OPP":
+        [xs, xsh, s, c, x, n0] = calcSSeqB6_OPP(v_ref, t_ref, Mi, setupPara, setupTopo)
     else:
         [xs, xsh, s, c, x, n0] = calcSSeqB6_CB(v_ref, t_ref, Mi, setupPara, setupTopo)
 
@@ -194,7 +196,7 @@ def calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
         # ------------------------------------------
         # PWM Period
         # ------------------------------------------
-        for ii in tqdm(range(iterNpwm), desc='PWM-Period', position=1, leave=False):
+        for ii in range(iterNpwm):
             # Init
             [_, timeElec, timeLoss, timeTher, _, _, _, _, _] = initB6(2)
             start = int(ii * (Nsim / iterNpwm))
@@ -206,11 +208,15 @@ def calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
             # Switch
             for j in range(0, len(id2)):
                 timeElec['sw'][id2[j]] = calcElecSwi(Vdc, timeAc[id4[j]][start:ende], (s[id3[j]][start:ende] == (-1) ** j), Tj[j], id5[j], para, setupPara)
-                timeLoss['sw'][id2[j]] = calcLossSwi(s[id3[j]][start:ende] * (-1) ** j, timeElec['sw'][id2[j]]['i_T'], timeElec['sw'][id2[j]]['i_D'], timeElec['sw'][id2[j]]['v_T'], timeElec['sw'][id2[j]]['v_D'], Tj[j], para, setupPara, setupExp)
+                timeLoss['sw'][id2[j]] = calcLossSwi(s[id3[j]][start:ende] * (-1) ** j, timeElec['sw'][id2[j]]['i_T'], timeElec['sw'][id2[j]]['i_D'], timeElec['sw'][id2[j]]['v_T'], timeElec['sw'][id2[j]]['v_D'], Tj[j], para, setupPara)
 
-                if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:
+                if setupPara['Ther']['Heatsink'] == 1 and setupPara['Ther']['Coupling'] == 1:
                     [timeTher['sw'][id6[j]], Tinit_T[:, j]] = calcTherRC(Tinit_T[:, j], Ta, timeLoss['sw'][id2[j]]['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
                     [timeTher['sw'][id8[j]], Tinit_C[:, j]] = calcTherRC(Tinit_C[:, j], Ta, timeLoss['sw'][id2[j]]['p_L'], t_ref[start:ende], Rth_CA, Cth_CA)
+                    timeTher['sw'][id6[j]] = timeTher['sw'][id6[j]][:] + timeTher['sw'][id8[j]][:] - Ta
+                elif setupPara['Ther']['Heatsink'] == 1 and setupPara['Ther']['Coupling'] == 2:
+                    [timeTher['sw'][id6[j]], Tinit_T[:, j]] = calcTherRC(Tinit_T[:, j], Ta, timeLoss['sw'][id2[j]]['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
+                    [timeTher['sw'][id8[j]], Tinit_C[:, j]] = calcTherRC(Tinit_C[:, j], Ta, np.mean(timeLoss['sw'][id2[j]]['p_L'])*np.ones(np.size(timeLoss['sw'][id2[j]]['p_L'])), t_ref[start:ende], Rth_CA, Cth_CA)
                     timeTher['sw'][id6[j]] = timeTher['sw'][id6[j]][:] + timeTher['sw'][id8[j]][:] - Ta
                 else:
                     [timeTher['sw'][id6[j]], Tinit_T[:, j]] = calcTherRC(Tinit_T[:, j], Ta, timeLoss['sw'][id2[j]]['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
@@ -225,7 +231,7 @@ def calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
             dataFel = app_fs(dataFel, timeElec, timeLoss, setupExp)
 
             # Parameter Update
-            if setupExp['loop'] == 'CL':
+            if setupExp['therFeed'] == 1:
                 for j in range(0, len(id2)):
                     Tj[j] = timeTher['sw'][id6[j]][-1]
                 Tcap = timeTher['cap']['C1'][-1]
@@ -261,8 +267,14 @@ def calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp):
 
     # Coupling
     for i in range(0, len(id2)):
-        if setupPara['Ther']['Heatsink'] == 1 & setupPara['Ther']['Coupling'] == 1:
+        if setupPara['Ther']['Heatsink'] == 1 and setupPara['Ther']['Coupling'] == 1:
             [out['ther']['sw'][id8[i]], _] = calcTherRC(0, Ta, out['loss']['sw'][id2[i]]['p_L'].values, t, Rth_CA, Cth_CA)
+            out['ther']['sw'][id6[i]] = out['ther']['sw'][id6[i]][:] + out['ther']['sw'][id8[i]][:] - Ta
+            out['ther']['sw'][id7[i]] = out['ther']['sw'][id7[i]][:] + out['ther']['sw'][id8[i]][:] - Ta
+        elif setupPara['Ther']['Heatsink'] == 1 and setupPara['Ther']['Coupling'] == 2:
+            Pv_Base = np.mean((out['loss']['sw']['S1']['p_L'] + out['loss']['sw']['S2']['p_L'] + out['loss']['sw']['S3']['p_L'] +
+                               out['loss']['sw']['S4']['p_L'] + out['loss']['sw']['S5']['p_L'] + out['loss']['sw']['S6']['p_L'])) / 6
+            [out['ther']['sw'][id8[i]], _] = calcTherRC(0, Ta, Pv_Base*np.ones(np.size(out['loss']['sw']['S1']['p_L'])), t, Rth_CA, Cth_CA)
             out['ther']['sw'][id6[i]] = out['ther']['sw'][id6[i]][:] + out['ther']['sw'][id8[i]][:] - Ta
             out['ther']['sw'][id7[i]] = out['ther']['sw'][id7[i]][:] + out['ther']['sw'][id8[i]][:] - Ta
         else:

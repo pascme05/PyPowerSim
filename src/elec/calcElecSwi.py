@@ -23,7 +23,6 @@
 import numpy as np
 import pandas as pd
 import copy
-from scipy import interpolate
 
 
 #######################################################################################################################
@@ -40,12 +39,6 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     Ron = para['Swi']['Elec']['con']['Ron']
     Vfd = para['Swi']['Elec']['con']['Vfd']
     RonD = para['Swi']['Elec']['con']['RonD']
-
-    # ==============================================================================
-    # Variables
-    # ==============================================================================
-    VfT = np.zeros(np.size(Is))
-    VfD = np.zeros(np.size(Is))
 
     # ==============================================================================
     # Output
@@ -68,53 +61,30 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
             VfD = Vfd * np.ones(np.size(Is))
 
         # MOSFET
-        if setupPara['Elec']['SwiType'] == "MOSFET":
+        else:
             VfT = Vf * np.ones(np.size(Is))
             VfD = Vfd * np.ones(np.size(Is))
 
     # ------------------------------------------
     # Piece-wise linear (tbi)
     # ------------------------------------------
-    if setupPara['Elec']['SwiMdl'] == "pwl":
+    elif setupPara['Elec']['SwiMdl'] == "pwl":
         # IGBT
         if setupPara['Elec']['SwiType'] == "IGBT":
             VfT = Vf + Ron * np.abs(Is)
             VfD = Vfd + RonD * np.abs(Is)
 
         # MOSFET
-        if setupPara['Elec']['SwiType'] == "MOSFET":
+        else:
             VfT = Ron * np.abs(Is)
             VfD = Vfd + RonD * np.abs(Is)
 
     # ------------------------------------------
     # Tabular
     # ------------------------------------------
-    if setupPara['Elec']['SwiMdl'] == "tab":
-        # IGBT
-        if setupPara['Elec']['SwiType'] == "IGBT":
-            Vce_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),
-                                          para['Swi']['Elec']['vec']['If'].to_numpy(),
-                                          para['Swi']['Elec']['tab']['Vf'].to_numpy(), kind='linear')
-            Vfd_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),
-                                          para['Swi']['Elec']['vec']['Ifd'].to_numpy(),
-                                          para['Swi']['Elec']['tab']['Vfd'].to_numpy(), kind='linear')
-
-            for i in range(0, len(Is)):
-                VfT[i] = Vce_2d(Tj, abs(Is[i]))
-                VfD[i] = Vfd_2d(Tj, abs(Is[i]))
-
-        # MOSFET
-        if setupPara['Elec']['SwiType'] == "MOSFET":
-            Vce_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),
-                                          para['Swi']['Elec']['vec']['If'].to_numpy(),
-                                          para['Swi']['Elec']['tab']['Vf'].to_numpy(), kind='linear')
-            Vfd_2d = interpolate.interp2d(para['Swi']['Elec']['vec']['Tj'].to_numpy(),
-                                          para['Swi']['Elec']['vec']['Ifd'].to_numpy(),
-                                          para['Swi']['Elec']['tab']['Vfd'].to_numpy(), kind='linear')
-
-            for i in range(0, len(Is)):
-                VfT[i] = Vce_2d(Tj, abs(Is[i]))
-                VfD[i] = Vfd_2d(Tj, abs(Is[i]))
+    else:
+        VfT = para['Swi']['Elec']['tab']['Vce_2d']((Tj, abs(Is)))
+        VfD = para['Swi']['Elec']['tab']['Vfd_2d']((Tj, abs(Is)))
 
     # ==============================================================================
     # Parameterize PWM Method

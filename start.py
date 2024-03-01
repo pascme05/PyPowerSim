@@ -48,16 +48,16 @@ setupPath = initPath('PyPowerSim')
 # ------------------------------------------
 # Experiment
 # ------------------------------------------
-setupExp['Name'] = "test"                                                                                               # name of the simulation (str)
+setupExp['Name'] = "default"                                                                                            # name of the simulation (str)
 setupExp['Author'] = "Pascal Schirmer"                                                                                  # name of the responsible person (str)
 setupExp['debug'] = 0                                                                                                   # (0): debug mode de-activated, (1): debug mode activated level-1, (2): debug mode activated level-2
 
 # ------------------------------------------
 # Operating Mode
 # ------------------------------------------
-setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled 
-setupExp['type'] = 0#3                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis, (3): Closed-Loop Control (Hysteresis)
-setupExp['loop'] = 'CL'                                                                                                 # (CL): closed-loop, (OL): open-loop (for temperature calculation)
+setupExp['output'] = 'Mi'                                                                                               # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled
+setupExp['type'] = 0                                                                                                    # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
+setupExp['therFeed'] = 0                                                                                                # (0): no thermal coupling with electric losses, (1): thermal-electric coupling
 setupExp['freqPar'] = 'fs'                                                                                              # (fs): values are updated earliest after switching cycle, (fel): values are updated earliest after fundamental cycle
 setupExp['freqAvg'] = 'none'                                                                                            # (none): no averaging is used (fs): values are averaged over switching cycle, (fel): values are averaged over fundamental cycle
 
@@ -73,6 +73,7 @@ setupExp['int'] = 20                                                            
 # Output
 # ------------------------------------------
 setupExp['plot'] = 2                                                                                                    # (0): no results are plotted, (1): results are plotted, (2): analytic results are plotted
+setupExp['plotGen'] = 1                                                                                                 # (0): no generic plots, (1): loss and thermal models are plotted
 setupExp['save'] = 0                                                                                                    # (0): no results are saved, (1): results are saved
 
 # ==============================================================================
@@ -82,15 +83,15 @@ setupExp['save'] = 0                                                            
 # General
 # ------------------------------------------
 # Transient
-setupData['trans']['tmax'] = 1/50                                                                                      # maximum time for transient analysis (sec)
-setupData['trans']['Tc'] = 50.0                                                                                         # reference temperature of all components (°C)
-setupData['trans']['Tj'] = 50.0                                                                                         # core temperature at t=0 of all components (°C)
+setupData['trans']['tmax'] = 10/50                                                                                      # maximum time for transient analysis (sec)
+setupData['trans']['Tc'] = 25.0                                                                                         # reference temperature of all components (°C)
+setupData['trans']['Tj'] = 25.0                                                                                         # core temperature at t=0 of all components (°C)
 
 # Stationary
 setupData['stat']['cyc'] = 4                                                                                            # number of fundamental cycles used for stationary analysis (at least 4)
 setupData['stat']['W'] = 20                                                                                             # number of datapoints for sweep analysis
-setupData['stat']['Tj'] = 50.0                                                                                          # core temperature of all components (°C)
-setupData['stat']['Tc'] = 50.0                                                                                          # reference temperature of all components (°C)
+setupData['stat']['Tj'] = 25.0                                                                                          # core temperature of all components (°C)
+setupData['stat']['Tc'] = 25.0                                                                                          # reference temperature of all components (°C)
 
 # ------------------------------------------
 # Parameter
@@ -98,12 +99,12 @@ setupData['stat']['Tc'] = 50.0                                                  
 # Control
 setupData['stat']['Po'] = 1000                                                                                          # output active power (Po) in (W) for power control
 setupData['stat']['Qo'] = 500                                                                                           # output reactive power (Qo) in (VAr) for power control
-setupData['stat']['Vo'] = 50                                                                                            # output RMS phase voltage (V0) in (V) for voltage control    
+setupData['stat']['Vo'] = 50                                                                                            # output RMS phase voltage (V0) in (V) for voltage control
 setupData['stat']['Io'] = 25                                                                                            # output RMS phase current (Io) in (A) for current control
 
 # Input and Output
 setupData['stat']['Mi'] = 1.00                                                                                          # modulation index (Mi) for distortion analysis                                                                                                # power factor cos_phi
-setupData['stat']['Vdc'] = 400                                                                                          # DC-Link voltage (V)
+setupData['stat']['Vdc'] = 600                                                                                          # DC-Link voltage (V)
 setupData['stat']['phi'] = 0.0                                                                                          # load angle output voltage (deg)
 
 # ==============================================================================
@@ -125,9 +126,9 @@ setupTopo['sourceType'] = "B6"                                                  
 # ------------------------------------------
 # Input
 setupTopo['inpFilter'] = 0                                                                                              # 0) input filter is deactivated, 1) input filter is activated
-setupTopo['Rinp'] = 1e-3                                                                                                # input filter resistance (Ohm)
-setupTopo['Linp'] = 2e-3                                                                                                # input filter inductance (H)
-setupTopo['Cinp'] = 1e-3                                                                                                # input filter capacitance (F)
+setupTopo['Rinp'] = 0.2                                                                                                 # input filter resistance (Ohm)
+setupTopo['Linp'] = 1e-3                                                                                                # input filter inductance (H)
+setupTopo['Cinp'] = 5e-4                                                                                                # input filter capacitance (F)
 
 # Output
 setupTopo['outFilter'] = 0                                                                                              # 0) output filter is deactivated, 1) output filter is activated
@@ -139,13 +140,13 @@ setupTopo['Cout'] = 1e-3                                                        
 # Load
 # ------------------------------------------
 # Parameters
-setupTopo['R'] = 0                                                                                                    # resistance in (Ohm)
+setupTopo['R'] = 5.0                                                                                                    # resistance in (Ohm)
 setupTopo['L'] = 5e-3                                                                                                   # inductance in (H)
 setupTopo['E'] = 0                                                                                                      # induced voltage in (V)
 setupTopo['phiE'] = 0                                                                                                   # load angle induced voltage (deg)
 
 # Waveform
-setupTopo['wave'] = "sin"                                                                                               # (con): constant, (sin): sinusoidal, (tri): triangular                                                                                   
+setupTopo['wave'] = "sin"                                                                                               # (con): constant, (sin): sinusoidal, (tri): triangular
 setupTopo['fel'] = 50                                                                                                   # waveform frequency in (Hz)
 
 # ==============================================================================
@@ -154,8 +155,8 @@ setupTopo['fel'] = 50                                                           
 # ------------------------------------------
 # General
 # ------------------------------------------
-setupPara['PWM']['type'] = "SV"#"CB"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based
-setupPara['PWM']['upd'] = "DE"                                                                                          # (SE): single edge, (DE): double edge 
+setupPara['PWM']['type'] = "SV"                                                                                         # (FF): fundamental frequency, (CB): carrier based, (SV): space vector based, (OPP): optimal pulse pattern
+setupPara['PWM']['upd'] = "DE"                                                                                          # (SE): single edge, (DE): double edge
 setupPara['PWM']['samp'] = "RS"                                                                                         # (NS): natural sampling, (RS): regular sampling
 setupPara['PWM']['tri'] = "SM"                                                                                          # modulation trigger (RE): rising edge, (FE): falling edge, (SM): symmetrical modulation, (AM): asymmetrical modualtion
 setupPara['PWM']['int'] = 0                                                                                             # (0): non-interleaved, (1): interleaving (when multiple carriers are used)
@@ -172,7 +173,7 @@ setupPara['PWM']['sw'] = 0                                                      
 # ------------------------------------------
 # Switching Sequence
 # ------------------------------------------
-setupPara['PWM']['fs'] = 5000    #1000                                                                                       # PWM switching frequency (Hz)
+setupPara['PWM']['fs'] = 1050                                                                                           # PWM switching frequency (Hz)
 setupPara['PWM']['seq'] = "0127"                                                                                        # PWM switching sequence B6 bridge
 setupPara['PWM']['zero'] = "SVPWM"                                                                                      # PWM method B6 bridge (SPWM, SVPWM, THIPWM4, THIPWM6, DPWM0, DPWM1, DPWM2, DPWM3, DPWMMAX, DPWMMIN)
 
@@ -201,9 +202,10 @@ setupPara['Elec']['CapSeries'] = 1                                              
 # Thermal Parameters
 # ==============================================================================
 setupPara['Ther']['Heatsink'] = 1                                                                                       # 1) using thermal capacities and resistances of heatsink RC model
-setupPara['Ther']['Coupling'] = 0                                                                                       # 0) no thermal coupling between diode and transistor, 1) thermal coupling between diode and transistor
+setupPara['Ther']['Coupling'] = 0                                                                                       # 0) no thermal coupling between diode and transistor, 1) thermal coupling between diode and transistor, 2) thermal coupling via whole converter
 
 #######################################################################################################################
 # Calculations
 #######################################################################################################################
-main(setupExp, setupData, setupTopo, setupPara, setupPath)
+if __name__ == '__main__':
+    main(setupExp, setupData, setupTopo, setupPara, setupPath)

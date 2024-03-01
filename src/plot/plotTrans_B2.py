@@ -72,6 +72,9 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     phiE = setupTopo['phiE']
     down = setupData['stat']['cyc'] - 2
     Ta = setupData['trans']['Tc']
+    down2 = int(fsim/fs/200)
+    if down2 < 1:
+        down2 = 1
 
     # ==============================================================================
     # Variables
@@ -138,8 +141,8 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     ax1 = pl.subplot(gs[0, :])
     ax2 = ax1.twinx()
-    ax1.plot(t, timeSw['c'], 'k')
-    ax2.plot(t, timeSw['v_ref'] / (Vdc / 2), color='tab:blue')
+    ax1.plot(t[::down2], timeSw['c'][::down2], 'k')
+    ax2.plot(t[::down2], timeSw['v_ref'][::down2] / (Vdc / 2), color='tab:blue')
     pl.title('Carrier and Reference Waveform')
     pl.xlabel('t in (sec)')
     ax1.set_ylabel('c(t)', color='black')
@@ -152,7 +155,7 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time-Domain
     pl.subplot(gs[1, 0])
-    pl.plot(t, timeSw['s'])
+    pl.plot(t[::down2], timeSw['s'][::down2])
     pl.title('Time-domain Switching Function')
     pl.xlabel('t in (sec)')
     pl.ylabel("$s_{a}(t)$ (p.u)")
@@ -160,7 +163,7 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
 
     # Freq-Domain
     pl.subplot(gs[2, 0])
-    pl.stem(f[::down], freqSw['Sa'][::down])
+    pl.stem(f[::down][0:50], freqSw['Sa'][::down][0:50])
     pl.xlim(0, 50)
     pl.title('Frequency-domain Switching Function')
     pl.xlabel("$f/f_{1}$ (Hz/Hz)")
@@ -174,7 +177,7 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time-Domain
     pl.subplot(gs[1, 1])
-    pl.plot(t, timeSw['xs'])
+    pl.plot(t[::down2], timeSw['xs'][::down2])
     pl.title('Time-domain Sampled Reference')
     pl.xlabel('t in (sec)')
     pl.ylabel("$x_{a}(t)$ (p.u)")
@@ -182,7 +185,7 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
 
     # Freq-Domain
     pl.subplot(gs[2, 1])
-    pl.stem(f[::down], freqSw['Xas'][::down])
+    pl.stem(f[::down][0:50], freqSw['Xas'][::down][0:50])
     pl.xlim(0, 50)
     pl.title('Frequency-domain Sampled Reference')
     pl.xlabel("$f/f_{1}$ (Hz/Hz)")
@@ -206,7 +209,7 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Current
     plt.subplot(2, 2, 1)
-    plt.plot(t, timeAc['i_a'])
+    plt.plot(t[::down2], timeAc['i_a'][::down2])
     plt.ylabel("$i_{a}(t)$ (A)")
     plt.title('Time-domain Currents AC-Side')
     plt.xlabel('time in (sec)')
@@ -214,7 +217,7 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
 
     # Voltage
     plt.subplot(2, 2, 2)
-    plt.plot(t, timeAc['v_a0'], t, timeAc['v_a'], t, timeAc['v_L'], t, timeSw['e'])
+    plt.plot(t[::down2], timeAc['v_a0'][::down2], t[::down2], timeAc['v_a'][::down2], t[::down2], timeAc['v_L'][::down2], t[::down2], timeSw['e'][::down2])
     plt.ylabel("$v_{a}(t)$ (V)")
     plt.title('Time-domain Voltages AC-Side')
     plt.xlabel('time in (sec)')
@@ -226,7 +229,7 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Current
     plt.subplot(2, 2, 3)
-    plt.plot(t, timeDc['i_d_p'], t, np.mean(timeDc['i_d_p']) * np.ones(np.size(timeDc['i_d_p'])), '--')
+    plt.plot(t[::down2], timeDc['i_d_p'][::down2], t[::down2], np.mean(timeDc['i_d_p']) * np.ones(np.size(timeDc['i_d_p'][::down2])), '--')
     plt.ylabel("$i_{dc}(t)$ (A)")
     plt.title('Time-domain Currents DC-Side')
     plt.xlabel('time in (sec)')
@@ -235,7 +238,7 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
 
     # Voltage
     plt.subplot(2, 2, 4)
-    plt.plot(t, timeDc['v_in'], t, timeDc['v_dc'], t, np.mean(timeDc['v_dc']) * np.ones(np.size(timeDc['v_dc'])), '--')
+    plt.plot(t[::down2], timeDc['v_in'][::down2], t[::down2], timeDc['v_dc'][::down2], t[::down2], np.mean(timeDc['v_dc']) * np.ones(np.size(timeDc['v_dc'][::down2])), '--')
     plt.ylabel("$v_{dc}(t)$ (V)")
     plt.title('Time-domain Voltages DC-Side')
     plt.xlabel('time in (sec)')
@@ -257,32 +260,32 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Bridge-Leg A
     plt.subplot(411)
-    plt.plot(tel, timeElec['sw']['S1']['v_T'], 'b', tel, timeElec['sw']['S2']['v_T'], 'r', tel,
-             timeElec['sw']['S1']['v_D'], 'b--', tel, timeElec['sw']['S2']['v_D'], 'r--')
+    plt.plot(tel[::down2], timeElec['sw']['S1']['v_T'][::down2], 'b', tel[::down2], timeElec['sw']['S2']['v_T'][::down2], 'r', tel[::down2],
+             timeElec['sw']['S1']['v_D'][::down2], 'b--', tel[::down2], timeElec['sw']['S2']['v_D'][::down2], 'r--')
     plt.title('Voltages Transistors and Diodes')
     plt.ylabel('Voltage in (V)')
     plt.legend(['T1', 'T2', 'D1', 'D2'])
     plt.grid('on')
 
     plt.subplot(412)
-    plt.plot(tel, timeElec['sw']['S1']['i_T'], 'b', tel, timeElec['sw']['S2']['i_T'], 'r', tel,
-             timeElec['sw']['S1']['i_D'], 'b--', tel, timeElec['sw']['S2']['i_D'], 'r--')
+    plt.plot(tel[::down2], timeElec['sw']['S1']['i_T'][::down2], 'b', tel[::down2], timeElec['sw']['S2']['i_T'][::down2], 'r', tel[::down2],
+             timeElec['sw']['S1']['i_D'][::down2], 'b--', tel[::down2], timeElec['sw']['S2']['i_D'][::down2], 'r--')
     plt.title('Currents Transistors and Diodes')
     plt.ylabel('Current in (A)')
     plt.legend(['T1', 'T2', 'D1', 'D2'])
     plt.grid('on')
 
     plt.subplot(413)
-    plt.plot(tel, timeLoss['sw']['S1']['p_T_c'], 'b', tel, timeLoss['sw']['S2']['p_T_c'], 'r', tel,
-             timeLoss['sw']['S1']['p_D_c'], 'b--', tel, timeLoss['sw']['S2']['p_D_c'], 'r--')
+    plt.plot(tel[::down2], timeLoss['sw']['S1']['p_T_c'][::down2], 'b', tel[::down2], timeLoss['sw']['S2']['p_T_c'][::down2], 'r', tel[::down2],
+             timeLoss['sw']['S1']['p_D_c'][::down2], 'b--', tel[::down2], timeLoss['sw']['S2']['p_D_c'][::down2], 'r--')
     plt.title('Conduction Losses Transistors and Diodes')
     plt.ylabel('Power in (W)')
     plt.legend(['T1', 'T2', 'D1', 'D2'])
     plt.grid('on')
 
     plt.subplot(414)
-    plt.plot(tel, timeLoss['sw']['S1']['p_T_s'], 'b', tel, timeLoss['sw']['S2']['p_T_s'], 'r', tel,
-             timeLoss['sw']['S1']['p_D_s'], 'b--', tel, timeLoss['sw']['S2']['p_D_s'], 'r--')
+    plt.plot(tel[::down2], timeLoss['sw']['S1']['p_T_s'][::down2], 'b', tel[::down2], timeLoss['sw']['S2']['p_T_s'][::down2], 'r', tel[::down2],
+             timeLoss['sw']['S1']['p_D_s'][::down2], 'b--', tel[::down2], timeLoss['sw']['S2']['p_D_s'][::down2], 'r--')
     plt.title('Switching Losses Transistors and Diodes')
     plt.ylabel('Power in (W)')
     plt.legend(['T1', 'T2', 'D1', 'D2'])
@@ -297,21 +300,21 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
     plt.subplot(311)
-    plt.plot(tel, timeElec['cap']['C1']['v_c'])
+    plt.plot(tel[::down2], timeElec['cap']['C1']['v_c'][::down2])
     plt.title('Voltage Capacitor')
     plt.ylabel('Voltage in (V)')
     plt.xlabel('time in (sec)')
     plt.grid('on')
 
     plt.subplot(312)
-    plt.plot(tel, timeElec['cap']['C1']['i_c'])
+    plt.plot(tel[::down2], timeElec['cap']['C1']['i_c'][::down2])
     plt.title('Current Capacitor')
     plt.ylabel('Current in (A)')
     plt.xlabel('time in (sec)')
     plt.grid('on')
 
     plt.subplot(313)
-    plt.plot(tel, timeLoss['cap']['C1']['p_L'])
+    plt.plot(tel[::down2], timeLoss['cap']['C1']['p_L'][::down2])
     plt.title('Losses Capacitor')
     plt.ylabel('Power in (W)')
     plt.xlabel('time in (sec)')
@@ -323,21 +326,21 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # Switches
     plt.figure()
     plt.subplot(221)
-    plt.plot(tel, timeLoss['sw']['S1']['p_L'], 'r', tel, timeLoss['sw']['S2']['p_L'], 'b', tel,
-             timeLoss['sw']['S2']['p_L'] + timeLoss['sw']['S1']['p_L'], 'black')
+    plt.plot(tel[::down2], timeLoss['sw']['S1']['p_L'][::down2], 'r', tel[::down2], timeLoss['sw']['S2']['p_L'][::down2], 'b', tel[::down2],
+             timeLoss['sw']['S2']['p_L'][::down2] + timeLoss['sw']['S1']['p_L'][::down2], 'black')
     plt.title('Losses Switches')
     plt.ylabel('Power in (W)')
     plt.legend(['S1', 'S2', 'B2'])
     plt.grid('on')
 
     plt.subplot(222)
-    plt.plot(tel, timeTher['sw']['T1'], color='b', linestyle='--')
-    plt.plot(tel, timeTher['sw']['D1'], color='b', linestyle=':')
-    plt.plot(tel, timeTher['sw']['C1'], color='b', linestyle='-')
-    plt.plot(tel, timeTher['sw']['T2'], color='r', linestyle='--')
-    plt.plot(tel, timeTher['sw']['D2'], color='r', linestyle=':')
-    plt.plot(tel, timeTher['sw']['C2'], color='r', linestyle='-')
-    plt.plot(tel, Ta * np.ones(np.size(tel)), color='k', linestyle='-')
+    plt.plot(tel[::down2], timeTher['sw']['T1'][::down2], color='b', linestyle='--')
+    plt.plot(tel[::down2], timeTher['sw']['D1'][::down2], color='b', linestyle=':')
+    plt.plot(tel[::down2], timeTher['sw']['C1'][::down2], color='b', linestyle='-')
+    plt.plot(tel[::down2], timeTher['sw']['T2'][::down2], color='r', linestyle='--')
+    plt.plot(tel[::down2], timeTher['sw']['D2'][::down2], color='r', linestyle=':')
+    plt.plot(tel[::down2], timeTher['sw']['C2'][::down2], color='r', linestyle='-')
+    plt.plot(tel[::down2], Ta * np.ones(np.size(tel[::down2])), color='k', linestyle='-')
     plt.title('Thermal Switches (A)')
     plt.ylabel('Temperature in (°C)')
     plt.xticks([], [])
@@ -346,14 +349,14 @@ def plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
 
     # Capacitor
     plt.subplot(223)
-    plt.plot(tel, timeLoss['cap']['C1']['p_L'])
+    plt.plot(tel[::down2], timeLoss['cap']['C1']['p_L'][::down2])
     plt.title('Losses Capacitor')
     plt.ylabel('Power in (W)')
     plt.xlabel('time in (sec)')
     plt.grid('on')
 
     plt.subplot(224)
-    plt.plot(tel, timeTher['cap']['C1'])
+    plt.plot(tel[::down2], timeTher['cap']['C1'][::down2])
     plt.title('Thermal Capacitor')
     plt.ylabel('Temperature in (°C)')
     plt.xlabel('time in (sec)')
