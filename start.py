@@ -37,21 +37,41 @@ setupPath = initPath('PyPowerSim')
 #######################################################################################################################
 # Init
 #######################################################################################################################
-[setupExp, setupData, setupPara, setupTopo] = initSetup()
+setup = initSetup()
 
 #######################################################################################################################
 # Configuration
 #######################################################################################################################
 # ==============================================================================
-# General Settings
+# Experiment
+# ==============================================================================
+setup['Exp']['Name'] = "default"                                                                                         # name of the simulation (str)
+setup['Exp']['Author'] = "Pascal Schirmer"                                                                               # name of the responsible person (str)
+setup['Exp']['debug'] = 0                                                                                                # (0): debug mode de-activated, (1): debug mode activated level-1, (2): debug mode activated level-2
+
+
+# ==============================================================================
+# Input Files
 # ==============================================================================
 # ------------------------------------------
-# Experiment
+# Mission Profile
 # ------------------------------------------
-setupExp['Name'] = "default"                                                                                            # name of the simulation (str)
-setupExp['Author'] = "Pascal Schirmer"                                                                                  # name of the responsible person (str)
-setupExp['debug'] = 0                                                                                                   # (0): debug mode de-activated, (1): debug mode activated level-1, (2): debug mode activated level-2
 
+# ------------------------------------------
+# Topology
+# ------------------------------------------
+setup['Exp']['Swi'] = "IKQ75N120CS6"                                                                                     # filename of the parameter set for the switching devices
+setup['Exp']['Cap'] = "Elco"                                                                                             # filename of the parameter set for the DC link capacitor
+setup['Exp']['Load'] = "RL"                                                                                              # filename of the parameter set for the load
+
+# ==============================================================================
+# Plotting and Saving
+# ==============================================================================
+setup['Exp']['plot'] = 2                                                                                                 # (0): no results are plotted, (1): results are plotted, (2): analytic results are plotted
+setup['Exp']['plotGen'] = 1                                                                                              # (0): no generic plots, (1): loss and thermal models are plotted
+setup['Exp']['save'] = 0                                                                                                 # (0): no results are saved, (1): results are saved
+
+'''
 # ------------------------------------------
 # Operating Mode
 # ------------------------------------------
@@ -203,9 +223,10 @@ setupPara['Elec']['CapSeries'] = 1                                              
 # ==============================================================================
 setupPara['Ther']['Heatsink'] = 1                                                                                       # 1) using thermal capacities and resistances of heatsink RC model
 setupPara['Ther']['Coupling'] = 0                                                                                       # 0) no thermal coupling between diode and transistor, 1) thermal coupling between diode and transistor, 2) thermal coupling via whole converter
+'''
 
 #######################################################################################################################
 # Calculations
 #######################################################################################################################
 if __name__ == '__main__':
-    main(setupExp, setupData, setupTopo, setupPara, setupPath)
+    main(setup, setupPath)

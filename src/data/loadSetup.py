@@ -2,7 +2,7 @@
 #######################################################################################################################
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
-# File:         loadPara
+# File:         loadSetup
 # Date:         27.04.2024
 # Author:       Dr. Pascal A. Schirmer
 # Version:      V.1.0
@@ -14,9 +14,9 @@
 # Function Description
 #######################################################################################################################
 """
-This function loads the parameters for the switching devices and the capacitor under \cpar. This includes experimental,
+This function loads the remaining setup parameters from the setup file located under \config. This includes experimental,
 data, topology, and electrical as well as thermal parameter information. The parameters are summarized in one common
-dataPara variable.
+setup variable.
 Inputs:     1) setup:   includes all simulation variables
             2) path:    includes all path variables
 Outputs:    1) setup:   extended setup variable
@@ -28,54 +28,107 @@ Outputs:    1) setup:   extended setup variable
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.data.loadParaSwi import loadParaSwi
-from src.data.loadParaCap import loadParaCap
 
 # ==============================================================================
 # External
 # ==============================================================================
+import pandas as pd
+from os.path import join as pjoin
 
 
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def loadPara(setup, path):
+def loadSetup(setup, path):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
     print("------------------------------------------")
-    print("START: Loading Parameter")
+    print("Loading Setup")
     print("------------------------------------------")
+    print("START: Loading setup")
 
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
-    dataPara = {'Swi': {}, 'Cap': {}}
+    column = 'Value'
 
     ###################################################################################################################
     # Loading
     ###################################################################################################################
     # ==============================================================================
-    # Switches
+    # Path and Filename
     # ==============================================================================
-    paraSwi = loadParaSwi(setup['Exp']['Swi'], path['parPath'], setup)
+    name = setup['Par']['name'] + '.xlsx'
+    path = path['setPath']
+    filename = pjoin(path, name)
 
     # ==============================================================================
-    # Capacitor
+    # Loading Config
     # ==============================================================================
-    paraCap = loadParaCap(setup['Exp']['Cap'], path['parPath'], setup)
+    try:
+        setupExpRaw = pd.read_excel(filename, sheet_name='Exp')
+        setupDatRaw = pd.read_excel(filename, sheet_name='Dat')
+        setupTopRaw = pd.read_excel(filename, sheet_name='Top')
+        setupParRaw = pd.read_excel(filename, sheet_name='Par')
+        print("INFO: Setup file loaded")
+    except:
+        setupExpRaw = []
+        setupDatRaw = []
+        setupTopRaw = []
+        setupParRaw = []
+        print("ERROR: Setup file could not be loaded")
 
     ###################################################################################################################
-    # Post-Processing
+    # Calculation
     ###################################################################################################################
-    dataPara['Swi'] = paraSwi
-    dataPara['Cap'] = paraCap
+    # ==============================================================================
+    # Experiment struct
+    # ==============================================================================
+    try:
+        for i in range(0, setupExpRaw.shape[0]):
+            setup['Exp'][setupExpRaw['Variable'][i]] = setupExpRaw[column][i]
+        print("INFO: Experimental setup file loaded")
+    except:
+        print("ERROR: Experimental setup file could not be loaded")
+
+    # ==============================================================================
+    # Data struct
+    # ==============================================================================
+    try:
+        for i in range(0, setupDatRaw.shape[0]):
+            if setupDatRaw['Category'][i] == 'stat':
+                setup['Dat']['stat'][setupDatRaw['Variable'][i]] = setupDatRaw[column][i]
+            else:
+                setup['Dat']['trans'][setupDatRaw['Variable'][i]] = setupDatRaw[column][i]
+        print("INFO: Data setup file loaded")
+    except:
+        print("ERROR: Data setup file could not be loaded")
+
+    # ==============================================================================
+    # Topology struct
+    # ==============================================================================
+    try:
+        for i in range(0, setupTopRaw.shape[0]):
+            setup['Top'][setupTopRaw['Variable'][i]] = setupTopRaw[column][i]
+        print("INFO: Topology setup file loaded")
+    except:
+        print("ERROR: Topology setup file could not be loaded")
+
+    # ==============================================================================
+    # Parameter struct
+    # ==============================================================================
+    try:
+        for i in range(0, setupParRaw.shape[0]):
+            setup['Par'][setupParRaw['Category'][i]][setupParRaw['Variable'][i]] = setupParRaw[column][i]
+        print("INFO: Parameter setup file loaded")
+    except:
+        print("ERROR: Parameter setup file could not be loaded")
 
     ###################################################################################################################
     # MSG Out
     ###################################################################################################################
-    print("------------------------------------------")
-    print("END: Loading Parameter")
-    print("------------------------------------------")
+    print("DONE: Loading setup")
+    print("\n")
 
-    return dataPara
+    return setup

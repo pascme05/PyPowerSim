@@ -3,12 +3,27 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         oppPWM
-# Date:         13.11.2023
+# Date:         27.04.2024
 # Author:       Dr. Daniel Glose
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer, Daniel Glose
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the optimal switch-on and -off angles according to the following input parameters:
+Inputs:     1) kmax:        maximum order of harmonics, which are taken into account
+            2) p0:          pulse-number
+            3) Mi:          modulation index (p.u.)
+            4) sym:         quarter or half-wave symmetry
+            5) setup:       includes all simulation variables
+Outputs:    1) ang_total:   total vector of switching angles (rad)
+            2) val_total:   total vector of switching states (-)
+            3) wthd:        weighted total harmonic distortion
+"""
 
 #######################################################################################################################
 # Import libs
@@ -163,17 +178,6 @@ def eq_B2(x_eq):
 # Function
 #######################################################################################################################
 def oppPWM(kmax, p0, Mi, sym, setupTopo):
-    ###################################################################################################################
-    # Theory
-    ###################################################################################################################
-    """
-    Calculates the optimal switch-on and -off angles according to the following input parameters:
-    kmax: Maximum order of harmonics, which are taken into account
-    p0: Number of switching instances in one fundamental period
-    Mi: Modulation index [0 ... 4/pi]
-    sym: symmetrical boundary, e.g. quarter-wave
-    """
-
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################

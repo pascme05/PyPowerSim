@@ -3,12 +3,21 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         helpFnc
-# Date:         14.08.2023
+# Date:         27.04.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function summarizes a set of small functions that can be used for different purposes.
+Inputs:     none
+Outputs:    none
+"""
 
 #######################################################################################################################
 # Import libs
@@ -31,12 +40,13 @@ import os
 # Init Setup files
 #######################################################################################################################
 def initSetup():
-    setupExp = {}
-    setupData = {'stat': {}, 'trans': {}}
-    setupTopo = {}
-    setupPara = {'PWM': {}, 'Elec': {}, 'Ther': {}, 'Stat': {}, 'Life': {}}
+    setup = {'Exp': {},
+             'Dat': {'stat': {}, 'trans': {}},
+             'Par': {'PWM': {}, 'Cont': {}, 'Elec': {}, 'Ther': {}},
+             'Top': {}
+             }
 
-    return [setupExp, setupData, setupPara, setupTopo]
+    return setup
 
 
 #######################################################################################################################

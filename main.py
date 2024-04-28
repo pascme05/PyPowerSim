@@ -3,12 +3,23 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         main
-# Date:         14.08.2023
+# Date:         27.04.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function builds the main part of the simulation. It takes the setup files and path variables as input and
+executes the program.
+Inputs:     1) setup:   includes all simulation variables
+            2) path:    includes all path variables
+Outputs:    None
+"""
 
 #######################################################################################################################
 # Import libs
@@ -17,6 +28,7 @@
 # Internal
 # ==============================================================================
 from src.data.loadPara import loadPara
+from src.data.loadSetup import loadSetup
 from src.topo.B2.calcSweepB2 import calcSweepB2
 from src.topo.B4.calcSweepB4 import calcSweepB4
 from src.topo.B6.calcSweepB6 import calcSweepB6
@@ -42,7 +54,7 @@ import sys
 #######################################################################################################################
 # Steady-State
 #######################################################################################################################
-def main(setupExp, setupData, setupTopo, setupPara, setupPath):
+def main(setup, path):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -51,8 +63,8 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     print("Welcome to the Power Electronics Distortion Toolkit!")
     print("Author:     Dr. Pascal Alexander Schirmer")
     print("Copyright:  Pascal Schirmer")
-    print("Version:    v.0.1")
-    print("Date:       01.04.2023")
+    print("Version:    v.1.0")
+    print("Date:       27.04.2024")
     print("----------------------------------------------------------------------------------------------------------")
     print("----------------------------------------------------------------------------------------------------------")
 
@@ -77,10 +89,18 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     print("=======================================================================")
 
     # ==============================================================================
+    # Configuration
+    # ==============================================================================
+    try:
+        setup = loadSetup(setup, path)
+    except:
+        sys.exit('ERROR: Configuration could not be loaded')
+
+    # ==============================================================================
     # Parameter
     # ==============================================================================
     try:
-        para = loadPara(setupTopo, setupPath, setupPara, setupData, setupExp)
+        para = loadPara(setup, path)
     except:
         sys.exit('ERROR: Parameters could not be loaded')
 
@@ -105,17 +125,17 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     # ==============================================================================
     # Sanity Checks
     # ==============================================================================
-    [setupExp, setupData, setupTopo, setupPara] = sanityInput(para, setupExp, setupData, setupTopo, setupPara)
+    setup = sanityInput(para, setup)
 
     # ==============================================================================
     # Transfer Functions
     # ==============================================================================
-    mdl = genTF(para, setupTopo)
+    mdl = genTF(para, setup)
 
     # ==============================================================================
     # Control Mode
     # ==============================================================================
-    setupData = genLoadInput(setupExp, setupTopo, setupData)
+    setup = genLoadInput(setup)
 
     # ==============================================================================
     # MSG OUT
@@ -138,68 +158,72 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     # ==============================================================================
     # B2
     # ==============================================================================
-    if setupTopo['sourceType'] == "B2":
+    if setup['Top']['sourceType'] == "B2":
+        # ------------------------------------------
+        # Init Topology
+        # ------------------------------------------
+
         # ------------------------------------------
         # Sweep
         # ------------------------------------------
-        if setupExp['type'] == 0:
-            [time, freq, sweep] = calcSweepB2(mdl, para, setupTopo, setupData, setupPara, setupExp)
+        if setup['Exp']['type'] == 0:
+            [time, freq, sweep] = calcSweepB2(mdl, para, setup)
 
         # ------------------------------------------
         # Stationary
         # ------------------------------------------
-        if setupExp['type'] == 1:
-            [time, freq] = calcSteadyB2(mdl, para, setupTopo, setupData, setupPara, setupExp)
+        if setup['Exp']['type'] == 1:
+            [time, freq] = calcSteadyB2(mdl, para, setup)
 
         # ------------------------------------------
         # Transient
         # ------------------------------------------
-        if setupExp['type'] == 2:
-            [time, freq] = calcTransB2(mdl, para, setupTopo, setupData, setupPara, setupExp)
+        if setup['Exp']['type'] == 2:
+            [time, freq] = calcTransB2(mdl, para, setup)
 
     # ==============================================================================
     # B4 
     # ==============================================================================
-    elif setupTopo['sourceType'] == "B4":
+    elif setup['Top']['sourceType'] == "B4":
         # ------------------------------------------
         # Sweep
         # ------------------------------------------
-        if setupExp['type'] == 0:
-            [time, freq, sweep] = calcSweepB4(mdl, para, setupTopo, setupData, setupPara, setupExp)
+        if setup['Exp']['type'] == 0:
+            [time, freq, sweep] = calcSweepB4(mdl, para, setup)
 
         # ------------------------------------------
         # Stationary
         # ------------------------------------------
-        if setupExp['type'] == 1:
-            [time, freq] = calcSteadyB4(mdl, para, setupTopo, setupData, setupPara, setupExp)
+        if setup['Exp']['type'] == 1:
+            [time, freq] = calcSteadyB4(mdl, para, setup)
 
         # ------------------------------------------
         # Transient
         # ------------------------------------------
-        if setupExp['type'] == 2:
-            [time, freq] = calcTransB4(mdl, para, setupTopo, setupData, setupPara, setupExp)
+        if setup['Exp']['type'] == 2:
+            [time, freq] = calcTransB4(mdl, para, setup)
 
     # ==============================================================================
     # B6
     # ==============================================================================
-    elif setupTopo['sourceType'] == "B6":
+    elif setup['Top']['sourceType'] == "B6":
         # ------------------------------------------
         # Sweep
         # ------------------------------------------
-        if setupExp['type'] == 0:
-            [time, freq, sweep] = calcSweepB6(mdl, para, setupTopo, setupData, setupPara, setupExp)
+        if setup['Exp']['type'] == 0:
+            [time, freq, sweep] = calcSweepB6(mdl, para, setup)
 
         # ------------------------------------------
         # Stationary
         # ------------------------------------------
-        if setupExp['type'] == 1:
-            [time, freq] = calcSteadyB6(mdl, para, setupTopo, setupData, setupPara, setupExp)
+        if setup['Exp']['type'] == 1:
+            [time, freq] = calcSteadyB6(mdl, para, setup)
 
         # ------------------------------------------
         # Transient
         # ------------------------------------------
-        if setupExp['type'] == 2:
-            [time, freq] = calcTransB6(mdl, para, setupTopo, setupData, setupPara, setupExp)
+        if setup['Exp']['type'] == 2:
+            [time, freq] = calcTransB6(mdl, para, setup)
 
     # ==============================================================================
     # Default
@@ -228,20 +252,20 @@ def main(setupExp, setupData, setupTopo, setupPara, setupPath):
     # ==============================================================================
     # Save Results
     # ==============================================================================
-    if setupExp['save'] == 1:
-        saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, setupPath)
+    if setup['Exp']['save'] == 1:
+        saveResults(time, freq, sweep, setup, path)
 
     # ==============================================================================
     # Plot Results
     # ==============================================================================
-    if setupExp['type'] != 0:
-        plotResults(time, setupTopo)
+    if setup['Exp']['type'] != 0:
+        plotResults(time, setup)
 
     # ==============================================================================
     # Plot Results
     # ==============================================================================
-    if setupExp['plot'] != 0:
-        plot(mdl, para, time, freq, sweep, setupPara, setupData, setupTopo, setupExp)
+    if setup['Exp']['plot'] != 0:
+        plot(mdl, para, time, freq, sweep, setup)
 
     # ==============================================================================
     # MSG OUT

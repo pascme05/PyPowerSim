@@ -3,12 +3,23 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         genTF
-# Date:         14.08.2023
+# Date:         27.04.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function checks the parameters for correctness. It also considers general parameters of the machine to assure
+smooth calculation.
+Inputs:     1) para:    all parameters used in the simulation
+            2) setup:   includes all simulation variables
+Outputs:    1) out:     the output file includes the transfer functions of the architecture
+"""
 
 #######################################################################################################################
 # Import libs
@@ -26,7 +37,7 @@ from scipy import signal
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def genTF(para, setupTopo):
+def genTF(para, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -43,8 +54,8 @@ def genTF(para, setupTopo):
     # ------------------------------------------
     # Load
     # ------------------------------------------
-    R = setupTopo['R']
-    L = setupTopo['L']
+    R = setup['Top']['R']
+    L = setup['Top']['L']
     
     # ------------------------------------------
     # DC-Link
@@ -55,16 +66,16 @@ def genTF(para, setupTopo):
     # ------------------------------------------
     # Output Filter
     # ------------------------------------------
-    Rout = setupTopo['Rout']
-    Lout = setupTopo['Lout']
-    Cout = setupTopo['Cout']
+    Rout = setup['Top']['Rout']
+    Lout = setup['Top']['Lout']
+    Cout = setup['Top']['Cout']
     
     # ------------------------------------------
     # Input Filter
     # ------------------------------------------
-    Rinp = setupTopo['Rinp']
-    Linp = setupTopo['Linp']
-    Cinp = setupTopo['Cinp']
+    Rinp = setup['Top']['Rinp']
+    Linp = setup['Top']['Linp']
+    Cinp = setup['Top']['Cinp']
 
     # ==============================================================================
     # Variables

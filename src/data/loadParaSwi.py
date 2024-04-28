@@ -3,12 +3,25 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         loadParaSwi
-# Date:         14.08.2023
+# Date:         27.04.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function loads the parameters for the switching device under \par. This includes experimental, data, topology, and
+electrical as well as thermal parameter information. The parameters are summarized in one common para variable.
+Inputs:     1) name:    name of the parameter file for the switches
+            2) path:    includes all path variables
+            2) setup:   includes all simulation variables
+Outputs:    1) para:    output parameter file for the switches
+"""
+
 
 #######################################################################################################################
 # Import libs
@@ -30,7 +43,7 @@ from scipy.interpolate import griddata, RegularGridInterpolator
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def loadParaSwi(name, path, setupPara, setupData, setupExp):
+def loadParaSwi(name, path, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -164,7 +177,7 @@ def loadParaSwi(name, path, setupPara, setupData, setupExp):
     # ==============================================================================
     # Losses
     # ==============================================================================
-    if setupPara['PWM']['loss'] == 0:
+    if setup['Par']['PWM']['loss'] == 0:
         # ------------------------------------------
         # Matrix
         # ------------------------------------------
@@ -201,13 +214,13 @@ def loadParaSwi(name, path, setupPara, setupData, setupExp):
         # Init
         # ------------------------------------------
         # General
-        nInt = setupExp['int']
+        nInt = setup['Exp']['int']
 
         # Voltages
         try:
             V_int = np.linspace(0, int(np.max(para['Elec']['vec']['Vf'].values)), nInt)
         except:
-            V_int = np.linspace(0, int(np.max(np.abs(setupData['stat']['Vdc']))), nInt)
+            V_int = np.linspace(0, int(np.max(np.abs(setup['Dat']['stat']['Vdc']))), nInt)
 
         # Energies
         Coss_int = np.zeros((len(para['Elec']['vec']['Tj']), len(V_int)))
@@ -242,7 +255,7 @@ def loadParaSwi(name, path, setupPara, setupData, setupExp):
         # Losses
         # ------------------------------------------
         # IGBT
-        if setupPara['Elec']['SwiType'] == "IGBT" or setupPara['PWM']['swloss'] == 0:
+        if setup['Par']['Elec']['SwiType'] == "IGBT" or setup['Par']['PWM']['swloss'] == 0:
             x = (para['Elec']['vec']['Tj'].to_numpy() * np.ones((len(para['Elec']['vec']['If'].to_numpy()), len(para['Elec']['vec']['Tj'].to_numpy())))).flatten(order='F')
             y = np.tile(para['Elec']['vec']['If'].to_numpy(), len(para['Elec']['vec']['Tj'].to_numpy()))
             z = para['Elec']['tab']['Eon'].to_numpy('float').flatten(order='F')
@@ -261,7 +274,7 @@ def loadParaSwi(name, path, setupPara, setupData, setupExp):
             para['Elec']['tab']['Erec_2d'] = RegularGridInterpolator((xi, yi), zi)
 
         # MOSFET
-        if setupPara['Elec']['SwiType'] == "MOSFET" and setupPara['PWM']['swloss'] == 1:
+        if setup['Par']['Elec']['SwiType'] == "MOSFET" and setup['Par']['PWM']['swloss'] == 1:
             x = (para['Elec']['vec']['Tj'].to_numpy() * np.ones((len(para['Elec']['vec']['Vf'].to_numpy()), len(para['Elec']['vec']['Tj'].to_numpy())))).flatten(order='F')
             y = np.tile(para['Elec']['vec']['Vf'].to_numpy(), len(para['Elec']['vec']['Tj'].to_numpy()))
             z = para['Elec']['tab']['Coss'].to_numpy('float').flatten(order='F')

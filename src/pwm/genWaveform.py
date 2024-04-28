@@ -3,12 +3,24 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         genWave
-# Date:         14.08.2023
+# Date:         28.04.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function generates a reference waveform for a load signal.
+Inputs:     1) t:       time domain vector (sec)
+            2) fel:     fundamental frequency (Hz)
+            3) phi:     phase shift of the reference waveform (rad)
+            4) setup:   includes all simulation variables
+Outputs:    1) wave:    generated time domain waveform
+"""
 
 #######################################################################################################################
 # Import libs
@@ -27,7 +39,7 @@ from scipy import signal
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def genWave(t, fel, phi, phi2, setupTopo):
+def genWave(t, fel, phi, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
@@ -39,36 +51,36 @@ def genWave(t, fel, phi, phi2, setupTopo):
     # ==============================================================================
     # Sinusoidal
     # ==============================================================================
-    if setupTopo['wave'] == "sin":
-        wave = np.sin(2 * np.pi * fel * t + phi + phi2)
+    if setup['Top']['wave'] == "sin":
+        wave = np.sin(2 * np.pi * fel * t + phi)
         print("INFO: Sinusoidal waveform generated")
 
     # ==============================================================================
     # Constant
     # ==============================================================================
-    elif setupTopo['wave'] == "con":
+    elif setup['Top']['wave'] == "con":
         wave = np.ones((Nsim,))
         print("INFO: Constant waveform generated")
 
     # ==============================================================================
     # Triangular
     # ==============================================================================
-    elif setupTopo['wave'] == "tri":
-        wave = signal.sawtooth(2 * np.pi * fel * t + phi + phi2, 0.5)
+    elif setup['Top']['wave'] == "tri":
+        wave = signal.sawtooth(2 * np.pi * fel * t + phi, 0.5)
         print("INFO: Triangular waveform generated")
 
     # ==============================================================================
     # Rectangular
     # ==============================================================================
-    elif setupTopo['wave'] == "rec":
-        wave = signal.square(2 * np.pi * fel * t + phi + phi2, 0.5)
+    elif setup['Top']['wave'] == "rec":
+        wave = signal.square(2 * np.pi * fel * t + phi, 0.5)
         print("INFO: Rectangular waveform generated")
 
     # ==============================================================================
     # Default
     # ==============================================================================
     else:
-        wave = np.sin(2 * np.pi * fel * t + phi + phi2)
+        wave = np.sin(2 * np.pi * fel * t + phi)
         print("ERROR: Undefined waveform using sinusoidal wave")
 
     ###################################################################################################################

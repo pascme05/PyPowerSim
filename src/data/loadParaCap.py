@@ -3,12 +3,24 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         loadParaCap
-# Date:         14.08.2023
+# Date:         27.04.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function loads the parameters for the capacitor device under \par. This includes experimental, data, topology, and
+electrical as well as thermal parameter information. The parameters are summarized in one common para variable.
+Inputs:     1) name:    name of the parameter file for the capacitor
+            2) path:    includes all path variables
+            2) setup:   includes all simulation variables
+Outputs:    1) para:    output parameter file for the capacitor
+"""
 
 #######################################################################################################################
 # Import libs
@@ -27,7 +39,7 @@ from os.path import join as pjoin
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def loadParaCap(name, path, setupPara):
+def loadParaCap(name, path, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -151,7 +163,7 @@ def loadParaCap(name, path, setupPara):
     # ==============================================================================
     # Losses
     # ==============================================================================
-    if setupPara['PWM']['loss'] == 0:
+    if setup['Par']['PWM']['loss'] == 0:
         # ------------------------------------------
         # Matrix
         # ------------------------------------------

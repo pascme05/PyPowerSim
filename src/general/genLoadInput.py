@@ -3,12 +3,22 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         template
-# Date:         14.08.2023
+# Date:         27.04.2024
 # Author:       Dr. Pascal A. Schirmer
 # Version:      V.0.2
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function checks the parameters for correctness. It also considers general parameters of the machine to assure
+smooth calculation.
+Inputs:     1) setup:   includes all simulation variables
+Outputs:    1) setup:   updated setup file
+"""
 
 #######################################################################################################################
 # Import libs
@@ -28,7 +38,7 @@ import cmath
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def genLoadInput(setupExp, setupTopo, setupData):
+def genLoadInput(setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -45,31 +55,31 @@ def genLoadInput(setupExp, setupTopo, setupData):
     # ------------------------------------------
     # Input/Output
     # ------------------------------------------
-    Mi = setupData['stat']['Mi']
-    Vdc = setupData['stat']['Vdc']
-    phiO = math.radians(setupData['stat']['phi'])
+    Mi = setup['Dat']['stat']['Mi']
+    Vdc = setup['Dat']['stat']['Vdc']
+    phiO = math.radians(setup['Dat']['stat']['phi'])
 
     # ------------------------------------------
     # Load
     # ------------------------------------------
-    R = setupTopo['R']
-    L = setupTopo['L']
-    E = setupTopo['E']
-    phiE = math.radians(setupTopo['phiE'])
+    R = setup['Top']['R']
+    L = setup['Top']['L']
+    E = setup['Top']['E']
+    phiE = math.radians(setup['Top']['phiE'])
 
     # ------------------------------------------
     # Operating point
     # ------------------------------------------
-    fel = setupTopo['fel']
+    fel = setup['Top']['fel']
 
     # ==============================================================================
     # Topology
     # ==============================================================================
-    if setupTopo['sourceType'] == "B2":
+    if setup['Top']['sourceType'] == "B2":
         paraV = 2
-    elif setupTopo['sourceType'] == "B4":
+    elif setup['Top']['sourceType'] == "B4":
         paraV = 1
-    elif setupTopo['sourceType'] == "B6":
+    elif setup['Top']['sourceType'] == "B6":
         paraV = 2
     else:
         paraV = 2
@@ -97,47 +107,47 @@ def genLoadInput(setupExp, setupTopo, setupData):
     # ==============================================================================
     # Modulation index is controlled
     # ==============================================================================
-    if setupExp['output'] == 'Mi':
-        print(f"INFO: Modulation index controlled mode with Mi {setupData['stat']['Mi']:.2f} (p.u.)")
+    if setup['Exp']['output'] == 'Mi':
+        print(f"INFO: Modulation index controlled mode with Mi {setup['Dat']['stat']['Mi']:.2f} (p.u.)")
 
     # ==============================================================================
     # Voltage is controlled
     # ==============================================================================
-    elif setupExp['output'] == 'V':
-        print(f"INFO: Voltage controlled mode with Vo {setupData['stat']['Vo']:.2f} (V)")
-        Mi = setupData['stat']['Vo'] / setupData['stat']['Vdc'] * paraV
+    elif setup['Exp']['output'] == 'V':
+        print(f"INFO: Voltage controlled mode with Vo {setup['Dat']['stat']['Vo']:.2f} (V)")
+        Mi = setup['Dat']['stat']['Vo'] / setup['Dat']['stat']['Vdc'] * paraV
 
     # ==============================================================================
     # Current is controlled
     # ==============================================================================
-    elif setupExp['output'] == 'I':
-        print(f"INFO: Current controlled mode with Io {setupData['stat']['Io']:.2f} (A)")
-        Vo = abs(setupData['stat']['Io'] * Z * np.sqrt(2) + EMF)
-        Mi = Vo / setupData['stat']['Vdc'] * paraV
+    elif setup['Exp']['output'] == 'I':
+        print(f"INFO: Current controlled mode with Io {setup['Dat']['stat']['Io']:.2f} (A)")
+        Vo = abs(setup['Dat']['stat']['Io'] * Z * np.sqrt(2) + EMF)
+        Mi = Vo / setup['Dat']['stat']['Vdc'] * paraV
 
     # ==============================================================================
     # Active power is controlled
     # ==============================================================================
-    elif setupExp['output'] == 'P':
-        print(f"INFO: Active power controlled mode with Po {setupData['stat']['Po']:.2f} (W)")
-        Io = np.sqrt(setupData['stat']['Po'] / R) * np.sqrt(2)
+    elif setup['Exp']['output'] == 'P':
+        print(f"INFO: Active power controlled mode with Po {setup['Dat']['stat']['Po']:.2f} (W)")
+        Io = np.sqrt(setup['Dat']['stat']['Po'] / R) * np.sqrt(2)
         Io = complex(Io * np.cos(angZ), Io * np.sin(angZ))
-        Mi = abs(Io * Z + EMF) / setupData['stat']['Vdc'] * paraV
+        Mi = abs(Io * Z + EMF) / setup['Dat']['stat']['Vdc'] * paraV
 
     # ==============================================================================
     # Reactive power is controlled
     # ==============================================================================
-    elif setupExp['output'] == 'Q':
-        print(f"INFO: Reactive power controlled mode with Qo {setupData['stat']['Qo']:.2f} (W)")
-        Io = np.sqrt(setupData['stat']['Qo'] / (2 * np.pi * fel * L)) * np.sqrt(2)
+    elif setup['Exp']['output'] == 'Q':
+        print(f"INFO: Reactive power controlled mode with Qo {setup['Dat']['stat']['Qo']:.2f} (W)")
+        Io = np.sqrt(setup['Dat']['stat']['Qo'] / (2 * np.pi * fel * L)) * np.sqrt(2)
         Io = complex(Io * np.cos(angZ), Io * np.sin(angZ))
-        Mi = abs(Io * Z + EMF) / setupData['stat']['Vdc'] * paraV
+        Mi = abs(Io * Z + EMF) / setup['Dat']['stat']['Vdc'] * paraV
 
     # ==============================================================================
     # Default
     # ==============================================================================
     else:
-        print(f"INFO: Modulation index controlled mode with Mi {setupData['stat']['Mi']:.2f} (p.u.)")
+        print(f"INFO: Modulation index controlled mode with Mi {setup['Dat']['stat']['Mi']:.2f} (p.u.)")
 
     ###################################################################################################################
     # Post-Processing
@@ -163,11 +173,11 @@ def genLoadInput(setupExp, setupTopo, setupData):
     # ==============================================================================
     # Output
     # ==============================================================================
-    setupData['stat']['Vo'] = Vo
-    setupData['stat']['Io'] = Io
-    setupData['stat']['Po'] = Po
-    setupData['stat']['Qo'] = Qo
-    setupData['stat']['Mi'] = Mi
+    setup['Dat']['stat']['Vo'] = Vo
+    setup['Dat']['stat']['Io'] = Io
+    setup['Dat']['stat']['Po'] = Po
+    setup['Dat']['stat']['Qo'] = Qo
+    setup['Dat']['stat']['Mi'] = Mi
 
     ###################################################################################################################
     # MSG Out
@@ -179,4 +189,4 @@ def genLoadInput(setupExp, setupTopo, setupData):
     ###################################################################################################################
     # Return
     ###################################################################################################################
-    return setupData
+    return setup

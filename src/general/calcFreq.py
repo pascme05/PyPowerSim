@@ -3,12 +3,26 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcFreq
-# Date:         14.08.2023
+# Date:         28.04.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the frequency domain results based on the time domain waveforms of the B2 bridge.
+Inputs:     1) t:       input time vector (sec)
+            2) i_a:     load current (A)
+            3) v_a:     load voltage (V)
+            4) i_dc:    dc current (A)
+            5) v_dc:    dc voltage (V)
+Outputs:    1) outAc:   outputs distortion ac side
+            2) outDc:   outputs distortion dc side
+"""
 
 #######################################################################################################################
 # Import libs

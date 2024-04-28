@@ -3,12 +3,23 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         sanityCheck
-# Date:         14.08.2023
+# Date:         27.04.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function checks the parameters for correctness. It also considers general parameters of the machine to assure
+smooth calculation.
+Inputs:     1) para:    all parameters used in the simulation
+            2) setup:   includes all simulation variables
+Outputs:    1) setup:   updated setup file
+"""
 
 #######################################################################################################################
 # Import libs
@@ -27,7 +38,7 @@ import numpy as np
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def sanityInput(para, setupExp, setupData, setupTopo, setupPara):
+def sanityInput(para, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -39,10 +50,10 @@ def sanityInput(para, setupExp, setupData, setupTopo, setupPara):
     # Initialisation
     ###################################################################################################################
     RAM_machine = psutil.virtual_memory().total
-    if setupExp['type'] == 2:
-        RAM_use = setupExp['fsim']*setupData['stat']['cyc'] * (20 + 24 + 36 + 12) * setupTopo['fel']*setupData['trans']['tmax']
+    if setup['Exp']['type'] == 2:
+        RAM_use = setup['Exp']['fsim']*setup['Dat']['stat']['cyc'] * (20 + 24 + 36 + 12) * setup['Top']['fel']*setup['Dat']['trans']['tmax']
     else:
-        RAM_use = setupExp['fsim']*setupData['stat']['cyc'] * (20 + 24 + 36 + 12)
+        RAM_use = setup['Exp']['fsim']*setup['Dat']['stat']['cyc'] * (20 + 24 + 36 + 12)
 
     ###################################################################################################################
     # General Settings
@@ -51,13 +62,13 @@ def sanityInput(para, setupExp, setupData, setupTopo, setupPara):
     # RAM (PS 14/01/2023: estimation of RAM based on fsim)
     # ==============================================================================
     if RAM_machine/RAM_use < 5:
-        print("WARN: Machine might run out of memory reduce 'setupExp['fsim']', 'setupData['stat']['cyc']' or 'setupData['trans']['tmax']'")
+        print("WARN: Machine might run out of memory reduce 'setup['Exp']['fsim']', 'setup['Dat']['stat']['cyc']' or 'setup['Dat']['trans']['tmax']'")
     
     # ==============================================================================
     # Epsilon
     # ==============================================================================
-    if setupExp['eps'] * 1e3 > (1/setupExp['fsim']):
-        print("WARN: Numerical value 'setupExp['eps']' comparatively large")
+    if setup['Exp']['eps'] * 1e3 > (1/setup['Exp']['fsim']):
+        print("WARN: Numerical value 'setup['Exp']['eps']' comparatively large")
     
     ###################################################################################################################
     # Mission Profile
@@ -65,19 +76,19 @@ def sanityInput(para, setupExp, setupData, setupTopo, setupPara):
     # ==============================================================================
     # Cycles
     # ==============================================================================
-    if setupData['stat']['cyc'] < 3:
-        print("WARN: To ensure convergence chose 'setupData['stat']['cyc']' >= 3")
+    if setup['Dat']['stat']['cyc'] < 3:
+        print("WARN: To ensure convergence chose 'setup['Dat']['stat']['cyc']' >= 3")
     
     # ==============================================================================
     # Cycles
     # ==============================================================================
-    if setupTopo['sourceType'] == 'B2' or setupTopo['sourceType'] == 'B4':
-        if setupData['stat']['Mi'] > 1.0:
-            setupData['stat']['Mi'] = 1.0
+    if setup['Top']['sourceType'] == 'B2' or setup['Top']['sourceType'] == 'B4':
+        if setup['Dat']['stat']['Mi'] > 1.0:
+            setup['Dat']['stat']['Mi'] = 1.0
             print("WARN: Modulation index Mi too high, limited to 1.000")
-    elif setupTopo['sourceType'] == 'B6':
-        if setupData['stat']['Mi'] > 4/np.pi:
-            setupData['stat']['Mi'] = 1.0
+    elif setup['Top']['sourceType'] == 'B6':
+        if setup['Dat']['stat']['Mi'] > 4/np.pi:
+            setup['Dat']['stat']['Mi'] = 1.0
             print("WARN: Modulation index Mi too high, limited to 1.273")
 
     ###################################################################################################################
@@ -89,27 +100,27 @@ def sanityInput(para, setupExp, setupData, setupTopo, setupPara):
     # ------------------------------------------
     # Minimum time
     # ------------------------------------------
-    if (setupPara['PWM']['tmin'] + setupExp['eps']) < (1/setupExp['fsim']):
-        setupPara['PWM']['tmin'] = 0
+    if (setup['Par']['PWM']['tmin'] + setup['Exp']['eps']) < (1/setup['Exp']['fsim']):
+        setup['Par']['PWM']['tmin'] = 0
         print("WARN: Minimum pulse width (tmin) smaller than simulation time (tsim)")
-    elif setupPara['PWM']['tmin'] > (1/setupPara['PWM']['fs']):
-        setupPara['PWM']['tmin'] = 0
+    elif setup['Par']['PWM']['tmin'] > (1/setup['Par']['PWM']['fs']):
+        setup['Par']['PWM']['tmin'] = 0
         print("ERROR: Minimum pulse width (tmin) larger than switching time (ts)")
         
     # ------------------------------------------
     # Dead time
     # ------------------------------------------
-    if (setupPara['PWM']['td'] + setupExp['eps']) < (1/setupExp['fsim']):
-        setupPara['PWM']['td'] = 0
+    if (setup['Par']['PWM']['td'] + setup['Exp']['eps']) < (1/setup['Exp']['fsim']):
+        setup['Par']['PWM']['td'] = 0
         print("WARN: Dead-time (td) smaller than simulation time (tsim)")
-    elif setupPara['PWM']['td'] > (1/setupPara['PWM']['fs']):
-        setupPara['PWM']['td'] = 0
+    elif setup['Par']['PWM']['td'] > (1/setup['Par']['PWM']['fs']):
+        setup['Par']['PWM']['td'] = 0
         print("ERROR: Dead-time (td) larger than switching time (ts)")
     
     # ------------------------------------------
     # Pulse number
     # ------------------------------------------
-    if not (setupPara['PWM']['fs'] / setupTopo['fel']).is_integer():
+    if not (setup['Par']['PWM']['fs'] / setup['Top']['fel']).is_integer():
         print("WARN: Pulse-number (q) is not integer, modulation is asynchronous")
     
     # ==============================================================================
@@ -118,7 +129,7 @@ def sanityInput(para, setupExp, setupData, setupTopo, setupPara):
     # ------------------------------------------
     # Switching Losses
     # ------------------------------------------
-    if setupData['stat']['Vdc'] != para['Swi']['Elec']['con']['Vnom']:
+    if setup['Dat']['stat']['Vdc'] != para['Swi']['Elec']['con']['Vnom']:
         print("INFO: DC-link voltage is not equal to nominal voltage of switching loss parameters (linear scaling)")
     else:
         print("INFO: DC-link voltage is  equal to nominal voltage of switching loss parameters")
@@ -137,4 +148,4 @@ def sanityInput(para, setupExp, setupData, setupTopo, setupPara):
     ###################################################################################################################
     # Return
     ###################################################################################################################
-    return [setupExp, setupData, setupTopo, setupPara]
+    return setup
