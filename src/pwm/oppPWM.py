@@ -177,7 +177,7 @@ def eq_B2(x_eq):
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def oppPWM(kmax, p0, Mi, sym, setupTopo):
+def oppPWM(kmax, p0, Mi, sym, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
@@ -218,13 +218,13 @@ def oppPWM(kmax, p0, Mi, sym, setupTopo):
         # ------------------------------------------
         # B2
         # ------------------------------------------
-        if setupTopo['sourceType'] == 'B2':
+        if setup['Top']['sourceType'] == 'B2':
             nonlinear_constraint = NonlinearConstraint(eq_B2, lb=Mi, ub=Mi)
 
         # ------------------------------------------
         # B2
         # ------------------------------------------
-        elif setupTopo['sourceType'] == 'B4':
+        elif setup['Top']['sourceType'] == 'B4':
             nonlinear_constraint = NonlinearConstraint(eq_B4, lb=Mi, ub=Mi)
 
         # ------------------------------------------
@@ -236,7 +236,7 @@ def oppPWM(kmax, p0, Mi, sym, setupTopo):
         # ==============================================================================
         # Solve
         # ==============================================================================
-        minimizer_kwargs = {"method": "SLSQP", "bounds": bounds, "args": (kmax, setupTopo['sourceType']),
+        minimizer_kwargs = {"method": "SLSQP", "bounds": bounds, "args": (kmax, setup['Top']['sourceType']),
                             "constraints": [linear_constraint, nonlinear_constraint]}
         opt_result = basinhopping(costfunction, alpha0, minimizer_kwargs=minimizer_kwargs, niter=100)
 

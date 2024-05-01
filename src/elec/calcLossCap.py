@@ -3,12 +3,25 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcLossCap
-# Date:         14.08.2023
+# Date:         01.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the losses of the capacitor devices.
+Inputs:     1) t:       time vector (sec)
+            2) i_c:     capacitor current (A)
+            3) t_Tj:    core temperature of the capacitor (°C)
+            4) para:    parameters of the switch
+            5) setup:   all setup variables
+Outputs:    1) out:     output array including capacitor
+"""
 
 #######################################################################################################################
 # Import libs
@@ -28,7 +41,7 @@ from scipy import interpolate
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcLossCap(t, i_c, Tj, para, setupPara, setupTopo):
+def calcLossCap(t, i_c, Tj, para, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################   
@@ -37,7 +50,7 @@ def calcLossCap(t, i_c, Tj, para, setupPara, setupTopo):
     # ==============================================================================
     dt = t[1] - t[0]
     f = np.linspace(0, int(1 / dt), int(len(i_c) / 2))
-    fel = setupTopo['fel']
+    fel = setup['Top']['fel']
 
     # ==============================================================================
     # Output
@@ -63,13 +76,13 @@ def calcLossCap(t, i_c, Tj, para, setupPara, setupTopo):
     # ------------------------------------------
     # Constant
     # ------------------------------------------
-    if setupPara['Elec']['CapMdl'] == "con" or setupPara['Elec']['CapMdl'] == "pwl":
+    if setup['Par']['Elec']['CapMdl'] == "con" or setup['Par']['Elec']['CapMdl'] == "pwl":
         ESR = para['Cap']['Elec']['con']['ESR']
 
     # ------------------------------------------
     # Tabular
     # ------------------------------------------
-    elif setupPara['Elec']['CapMdl'] == "tab":
+    elif setup['Par']['Elec']['CapMdl'] == "tab":
         # Matrix 
         ESR_2d = interpolate.interp2d(para['Cap']['Elec']['vec']['Tj'].to_numpy(),
                                       para['Cap']['Elec']['vec']['f'].to_numpy(),
@@ -99,7 +112,7 @@ def calcLossCap(t, i_c, Tj, para, setupPara, setupTopo):
     # ==============================================================================
     # Scale Number Switches
     # ==============================================================================
-    out['p_L'] = out['p_L'] * setupPara['Elec']['CapSeries'] * setupPara['Elec']['CapPara']
+    out['p_L'] = out['p_L'] * setup['Par']['Elec']['CapSeries'] * setup['Par']['Elec']['CapPara']
 
     ###################################################################################################################
     # Return

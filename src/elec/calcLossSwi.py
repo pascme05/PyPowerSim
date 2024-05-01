@@ -3,12 +3,28 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcLossCap
-# Date:         14.08.2023
+# Date:         01.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the losses of the switching devices.
+Inputs:     1) i_G:     gate signal
+            2) i_T:     transistor current (A)
+            3) i_D:     diode current (A)
+            4) v_T:     transistor voltage (V)
+            5) v_D:     diode voltage (V)
+            6) t_Tj:    junction temperature of the switch (°C)
+            7) para:    parameters of the switch
+            8) setup:   all setup variables
+Outputs:    1) out:     output array including transistor and diode quantities
+"""
 
 #######################################################################################################################
 # Import libs
@@ -28,14 +44,14 @@ import pandas as pd
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara):
+def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    fs = setupPara['PWM']['fs']
+    fs = setup['Par']['PWM']['fs']
 
     # ==============================================================================
     # Output
@@ -51,9 +67,9 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara):
     # ------------------------------------------
     # Constant
     # ------------------------------------------
-    if setupPara['Elec']['SwiMdl'] == "con":
+    if setup['Par']['Elec']['SwiMdl'] == "con":
         # IGBT
-        if setupPara['Elec']['SwiType'] == "IGBT":
+        if setup['Par']['Elec']['SwiType'] == "IGBT":
             Eon = para['Swi']['Elec']['con']['Eon'] * np.ones(np.size(i_T))
             Eoff = para['Swi']['Elec']['con']['Eoff'] * np.ones(np.size(i_T))
             Erec = para['Swi']['Elec']['con']['Erec'] * np.ones(np.size(i_T))
@@ -67,9 +83,9 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara):
     # ------------------------------------------
     # Piece-wise-linear
     # ------------------------------------------
-    elif setupPara['Elec']['SwiMdl'] == "pwl":
+    elif setup['Par']['Elec']['SwiMdl'] == "pwl":
         # IGBT
-        if setupPara['Elec']['SwiType'] == "IGBT":
+        if setup['Par']['Elec']['SwiType'] == "IGBT":
             Eon = para['Swi']['Elec']['con']['Eon'] * np.abs(i_T) / para['Swi']['Elec']['con']['Inom'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
             Eoff = para['Swi']['Elec']['con']['Eoff'] * np.abs(i_T) / para['Swi']['Elec']['con']['Inom'] * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
             Erec = para['Swi']['Elec']['con']['Erec'] * np.abs(i_D) / para['Swi']['Elec']['con']['Inom'] * np.max(np.abs(v_D)) / para['Swi']['Elec']['con']['Vnom']
@@ -85,7 +101,7 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara):
     # ------------------------------------------
     else:
         # IGBT
-        if setupPara['Elec']['SwiType'] == "IGBT" or setupPara['PWM']['swloss'] == 0:
+        if setup['Par']['Elec']['SwiType'] == "IGBT" or setup['Par']['PWM']['swloss'] == 0:
             Eon = para['Swi']['Elec']['tab']['Eon_2d']((t_Tj, abs(i_T))) * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
             Eoff = para['Swi']['Elec']['tab']['Eoff_2d']((t_Tj, abs(i_T))) * np.max(np.abs(v_T)) / para['Swi']['Elec']['con']['Vnom']
             Erec = para['Swi']['Elec']['tab']['Erec_2d']((t_Tj, abs(i_D))) * np.max(np.abs(v_D)) / para['Swi']['Elec']['con']['Vnom']
@@ -154,7 +170,7 @@ def calcLossSwi(i_G, i_T, i_D, v_T, v_D, t_Tj, para, setupPara):
     # ==============================================================================
     # Scale Number Switches
     # ==============================================================================
-    out['p_L'] = out['p_L'] * setupPara['Elec']['SwiSeries'] * setupPara['Elec']['SwiPara']
+    out['p_L'] = out['p_L'] * setup['Par']['Elec']['SwiSeries'] * setup['Par']['Elec']['SwiPara']
 
     ###################################################################################################################
     # Return

@@ -54,13 +54,14 @@ def initSetup():
 #######################################################################################################################
 def initPath(nameFolder):
     basePath = pjoin(dirname(os.getcwd()), nameFolder)
+    dataConf = pjoin(dirname(os.getcwd()), nameFolder, 'config')
     dataPath = pjoin(dirname(os.getcwd()), nameFolder, 'data')
     mdlPath = pjoin(dirname(os.getcwd()), nameFolder, 'mdl')
     libPath = pjoin(dirname(os.getcwd()), nameFolder, 'lib')
     resPath = pjoin(dirname(os.getcwd()), nameFolder, 'results')
     parPath = pjoin(dirname(os.getcwd()), nameFolder, 'para')
     setupPath = {'basePath': basePath, 'dataPath': dataPath, 'mdlPath': mdlPath, 'libPath': libPath, 'resPath': resPath,
-                 'parPath': parPath}
+                 'parPath': parPath, 'conPath': dataConf}
 
     return setupPath
 

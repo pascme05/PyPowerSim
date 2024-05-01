@@ -3,12 +3,27 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcTherRC
-# Date:         14.08.2023
+# Date:         01.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the time domain transient thermal response of a 1D reduced order model using RC parameters.
+Inputs:     1) Tinit:   initial temperature per RC pair (°C)
+            2) Tc:      coolant reference temperature (°C)
+            3) Pv:      power losses (W)
+            4) t:       time domain vector (sec)
+            5) Rth:     thermal resistances (K/W)
+            6) Cth:     thermal capacitance (Ws/K)
+Outputs:    1) dT:      self-heating (K)
+            2) T:       absolute temperature (°C)
+"""
 
 #######################################################################################################################
 # Import libs

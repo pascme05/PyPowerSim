@@ -3,12 +3,27 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcElecSwi
-# Date:         14.08.2023
+# Date:         01.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the currents and voltages of electrical switching devices.
+Inputs:     1) Vdc:     dc link voltage of the converter cell (V)
+            2) Is:      switching current (A)
+            3) G:       binary ideal gate signal
+            4) Tj:      junction temperature (°C)
+            5) pos:     position of the switch (HS or LS)
+            6) para:    parameters of the switch
+            7) setup:   all setup variables
+Outputs:    1) out:     output array including transistor and diode quantities
+"""
 
 #######################################################################################################################
 # Import libs
@@ -28,7 +43,7 @@ import copy
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
+def calcElecSwi(Vdc, Is, G, Tj, pos, para, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
@@ -54,9 +69,9 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     # ------------------------------------------
     # Constant
     # ------------------------------------------
-    if setupPara['Elec']['SwiMdl'] == "con":
+    if setup['Par']['Elec']['SwiMdl'] == "con":
         # IGBT
-        if setupPara['Elec']['SwiType'] == "IGBT":
+        if setup['Par']['Elec']['SwiType'] == "IGBT":
             VfT = Vf * np.ones(np.size(Is))
             VfD = Vfd * np.ones(np.size(Is))
 
@@ -68,9 +83,9 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     # ------------------------------------------
     # Piece-wise linear (tbi)
     # ------------------------------------------
-    elif setupPara['Elec']['SwiMdl'] == "pwl":
+    elif setup['Par']['Elec']['SwiMdl'] == "pwl":
         # IGBT
-        if setupPara['Elec']['SwiType'] == "IGBT":
+        if setup['Par']['Elec']['SwiType'] == "IGBT":
             VfT = Vf + Ron * np.abs(Is)
             VfD = Vfd + RonD * np.abs(Is)
 
@@ -89,7 +104,7 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     # ==============================================================================
     # Parameterize PWM Method
     # ==============================================================================
-    if setupPara['PWM']['type'] == 0:
+    if setup['Par']['PWM']['type'] == 0:
         VfT = np.zeros(np.size(Is))
         VfD = np.zeros(np.size(Is))
 
@@ -111,7 +126,7 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
         # Current
         # ------------------------------------------
         i_T = Is * G.astype(float)
-        if setupPara['Elec']['SwiRecCon'] == "D":
+        if setup['Par']['Elec']['SwiRecCon'] == "D":
             i_T[Is < 0] = 0
         else:
             i_T[Is < 0] = i_T[Is < 0] * (VfD[Is < 0] / (VfD[Is < 0] + VfT[Is < 0]))
@@ -127,7 +142,7 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
         # Current
         # ------------------------------------------
         i_T = Is * G.astype(float) * (-1)
-        if setupPara['Elec']['SwiRecCon'] == "D":
+        if setup['Par']['Elec']['SwiRecCon'] == "D":
             i_T[Is > 0] = 0
         else:
             i_T[Is > 0] = i_T[Is > 0] * (VfD[Is > 0] / (VfD[Is > 0] + VfT[Is > 0]))
@@ -146,7 +161,7 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
         # ------------------------------------------
         i_D = -copy.deepcopy(Is)
         i_D[Is > 0] = 0
-        if setupPara['Elec']['SwiRecCon'] == "D":
+        if setup['Par']['Elec']['SwiRecCon'] == "D":
             # HS Gate 0/1
             i_D[v_D < 0] = 0
         else:
@@ -157,7 +172,7 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
             i_D = i_D * (VfT / (VfD + VfT))
 
             # Blanking time
-            if setupPara['Elec']['SwiRecMdl'] == 1:
+            if setup['Par']['Elec']['SwiRecMdl'] == 1:
                 i_D[(VfT > VfD) & (G.astype(float) == 1)] = 0
 
     else:
@@ -171,7 +186,7 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
         # ------------------------------------------
         i_D = copy.deepcopy(Is)
         i_D[Is < 0] = 0
-        if setupPara['Elec']['SwiRecCon'] == "D":
+        if setup['Par']['Elec']['SwiRecCon'] == "D":
             # HS Gate 0/1
             i_D[v_D < 0] = 0
         else:
@@ -182,7 +197,7 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
             i_D = i_D * (VfT / (VfD + VfT))
 
             # Blanking time
-            if setupPara['Elec']['SwiRecMdl'] == 1:
+            if setup['Par']['Elec']['SwiRecMdl'] == 1:
                 i_D[(VfT > VfD) & ((~G).astype(float) == 1)] = 0
 
     ###################################################################################################################
@@ -194,14 +209,14 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setupPara):
     # ------------------------------------------
     # Transistor
     # ------------------------------------------
-    out['v_T'] = v_T / setupPara['Elec']['SwiSeries']
-    out['i_T'] = i_T / setupPara['Elec']['SwiPara']
+    out['v_T'] = v_T / setup['Par']['Elec']['SwiSeries']
+    out['i_T'] = i_T / setup['Par']['Elec']['SwiPara']
 
     # ------------------------------------------
     # Diode
     # ------------------------------------------
-    out['v_D'] = v_D / setupPara['Elec']['SwiSeries']
-    out['i_D'] = i_D / setupPara['Elec']['SwiPara']
+    out['v_D'] = v_D / setup['Par']['Elec']['SwiSeries']
+    out['i_D'] = i_D / setup['Par']['Elec']['SwiPara']
 
     ###################################################################################################################
     # Return

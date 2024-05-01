@@ -3,12 +3,28 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcSSeqB2
-# Date:         14.08.2023
+# Date:         01.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the switching functions for different modulation techniques including carrier
+based PWM, fundamental switching frequency, and optimal pulse patterns.
+Inputs:     1) ref:     reference waveform for the PWM
+            2) t:       time vector of the PWM (sec)
+            3) Mi:      modulation index (p.u.)
+            4) setup:   includes all simulation variables
+Outputs:    1) xs:      sampled reference waveform
+            2) xsh:     sampled reference waveform including zero order hold
+            3) c:       carrier signal
+            4) s:       switching sequence
+"""
 
 #######################################################################################################################
 # Import libs
@@ -29,22 +45,22 @@ from scipy import signal
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcSSeqB2_CB(ref, t, Mi, setupPara, setupTopo):
+def calcSSeqB2_CB(ref, t, Mi, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    fs = setupPara['PWM']['fs']
+    fs = setup['Par']['PWM']['fs']
     Ts = 1/fs
-    fel = setupTopo['fel']
+    fel = setup['Top']['fel']
     
     # ==============================================================================
     # Variables
     # ==============================================================================
-    tmin = int(setupPara['PWM']['tmin']/(t[1]-t[0]))
-    td = int(setupPara['PWM']['td']/(t[1]-t[0]))
+    tmin = int(setup['Par']['PWM']['tmin']/(t[1]-t[0]))
+    td = int(setup['Par']['PWM']['td']/(t[1]-t[0]))
 
     ###################################################################################################################
     # Pre-Processing
@@ -60,11 +76,11 @@ def calcSSeqB2_CB(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Carrier
     # ==============================================================================
-    if setupPara['PWM']['tri'] == "RE":
+    if setup['Par']['PWM']['tri'] == "RE":
         c = signal.sawtooth(2*np.pi*fs*t, 1) * (-1)
-    elif setupPara['PWM']['tri'] == "FE":
+    elif setup['Par']['PWM']['tri'] == "FE":
         c = signal.sawtooth(2*np.pi*fs*(t - 0.5/fs), 0) * (-1)
-    elif setupPara['PWM']['tri'] == "AM":
+    elif setup['Par']['PWM']['tri'] == "AM":
         c = signal.sawtooth(2*np.pi*fs*t, 1/3) * (-1)
     else:
         c = signal.sawtooth(2*np.pi*fs*t, 0.5) * (-1)
@@ -73,8 +89,8 @@ def calcSSeqB2_CB(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Sampling
     # ==============================================================================
-    if setupPara['PWM']['samp'] == "RS":
-        if setupPara['PWM']['upd'] == "SE":
+    if setup['Par']['PWM']['samp'] == "RS":
+        if setup['Par']['PWM']['upd'] == "SE":
             xs = con2dis(x, t, Ts)
             xsh = np.roll(x, int(len(xs)*fel/fs))
         else:
@@ -95,7 +111,7 @@ def calcSSeqB2_CB(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Minimum Pulse Width
     # ==============================================================================
-    if setupPara['PWM']['tmin'] > 0:
+    if setup['Par']['PWM']['tmin'] > 0:
         hold = tmin
         for i in range(0, len(s)):
             if hold >= tmin:
@@ -109,7 +125,7 @@ def calcSSeqB2_CB(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Dead-time
     # ==============================================================================
-    if setupPara['PWM']['td'] > 0:
+    if setup['Par']['PWM']['td'] > 0:
         s = deadTime(s, td)
 
     ###################################################################################################################
@@ -121,16 +137,16 @@ def calcSSeqB2_CB(ref, t, Mi, setupPara, setupTopo):
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcSSeqB2_OPP(ref, t, Mi, setupPara, setupTopo):
+def calcSSeqB2_OPP(ref, t, Mi, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    fs = setupPara['PWM']['fs']
+    fs = setup['Par']['PWM']['fs']
     Ts = 1 / fs
-    fel = setupTopo['fel']
+    fel = setup['Top']['fel']
     Tel = 1 / fel
     q = int(fs / fel)
     N = int((t[-1] - t[0]) / Tel)
@@ -139,9 +155,9 @@ def calcSSeqB2_OPP(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Variables
     # ==============================================================================
-    tmin = int(setupPara['PWM']['tmin'] / (t[1] - t[0]))
+    tmin = int(setup['Par']['PWM']['tmin'] / (t[1] - t[0]))
     hold = tmin
-    td = int(setupPara['PWM']['td'] / (t[1] - t[0]))
+    td = int(setup['Par']['PWM']['td'] / (t[1] - t[0]))
     ang = np.linspace(0, np.pi * 2 * N, np.size(t))
     s = (-1) * np.ones(np.size(t))
     c = np.zeros(np.size(t))
@@ -162,7 +178,7 @@ def calcSSeqB2_OPP(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Fundamental Angles (0, 2pi)
     # ==============================================================================
-    [ang_fun, val_fun, _] = oppPWM(kmax, q, Mi/4*np.pi, 4, setupTopo)
+    [ang_fun, val_fun, _] = oppPWM(kmax, q, Mi/4*np.pi, 4, setup)
 
     # ==============================================================================
     # Complete Angles
@@ -206,8 +222,8 @@ def calcSSeqB2_OPP(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Sampling
     # ==============================================================================
-    if setupPara['PWM']['samp'] == "RS":
-        if setupPara['PWM']['upd'] == "SE":
+    if setup['Par']['PWM']['samp'] == "RS":
+        if setup['Par']['PWM']['upd'] == "SE":
             xs = con2dis(x, t, Ts)
             xsh = np.roll(x, int(len(xs) * fel / fs))
         else:
@@ -223,7 +239,7 @@ def calcSSeqB2_OPP(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Switching Function
     # ==============================================================================
-    if setupPara['PWM']['tmin'] > 0:
+    if setup['Par']['PWM']['tmin'] > 0:
         for i in range(0, len(s)):
             if hold >= tmin:
                 if Mi != 0:
@@ -236,7 +252,7 @@ def calcSSeqB2_OPP(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Dead-time
     # ==============================================================================
-    if setupPara['PWM']['td'] > 0:
+    if setup['Par']['PWM']['td'] > 0:
         s = deadTime(s, td)
 
     ###################################################################################################################
@@ -248,7 +264,7 @@ def calcSSeqB2_OPP(ref, t, Mi, setupPara, setupTopo):
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcSSeqB2_FF(ref, t, Mi, _, setupTopo):
+def calcSSeqB2_FF(ref, t, Mi, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
@@ -259,7 +275,7 @@ def calcSSeqB2_FF(ref, t, Mi, _, setupTopo):
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    fel = setupTopo['fel']
+    fel = setup['Top']['fel']
     
     ###################################################################################################################
     # Pre-Processing

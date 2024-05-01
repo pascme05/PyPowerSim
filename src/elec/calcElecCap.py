@@ -3,12 +3,25 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcElecCap
-# Date:         14.08.2023
+# Date:         01.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the electrical output of the capacitor at the dc link.
+Inputs:     1) t:       time domain vector (sec)
+            2) i_c:     time domain capacitor current (A)
+            3) Tj:      core temperature of the capacitor (°C)
+            4) para:    all parameters of the capacitor
+            5) setup:   all setup variables
+Outputs:    1) v_dc:    time domain capacitor voltage (V)
+"""
 
 #######################################################################################################################
 # Import libs
@@ -28,7 +41,7 @@ from scipy import signal
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcElecCap(t, i_c, Tj, para, setupPara, setupTopo):
+def calcElecCap(t, i_c, Tj, para, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
@@ -36,7 +49,7 @@ def calcElecCap(t, i_c, Tj, para, setupPara, setupTopo):
     # Parameters
     # ==============================================================================
     dt = t[1] - t[0]
-    fel = setupTopo['fel']
+    fel = setup['Top']['fel']
 
     # ==============================================================================
     # Variables
@@ -63,14 +76,14 @@ def calcElecCap(t, i_c, Tj, para, setupPara, setupTopo):
     # ------------------------------------------
     # Constant
     # ------------------------------------------
-    if setupPara['Elec']['CapMdl'] == "con" or setupPara['Elec']['SwiMdl'] == "pwl":  
+    if setup['Par']['Elec']['CapMdl'] == "con" or setup['Par']['Elec']['SwiMdl'] == "pwl":  
         ESR = para['Cap']['Elec']['con']['ESR']
         C = para['Cap']['Elec']['con']['C']
         
     # ------------------------------------------
     # Tabular
     # ------------------------------------------
-    elif setupPara['Elec']['CapMdl'] == "tab":
+    elif setup['Par']['Elec']['CapMdl'] == "tab":
         # Matrix 
         ESR_2d = interpolate.interp2d(para['Cap']['Elec']['vec']['Tj'].to_numpy(), para['Cap']['Elec']['vec']['f'].to_numpy(), para['Cap']['Elec']['tab']['ESR'].to_numpy(), kind='linear')
         C_2d = interpolate.interp2d(para['Cap']['Elec']['vec']['Tj'].to_numpy(), para['Cap']['Elec']['vec']['f'].to_numpy(), para['Cap']['Elec']['tab']['C'].to_numpy(), kind='linear')

@@ -3,12 +3,21 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         initB6
-# Date:         14.08.2023
+# Date:         01.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function initialises the variables for the time, frequency, and distortion domain for the B6 bridge.
+Inputs:     1) W:       number of sample points for the distortion
+Outputs:    1) data:    data array
+"""
 
 #######################################################################################################################
 # Import libs

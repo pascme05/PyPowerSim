@@ -64,8 +64,8 @@ def calcSweepB2(mdl, _, setup):
     fel = setup['Top']['fel']
     fsim = setup['Exp']['fsim']
     N = int(fsim/fel)
-    K = setup['Dat']['stat']['cyc']
-    W = setup['Dat']['stat']['W'] 
+    K = int(setup['Dat']['stat']['cyc'])
+    W = int(setup['Dat']['stat']['W'])
     Mi = setup['Dat']['stat']['Mi']
 
     # ==============================================================================
@@ -125,18 +125,18 @@ def calcSweepB2(mdl, _, setup):
     # Switching Function
     # ------------------------------------------
     if setup['Par']['PWM']['type'] == "FF":
-        [xs, xsh, s, c] = calcSSeqB2_FF(v_ref, t, Mi, setup['Par'], setup['Top'])
+        [xs, xsh, s, c] = calcSSeqB2_FF(v_ref, t, Mi, setup)
     elif setup['Par']['PWM']['type'] == "CB":
-        [xs, xsh, s, c] = calcSSeqB2_CB(v_ref, t, Mi, setup['Par'], setup['Top'])
+        [xs, xsh, s, c] = calcSSeqB2_CB(v_ref, t, Mi, setup)
     elif setup['Par']['PWM']['type'] == "OPP":
-        [xs, xsh, s, c] = calcSSeqB2_OPP(v_ref, t, Mi, setup['Par'], setup['Top'])
+        [xs, xsh, s, c] = calcSSeqB2_OPP(v_ref, t, Mi, setup)
     else:
-        [xs, xsh, s, c] = calcSSeqB2_CB(v_ref, t, Mi, setup['Par'], setup['Top'])
+        [xs, xsh, s, c] = calcSSeqB2_CB(v_ref, t, Mi, setup)
 
     # ------------------------------------------
     # Time Domain
     # ------------------------------------------
-    [timeAc, timeDc] = calcTimeB2(t, s, e_ref, Vdc, Mi, mdl, setup['Top'], start, ende)
+    [timeAc, timeDc] = calcTimeB2(t, s, e_ref, Vdc, Mi, mdl, setup, start, ende)
     
     # ==============================================================================
     # Sweeping
@@ -146,24 +146,24 @@ def calcSweepB2(mdl, _, setup):
         # Switching
         # ------------------------------------------
         if setup['Par']['PWM']['type'] == "FF":
-            [_, _, s_i, _] = calcSSeqB2_FF(v_ref, t, M_i[i], setup['Par'], setup['Top'])
+            [_, _, s_i, _] = calcSSeqB2_FF(v_ref, t, M_i[i], setup)
         elif setup['Par']['PWM']['type'] == "CB":
-            [_, _, s_i, _] = calcSSeqB2_CB(v_ref, t, M_i[i], setup['Par'], setup['Top'])
+            [_, _, s_i, _] = calcSSeqB2_CB(v_ref, t, M_i[i], setup)
         elif setup['Par']['PWM']['type'] == "OPP":
-            [_, _, s_i, _] = calcSSeqB2_OPP(v_ref, t, M_i[i], setup['Par'], setup['Top'])
+            [_, _, s_i, _] = calcSSeqB2_OPP(v_ref, t, M_i[i], setup)
         else:
-            [_, _, s_i, _] = calcSSeqB2_CB(v_ref, t, M_i[i], setup['Par'], setup['Top'])
+            [_, _, s_i, _] = calcSSeqB2_CB(v_ref, t, M_i[i], setup)
         
         # ------------------------------------------
         # Time
         # ------------------------------------------
-        [tempTimeAc, tempTimeDc] = calcTimeB2(t, s_i, e_ref, Vdc, M_i[i], mdl, setup['Top'], start, ende)
+        [tempTimeAc, tempTimeDc] = calcTimeB2(t, s_i, e_ref, Vdc, M_i[i], mdl, setup, start, ende)
         
         # ------------------------------------------
         # Distortion
         # ------------------------------------------
         [numDistAc, numDistDc] = calcDistNum(t[start:ende], tempTimeAc['i_a'], tempTimeAc['v_a'], tempTimeDc['i_dc'], tempTimeDc['v_dc'], Vdc, fel)
-        [anaTimeAc, anaTimeDc] = calcDistB2_Ana(M_i[i], Vdc, setup['Top'], setup['Par'])
+        [anaTimeAc, anaTimeDc] = calcDistB2_Ana(M_i[i], Vdc, setup)
         
         # ------------------------------------------
         # Output

@@ -3,12 +3,24 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         saveResults
-# Date:         14.08.2023
+# Date:         01.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function saves the results for the different simulation setups and topologies.
+Inputs:     1) time:    time domain results
+            2) freq:    frequency domain results
+            3) sweep:   sweep domain results 
+            4) setup:   includes all setup variables 
+            5) path:    path variables
+"""
 
 #######################################################################################################################
 # Import libs
@@ -31,7 +43,7 @@ import json
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, setupPath):
+def saveResults(time, freq, sweep, setup, path):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -45,35 +57,35 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
     # ==============================================================================
     # Labels
     # ==============================================================================
-    if setupTopo['sourceType'] == 'B2':
-        id = ['S1', 'S2']
-    elif setupTopo['sourceType'] == 'B4':
-        id = ['S1', 'S2', 'S3', 'S4']
-    elif setupTopo['sourceType'] == 'B6':
-        id = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+    if setup['Top']['sourceType'] == 'B2':
+        idSw = ['S1', 'S2']
+    elif setup['Top']['sourceType'] == 'B4':
+        idSw = ['S1', 'S2', 'S3', 'S4']
+    elif setup['Top']['sourceType'] == 'B6':
+        idSw = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
     else:
         print("WARN: Invalid topology assuming B6")
-        id = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+        idSw = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
 
     # ==============================================================================
     # General
     # ==============================================================================
     now = datetime.now()
-    dir_name = setupExp['Name']
+    dir_name = setup['Exp']['Name']
     dt_string = now.strftime("%d%m%Y%H%M%S")
 
     # ==============================================================================
     # Variables
     # ==============================================================================
-    fel = setupTopo['fel']
-    fsim = setupExp['fsim']
+    fel = setup['Top']['fel']
+    fsim = setup['Exp']['fsim']
     f = fsim * np.linspace(0, 0.5, int(len(time['Sw']['t']) / 2)) / fel
-    setupData['stat']['Io'] = abs(setupData['stat']['Io'])
+    setup['Dat']['stat']['Io'] = abs(setup['Dat']['stat']['Io'])
 
     ###################################################################################################################
     # Directory
     ###################################################################################################################
-    path = setupPath['resPath'] + '\\' + dir_name
+    path = path['resPath'] + '\\' + dir_name
     Path(path).mkdir(parents=True, exist_ok=True)
     print("INFO: Generating directory")
 
@@ -83,10 +95,10 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
     setup_name = 'setup_' + dir_name + '_' + dt_string + '.txt'
     os.chdir(path)
     with open(setup_name, 'w') as file:
-        file.write(json.dumps(setupExp))
-        file.write(json.dumps(setupData))
-        file.write(json.dumps(setupPara))
-        file.write(json.dumps(setupTopo))
+        file.write(json.dumps(setup['Exp']))
+        file.write(json.dumps(setup['Dat']))
+        file.write(json.dumps(setup['Par']))
+        file.write(json.dumps(setup['Top']))
     print("INFO: Saving setup files")
 
     ####################################################################################################################
@@ -114,12 +126,12 @@ def saveResults(time, freq, sweep, setupExp, setupData, setupPara, setupTopo, se
         # Switches
         # ------------------------------------------
         try:
-            for i in range(0, len(id)):
-                nameTime = 'time_' + dir_name + '_' + dt_string + '_' + id[i] + '.xlsx'
+            for i in range(0, len(idSw)):
+                nameTime = 'time_' + dir_name + '_' + dt_string + '_' + idSw[i] + '.xlsx'
                 with pd.ExcelWriter(nameTime) as writer:
                     time['Sw']['t'].to_excel(writer, sheet_name='time')
-                    time['Elec']['sw'][id[i]].to_excel(writer, sheet_name='elec')
-                    time['Loss']['sw'][id[i]].to_excel(writer, sheet_name='loss')
+                    time['Elec']['sw'][idSw[i]].to_excel(writer, sheet_name='elec')
+                    time['Loss']['sw'][idSw[i]].to_excel(writer, sheet_name='loss')
                     pd.DataFrame.from_dict(time['Ther']['sw']).to_excel(writer, sheet_name='ther')
             print("INFO: Saving per switch results")
         except:

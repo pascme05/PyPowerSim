@@ -83,8 +83,8 @@ def calcSteadyB2(mdl, para, setup):
     Nsim = int(np.ceil(fsim / fel))
     Npwm = int(np.ceil(fs / fel))
     N = int(fsim / fel)
-    K = setup['Dat']['stat']['cyc']
-    W = setup['Dat']['stat']['W']
+    K = int(setup['Dat']['stat']['cyc'])
+    W = int(setup['Dat']['stat']['W'])
     Mi = setup['Dat']['stat']['Mi']
     start = int(N) * 2
     ende = int(K * N + 1)
@@ -139,7 +139,7 @@ def calcSteadyB2(mdl, para, setup):
     # ------------------------------------------
     # Load
     # ------------------------------------------
-    [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap] = initRC(para, setup['Par'])
+    [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap] = initRC(para, setup)
 
     # ------------------------------------------
     # Variables
@@ -156,18 +156,18 @@ def calcSteadyB2(mdl, para, setup):
     # Switching Function
     # ==============================================================================
     if setup['Par']['PWM']['type'] == "FF":
-        [xs, xsh, s, c] = calcSSeqB2_FF(v_ref, t, Mi, setup['Par'], setup['Top'])
+        [xs, xsh, s, c] = calcSSeqB2_FF(v_ref, t, Mi, setup)
     elif setup['Par']['PWM']['type'] == "CB":
-        [xs, xsh, s, c] = calcSSeqB2_CB(v_ref, t, Mi, setup['Par'], setup['Top'])
+        [xs, xsh, s, c] = calcSSeqB2_CB(v_ref, t, Mi, setup)
     elif setup['Par']['PWM']['type'] == "OPP":
-        [xs, xsh, s, c] = calcSSeqB2_OPP(v_ref, t, Mi, setup['Par'], setup['Top'])
+        [xs, xsh, s, c] = calcSSeqB2_OPP(v_ref, t, Mi, setup)
     else:
-        [xs, xsh, s, c] = calcSSeqB2_CB(v_ref, t, Mi, setup['Par'], setup['Top'])
+        [xs, xsh, s, c] = calcSSeqB2_CB(v_ref, t, Mi, setup)
 
     # ==============================================================================
     # Time Domain
     # ==============================================================================
-    [timeAc, timeDc] = calcTimeB2(t, s, e_ref, Vdc, Mi, mdl, setup['Top'], start, ende)
+    [timeAc, timeDc] = calcTimeB2(t, s, e_ref, Vdc, Mi, mdl, setup, start, ende)
 
     # ==============================================================================
     # Msg
@@ -183,11 +183,11 @@ def calcSteadyB2(mdl, para, setup):
         # Electrical
         # ------------------------------------------
         # Switches
-        timeElec['sw']['S1'] = calcElecSwi(Vdc, timeAc['i_a'], (s[start:ende] == +1), T_sw[0], 'HS', para, setup['Par'])
-        timeElec['sw']['S2'] = calcElecSwi(Vdc, timeAc['i_a'], (s[start:ende] == -1), T_sw[1], 'LS', para, setup['Par'])
+        timeElec['sw']['S1'] = calcElecSwi(Vdc, timeAc['i_a'], (s[start:ende] == +1), T_sw[0], 'HS', para, setup)
+        timeElec['sw']['S2'] = calcElecSwi(Vdc, timeAc['i_a'], (s[start:ende] == -1), T_sw[1], 'LS', para, setup)
 
         # Capacitor
-        timeDc['v_dc'] = calcElecCap(t, timeDc['i_c'], T_ca, para, setup['Par'], setup['Top'])
+        timeDc['v_dc'] = calcElecCap(t, timeDc['i_c'], T_ca, para, setup)
         timeElec['cap']['C1']['i_c'] = timeDc['i_c']
         timeElec['cap']['C1']['v_c'] = timeDc['v_dc']
 
@@ -197,13 +197,13 @@ def calcSteadyB2(mdl, para, setup):
         # Switches
         timeLoss['sw']['S1'] = calcLossSwi(s[start:ende] * (+1), timeElec['sw']['S1']['i_T'],
                                            timeElec['sw']['S1']['i_D'], timeElec['sw']['S1']['v_T'],
-                                           timeElec['sw']['S1']['v_D'], T_sw[0], para, setup['Par'])
+                                           timeElec['sw']['S1']['v_D'], T_sw[0], para, setup)
         timeLoss['sw']['S2'] = calcLossSwi(s[start:ende] * (-1), timeElec['sw']['S2']['i_T'],
                                            timeElec['sw']['S2']['i_D'], timeElec['sw']['S2']['v_T'],
-                                           timeElec['sw']['S2']['v_D'], T_sw[1], para, setup['Par'])
+                                           timeElec['sw']['S2']['v_D'], T_sw[1], para, setup)
 
         # Capacitor
-        timeLoss['cap']['C1'] = calcLossCap(t, timeDc['i_c'], T_ca, para, setup['Par'], setup['Top'])
+        timeLoss['cap']['C1'] = calcLossCap(t, timeDc['i_c'], T_ca, para, setup)
 
         # ------------------------------------------
         # Init Thermal
@@ -311,7 +311,7 @@ def calcSteadyB2(mdl, para, setup):
     # ------------------------------------------
     # Average
     # ------------------------------------------
-    out = calcAvg(out, setup['Exp'], setup['Top'], Nsim, Npwm)
+    out = calcAvg(out, setup, Nsim, Npwm)
 
     # ------------------------------------------
     # Removing

@@ -3,12 +3,38 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         outB4
-# Date:         14.08.2023
+# Date:         01.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function summarizes the calculated outputs for the B4 bridge circuit.
+Inputs:     1) timeAc:  time domain ac results
+            2) timeDc:  time domain dc results
+            3) freqSw:  frequency domain results switching function
+            4) freqAc:  frequency domain results ac
+            5) freqDc:  frequency domain results dc
+            6) t_ref:   reference time vector (sec)
+            7) v_ref:   reference voltage vector (V)
+            8) e_ref:   reference back EMI vector (V)
+            9) s:       switching function
+            10) c:      carrier waveform
+            11) xs:     sampled reference
+            12) xsh:    sampled reference including zero order hold
+            13) K:      number of fundamental cycles
+            14) Nsim:   number of samples in fundamental period
+            15) Tel:    period of the fundamental
+            16) Nel:    number of electrical cycles in transient period
+Outputs:    1) time:    results in the time domain
+            2) freq:    results in the frequency domain
+            3) dist:    results in the distortion domain
+"""
 
 #######################################################################################################################
 # Import libs

@@ -3,12 +3,30 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcTimeB4
-# Date:         14.08.2023
+# Date:         01.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the time domain output of the B4 full-bridge circuit.
+Inputs:     1) t:       input time vector (sec)
+            2) s:       switching function
+            3) e:       induced voltage
+            4) Vdc:     dc link voltage (V)
+            5) Mi:      modulation index (p.u.)
+            6) mdl:     model transfer functions
+            7) setup:   file including all setup variables
+            8) start:   starting sample for evaluation
+            9) ende:    end sample for the evaluation
+Outputs:    1) timeAc:  results in the time domain Ac
+            2) timeDc:  results in the time domain Dc
+"""
 
 #######################################################################################################################
 # Import libs
@@ -27,7 +45,7 @@ import scipy.signal as sig
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcTimeB4(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
+def calcTimeB4(t, s, e, Vdc, Mi, mdl, setup, start, ende):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
@@ -50,7 +68,7 @@ def calcTimeB4(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     # ------------------------------------------
     # Filter Output
     # ------------------------------------------
-    if setupTopo['outFilter'] == 0:
+    if setup['Top']['outFilter'] == 0:
         v_out = v_ab
     else:
         _, v_out, _, = sig.lsim(mdl['SS']['Out'], v_ab, t)
@@ -62,7 +80,7 @@ def calcTimeB4(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     v_L = v_out - Mi*e
     
     # Current
-    if setupTopo['wave'] == "con":
+    if setup['Top']['wave'] == "con":
         _, i_a, _, = sig.lsim(mdl['SS']['Load'], v_L, t)
         i_a = i_a[start:ende]
     else: 
@@ -87,7 +105,7 @@ def calcTimeB4(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     # ------------------------------------------
     # Filter Input
     # ------------------------------------------
-    if setupTopo['inpFilter'] == 0:
+    if setup['Top']['inpFilter'] == 0:
         v_in = v_dc
     else:
         _, v_in, _, = sig.lsim(mdl['SS']['Inp'], (v_dc-Vdc), t[start:ende])

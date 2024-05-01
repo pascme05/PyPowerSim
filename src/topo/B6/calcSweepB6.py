@@ -11,6 +11,19 @@
 #######################################################################################################################
 
 #######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the results for a parameter sweep of the B6 full-bridge circuit.
+Inputs:     1) mdl:     all models and transfer functions of the architecture
+            2) para:    all parameters used in the simulation
+            3) setup:   includes all simulation variables
+Outputs:    1) time:    results in the time domain
+            2) freq:    results in the frequency domain
+            3) dist:    results in the distortion domain
+"""
+
+#######################################################################################################################
 # Import libs
 #######################################################################################################################
 # ==============================================================================
@@ -36,7 +49,7 @@ from tqdm import tqdm
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcSweepB6(mdl, _, setupTopo, setupData, setupPara, setupExp):
+def calcSweepB6(mdl, _, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -62,12 +75,12 @@ def calcSweepB6(mdl, _, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    fel = setupTopo['fel']
-    fsim = setupExp['fsim']
+    fel = setup['Top']['fel']
+    fsim = setup['Exp']['fsim']
     N = int(fsim / fel)
-    K = setupData['stat']['cyc']
-    W = setupData['stat']['W']
-    Mi = setupData['stat']['Mi']
+    K = int(setup['Dat']['stat']['cyc'])
+    W = int(setup['Dat']['stat']['W'])
+    Mi = setup['Dat']['stat']['Mi']
 
     # ==============================================================================
     # Variables
@@ -80,10 +93,10 @@ def calcSweepB6(mdl, _, setupTopo, setupData, setupPara, setupExp):
     # ------------------------------------------
     # Inputs 
     # ------------------------------------------
-    E = setupTopo['E']
-    Vdc = setupData['stat']['Vdc']
-    phiE = math.radians(setupTopo['phiE'])
-    phiV = math.radians(setupData['stat']['phi'])
+    E = setup['Top']['E']
+    Vdc = setup['Dat']['stat']['Vdc']
+    phiE = math.radians(setup['Top']['phiE'])
+    phiV = math.radians(setup['Dat']['stat']['phi'])
 
     ###################################################################################################################
     # Pre-Processing
@@ -100,13 +113,13 @@ def calcSweepB6(mdl, _, setupTopo, setupData, setupPara, setupExp):
     # Reference
     # ------------------------------------------
     for i in range(0, len(id1)):
-        v_ref[id1[i]] = (Vdc / 2) * Mi * genWave(t, fel, phiV, -i * 2 / 3 * np.pi, setupTopo)
-        e_ref[id1[i]] = E * genWave(t, fel, phiE, -i * 2 / 3 * np.pi, setupTopo)
+        v_ref[id1[i]] = (Vdc / 2) * Mi * genWave(t, fel, phiV - i * 2 / 3 * np.pi, setup)
+        e_ref[id1[i]] = E * genWave(t, fel, phiE - i * 2 / 3 * np.pi, setup)
 
     # ==============================================================================
     # Maximum Modulation Index
     # ==============================================================================
-    if setupPara['PWM']['zero'] == "SPWM":
+    if setup['Par']['PWM']['zero'] == "SPWM":
         Mi_max = 1.0
     else:
         Mi_max = 2 / np.sqrt(3)
@@ -129,21 +142,21 @@ def calcSweepB6(mdl, _, setupTopo, setupData, setupPara, setupExp):
     # ------------------------------------------
     # Switching Function
     # ------------------------------------------
-    if setupPara['PWM']['type'] == "FF":
-        [xs, xsh, s, c, x, n0] = calcSSeqB6_FF(v_ref, t, Mi, setupPara, setupTopo)
-    elif setupPara['PWM']['type'] == "CB":
-        [xs, xsh, s, c, x, n0] = calcSSeqB6_CB(v_ref, t, Mi, setupPara, setupTopo)
-    elif setupPara['PWM']['type'] == "SV":
-        [xs, xsh, s, c, x, n0] = calcSSeqB6_SV(v_ref, t, Mi, setupPara, setupTopo)
-    elif setupPara['PWM']['type'] == "OPP":
-        [xs, xsh, s, c, x, n0] = calcSSeqB6_OPP(v_ref, t, Mi, setupPara, setupTopo)
+    if setup['Par']['PWM']['type'] == "FF":
+        [xs, xsh, s, c, x, n0] = calcSSeqB6_FF(v_ref, t, Mi, setup)
+    elif setup['Par']['PWM']['type'] == "CB":
+        [xs, xsh, s, c, x, n0] = calcSSeqB6_CB(v_ref, t, Mi, setup)
+    elif setup['Par']['PWM']['type'] == "SV":
+        [xs, xsh, s, c, x, n0] = calcSSeqB6_SV(v_ref, t, Mi, setup)
+    elif setup['Par']['PWM']['type'] == "OPP":
+        [xs, xsh, s, c, x, n0] = calcSSeqB6_OPP(v_ref, t, Mi, setup)
     else:
-        [xs, xsh, s, c, x, n0] = calcSSeqB6_CB(v_ref, t, Mi, setupPara, setupTopo)
+        [xs, xsh, s, c, x, n0] = calcSSeqB6_CB(v_ref, t, Mi, setup)
 
     # ------------------------------------------
     # Time Domain
     # ------------------------------------------
-    [timeAc, timeDc] = calcTimeB6(t, s, e_ref, Vdc, Mi, mdl, setupTopo, start, ende)
+    [timeAc, timeDc] = calcTimeB6(t, s, e_ref, Vdc, Mi, mdl, setup, start, ende)
 
     # ==============================================================================
     # Sweeping
@@ -152,21 +165,21 @@ def calcSweepB6(mdl, _, setupTopo, setupData, setupPara, setupExp):
         # ------------------------------------------
         # Switching
         # ------------------------------------------
-        if setupPara['PWM']['type'] == "FF":
-            [_, _, s_i, _, _, _] = calcSSeqB6_FF(v_ref, t, M_i[i], setupPara, setupTopo)
-        elif setupPara['PWM']['type'] == "CB":
-            [_, _, s_i, _, _, _] = calcSSeqB6_CB(v_ref, t, M_i[i], setupPara, setupTopo)
-        elif setupPara['PWM']['type'] == "SV":
-            [_, _, s_i, _, _, _] = calcSSeqB6_SV(v_ref, t, M_i[i], setupPara, setupTopo)
-        elif setupPara['PWM']['type'] == "OPP":
-            [_, _, s_i, _, _, _] = calcSSeqB6_OPP(v_ref, t, M_i[i], setupPara, setupTopo)
+        if setup['Par']['PWM']['type'] == "FF":
+            [_, _, s_i, _, _, _] = calcSSeqB6_FF(v_ref, t, M_i[i], setup)
+        elif setup['Par']['PWM']['type'] == "CB":
+            [_, _, s_i, _, _, _] = calcSSeqB6_CB(v_ref, t, M_i[i], setup)
+        elif setup['Par']['PWM']['type'] == "SV":
+            [_, _, s_i, _, _, _] = calcSSeqB6_SV(v_ref, t, M_i[i], setup)
+        elif setup['Par']['PWM']['type'] == "OPP":
+            [_, _, s_i, _, _, _] = calcSSeqB6_OPP(v_ref, t, M_i[i], setup)
         else:
-            [_, _, s_i, _, _, _] = calcSSeqB6_CB(v_ref, t, M_i[i], setupPara, setupTopo)
+            [_, _, s_i, _, _, _] = calcSSeqB6_CB(v_ref, t, M_i[i], setup)
 
         # ------------------------------------------
         # Time
         # ------------------------------------------
-        [tempTimeAc, tempTimeDc] = calcTimeB6(t, s_i, e_ref, Vdc, M_i[i], mdl, setupTopo, start, ende)
+        [tempTimeAc, tempTimeDc] = calcTimeB6(t, s_i, e_ref, Vdc, M_i[i], mdl, setup, start, ende)
 
         # ------------------------------------------
         # Distortion
@@ -174,7 +187,7 @@ def calcSweepB6(mdl, _, setupTopo, setupData, setupPara, setupExp):
         [numDistAc, numDistDc] = calcDistNum(t[start:ende], tempTimeAc['i_a'], tempTimeAc['v_a'], tempTimeDc['i_dc'],
                                              tempTimeDc['v_dc'], Vdc, fel)
         [anaTimeAc, anaTimeDc] = calcDistB6_Ana(t[start:ende], tempTimeAc['i_a'], tempTimeAc['v_a'],
-                                                numDistAc['I_a_v1_eff'], M_i[i], Vdc, setupTopo, setupPara)
+                                                numDistAc['I_a_v1_eff'], M_i[i], Vdc, setup)
 
         # ------------------------------------------
         # Output

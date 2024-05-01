@@ -28,7 +28,7 @@ import math
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def plotResults(time, setupTopo):
+def plotResults(time, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -42,24 +42,24 @@ def plotResults(time, setupTopo):
     # ==============================================================================
     # Labels
     # ==============================================================================
-    if setupTopo['sourceType'] == 'B2':
-        id = ['S1', 'S2']
+    if setup['Top']['sourceType'] == 'B2':
+        id1 = ['S1', 'S2']
         id2 = ['T1', 'T2']
         id3 = ['D1', 'D2']
         lab = ['S1', 'S2', 'C1']
-    elif setupTopo['sourceType'] == 'B4':
-        id = ['S1', 'S2', 'S3', 'S4']
+    elif setup['Top']['sourceType'] == 'B4':
+        id1 = ['S1', 'S2', 'S3', 'S4']
         id2 = ['T1', 'T2', 'T3', 'T4']
         id3 = ['D1', 'D2', 'D3', 'D4']
         lab = ['S1', 'S2', 'S3', 'S4', 'C1']
-    elif setupTopo['sourceType'] == 'B6':
-        id = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+    elif setup['Top']['sourceType'] == 'B6':
+        id1 = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
         id2 = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6']
         id3 = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6']
         lab = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'C1']
     else:
         print("WARN: Invalid topology assuming B6")
-        id = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+        id1 = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
         id2 = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6']
         id3 = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6']
         lab = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'C1']
@@ -67,9 +67,9 @@ def plotResults(time, setupTopo):
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    fel = setupTopo['fel']
-    R = setupTopo['R']
-    L = setupTopo['L']
+    fel = setup['Top']['fel']
+    R = setup['Top']['R']
+    L = setup['Top']['L']
     angZ = math.atan2(2 * np.pi * fel * L, R)
     magZ = np.sqrt(R ** 2 + (2 * np.pi * fel * L) ** 2)
 
@@ -81,11 +81,11 @@ def plotResults(time, setupTopo):
     # ==============================================================================
     # Init
     # ==============================================================================
-    I_ALL = np.zeros((len(id) + 1, 3))
-    V_ALL = np.zeros((len(id) + 1, 3))
-    P_ALL = np.zeros((len(id) + 1, 4))
-    T_ALL = np.zeros((len(id) + 1, 4))
-    E_ALL = np.zeros((len(id) + 1, 1))
+    I_ALL = np.zeros((len(id1) + 1, 3))
+    V_ALL = np.zeros((len(id1) + 1, 3))
+    P_ALL = np.zeros((len(id1) + 1, 4))
+    T_ALL = np.zeros((len(id1) + 1, 4))
+    E_ALL = np.zeros((len(id1) + 1, 1))
 
     ###################################################################################################################
     # Pre-Processing
@@ -98,20 +98,20 @@ def plotResults(time, setupTopo):
     # ------------------------------------------
     for i in range(0, len(time['Elec']['sw'])):
         # Currents
-        I_ALL[i, 0] = np.max(time['Elec']['sw'][id[i]]['i_T'] + time['Elec']['sw'][id[i]]['i_D'])
-        I_ALL[i, 1] = np.mean(time['Elec']['sw'][id[i]]['i_T'] + time['Elec']['sw'][id[i]]['i_D'])
-        I_ALL[i, 2] = rms(time['Elec']['sw'][id[i]]['i_T'] + time['Elec']['sw'][id[i]]['i_D'])
+        I_ALL[i, 0] = np.max(time['Elec']['sw'][id1[i]]['i_T'] + time['Elec']['sw'][id1[i]]['i_D'])
+        I_ALL[i, 1] = np.mean(time['Elec']['sw'][id1[i]]['i_T'] + time['Elec']['sw'][id1[i]]['i_D'])
+        I_ALL[i, 2] = rms(time['Elec']['sw'][id1[i]]['i_T'] + time['Elec']['sw'][id1[i]]['i_D'])
 
         # Currents
-        V_ALL[i, 0] = np.max(time['Elec']['sw'][id[i]]['v_T'])
-        V_ALL[i, 1] = np.mean(time['Elec']['sw'][id[i]]['v_T'])
-        V_ALL[i, 2] = rms(time['Elec']['sw'][id[i]]['v_T'])
+        V_ALL[i, 0] = np.max(time['Elec']['sw'][id1[i]]['v_T'])
+        V_ALL[i, 1] = np.mean(time['Elec']['sw'][id1[i]]['v_T'])
+        V_ALL[i, 2] = rms(time['Elec']['sw'][id1[i]]['v_T'])
 
         # Losses
-        P_ALL[i, 0] = np.mean(time['Loss']['sw'][id[i]]['p_T_s'])
-        P_ALL[i, 1] = np.mean(time['Loss']['sw'][id[i]]['p_T_c'])
-        P_ALL[i, 2] = np.mean(time['Loss']['sw'][id[i]]['p_D_s'])
-        P_ALL[i, 3] = np.mean(time['Loss']['sw'][id[i]]['p_D_c'])
+        P_ALL[i, 0] = np.mean(time['Loss']['sw'][id1[i]]['p_T_s'])
+        P_ALL[i, 1] = np.mean(time['Loss']['sw'][id1[i]]['p_T_c'])
+        P_ALL[i, 2] = np.mean(time['Loss']['sw'][id1[i]]['p_D_s'])
+        P_ALL[i, 3] = np.mean(time['Loss']['sw'][id1[i]]['p_D_c'])
 
         # Thermal
         T_ALL[i, 0] = np.max(time['Ther']['sw'][id2[i]])
@@ -120,7 +120,7 @@ def plotResults(time, setupTopo):
         T_ALL[i, 3] = np.mean(time['Ther']['sw'][id3[i]])
 
         # Efficiency
-        E_ALL[i, 0] = np.abs(rms(pt) - np.mean(time['Loss']['sw'][id[i]]['p_T'])) / rms(pt)
+        E_ALL[i, 0] = np.abs(rms(pt) - np.mean(time['Loss']['sw'][id1[i]]['p_T'])) / rms(pt)
 
     # ------------------------------------------
     # Capacitor
@@ -194,8 +194,8 @@ def plotResults(time, setupTopo):
         '| item ID  | P (W)  | Q (VA) | PF (p.u) | I_ph (A) | V_ph (V) |  I_MAX  |  I_AVG  |  I_RMS  |  V_MAX  |  V_AVG  |  V_RMS  |  P_T_s  |  P_T_c  |  P_D_s  |  P_D_c  | T_T_MAX | T_T_AVG | T_D_MAX | T_D_AVG |    -    |')
     print(
         '|----------|--------|--------|----------|----------|----------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|')
-    for i in range(0, len(id) + 1):
-        if i == len(id):
+    for i in range(0, len(id1) + 1):
+        if i == len(id1):
             print(
                 '| %-8s |   --   |   --   |    --    |    --    |    --    |  %5.1f  |  %5.1f  |  %5.1f  |  %5.1f  |  %5.1f  |  %5.1f  |                 %5.2f                 |                 %5.1f                 |  %5.2f  |' % (
                     lab[i], I_ALL[i, 0], I_ALL[i, 1], I_ALL[i, 2], V_ALL[i, 0], V_ALL[i, 1], V_ALL[i, 2],

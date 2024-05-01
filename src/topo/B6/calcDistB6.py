@@ -11,6 +11,22 @@
 #######################################################################################################################
 
 #######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the analytical distortion functions for the B6 bridge.
+Inputs:     1) t:       time vector (sec)
+            2) i_a:     phase current (A)
+            3) v_a:     phase voltage (V)
+            4) Ia1:     fundamental RMS current phase (A)
+            5) Vdc:     DC-link voltage for the converter cell (V)
+            6) Mi:      modulation index (p.u.)
+            7) setup:   includes all simulation variables
+Outputs:    1) distAc:  Ac distortion waveforms
+            2) distDc:  Dc distortion waveforms
+"""
+
+#######################################################################################################################
 # Import libs
 #######################################################################################################################
 # ==============================================================================
@@ -27,19 +43,19 @@ from scipy.fft import fft
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcDistB6_Ana(t, i_a, v_a, Ia1, Mi, Vdc, setupTopo, setupPara):
+def calcDistB6_Ana(t, i_a, v_a, Ia1, Mi, Vdc, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    fs = setupPara['PWM']['fs']
-    fel = setupTopo['fel']
+    fs = setup['Par']['PWM']['fs']
+    fel = setup['Top']['fel']
     Tel = 1 / fel
     K = int(np.round((t[-1] - t[0]) / Tel))
-    L = setupTopo['L']
-    R = setupTopo['R']
+    L = setup['Top']['L']
+    R = setup['Top']['R']
     Z = np.sqrt(R ** 2 + (2 * np.pi * fel * L) ** 2)
 
     # ==============================================================================
@@ -83,28 +99,28 @@ def calcDistB6_Ana(t, i_a, v_a, Ia1, Mi, Vdc, setupTopo, setupPara):
     I_a_v1_eff = V_a_v1_eff / Z
 
     # Distortion
-    if setupPara['PWM']['type'] == "FF":
+    if setup['Par']['PWM']['type'] == "FF":
         I_a_thd = 0.0417 * (Vdc / 2) * (1 / (2 * np.pi * fel * L)) * Mi
     else:
         # 0127 (SPWM)
-        if setupPara['PWM']['seq'] == "0127" and setupPara['PWM']['zero'] == "SPWM":
+        if setup['Par']['PWM']['seq'] == "0127" and setup['Par']['PWM']['zero'] == "SPWM":
             HDF = 3 / 2 * Mi ** 2 - 4 * np.sqrt(3) / np.pi * Mi ** 3 + 9 / 8 * Mi ** 4
 
         # 0127 (SVPWM)
-        if setupPara['PWM']['seq'] == "0127" and setupPara['PWM']['zero'] == "SVPWM":
+        if setup['Par']['PWM']['seq'] == "0127" and setup['Par']['PWM']['zero'] == "SVPWM":
             HDF = 3 / 2 * Mi ** 2 - 4 * np.sqrt(3) / np.pi * Mi ** 3 + (
                         27 / 16 - 81 * np.sqrt(3) / (64 * np.pi)) * Mi ** 4
 
         # 0127 (THIPWM4)
-        if setupPara['PWM']['seq'] == "0127" and setupPara['PWM']['zero'] == "THIPWM4":
+        if setup['Par']['PWM']['seq'] == "0127" and setup['Par']['PWM']['zero'] == "THIPWM4":
             HDF = 3 / 2 * Mi ** 2 - 4 * np.sqrt(3) / np.pi * Mi ** 3 + 63 / 64 * Mi ** 4
 
         # 0127 (THIPWM6)
-        if setupPara['PWM']['seq'] == "0127" and setupPara['PWM']['zero'] == "THIPWM4":
+        if setup['Par']['PWM']['seq'] == "0127" and setup['Par']['PWM']['zero'] == "THIPWM4":
             HDF = 3 / 2 * Mi ** 2 - 4 * np.sqrt(3) / np.pi * Mi ** 3 + Mi ** 4
 
         # 0127 (DPWM0)
-        if setupPara['PWM']['seq'] == "0127" and setupPara['PWM']['zero'] == "DPWM0":
+        if setup['Par']['PWM']['seq'] == "0127" and setup['Par']['PWM']['zero'] == "DPWM0":
             HDF_max = 6 * Mi ** 2 - (8 * np.sqrt(3) + 45) / (2 * np.pi) * Mi ** 3 + (
                         27 / 8 + 27 * np.sqrt(3) / (32 * np.pi)) * Mi ** 4
             HDF_min = 6 * Mi ** 2 + (45 - 62 * np.sqrt(3)) / (2 * np.pi) * Mi ** 3 + (
@@ -112,12 +128,12 @@ def calcDistB6_Ana(t, i_a, v_a, Ia1, Mi, Vdc, setupTopo, setupPara):
             HDF = 0.5 * (HDF_max + HDF_min)
 
         # 0127 (DPWM1)
-        if setupPara['PWM']['seq'] == "0127" and setupPara['PWM']['zero'] == "DPWM1":
+        if setup['Par']['PWM']['seq'] == "0127" and setup['Par']['PWM']['zero'] == "DPWM1":
             HDF = 6 * Mi ** 2 - (8 * np.sqrt(3) + 45) / (2 * np.pi) * Mi ** 3 + (
                         27 / 8 + 27 * np.sqrt(3) / (32 * np.pi)) * Mi ** 4
 
         # 0127 (DPWM2)
-        if setupPara['PWM']['seq'] == "0127" and setupPara['PWM']['zero'] == "DPWM2":
+        if setup['Par']['PWM']['seq'] == "0127" and setup['Par']['PWM']['zero'] == "DPWM2":
             HDF_max = 6 * Mi ** 2 - (8 * np.sqrt(3) + 45) / (2 * np.pi) * Mi ** 3 + (
                         27 / 8 + 27 * np.sqrt(3) / (32 * np.pi)) * Mi ** 4
             HDF_min = 6 * Mi ** 2 + (45 - 62 * np.sqrt(3)) / (2 * np.pi) * Mi ** 3 + (
@@ -125,12 +141,12 @@ def calcDistB6_Ana(t, i_a, v_a, Ia1, Mi, Vdc, setupTopo, setupPara):
             HDF = 0.5 * (HDF_max + HDF_min)
 
         # 0127 (DPWM3)
-        if setupPara['PWM']['seq'] == "0127" and setupPara['PWM']['zero'] == "DPWM3":
+        if setup['Par']['PWM']['seq'] == "0127" and setup['Par']['PWM']['zero'] == "DPWM3":
             HDF = 6 * Mi ** 2 + (45 - 62 * np.sqrt(3)) / (2 * np.pi) * Mi ** 3 + (
                         27 / 8 + 27 * np.sqrt(3) / (16 * np.pi)) * Mi ** 4
 
         # 0127 (DPWMMAX)
-        if setupPara['PWM']['seq'] == "0127" and setupPara['PWM']['zero'] == "DPWMMAX":
+        if setup['Par']['PWM']['seq'] == "0127" and setup['Par']['PWM']['zero'] == "DPWMMAX":
             HDF_max = 6 * Mi ** 2 - (8 * np.sqrt(3) + 45) / (2 * np.pi) * Mi ** 3 + (
                         27 / 8 + 27 * np.sqrt(3) / (32 * np.pi)) * Mi ** 4
             HDF_min = 6 * Mi ** 2 + (45 - 62 * np.sqrt(3)) / (2 * np.pi) * Mi ** 3 + (
@@ -138,7 +154,7 @@ def calcDistB6_Ana(t, i_a, v_a, Ia1, Mi, Vdc, setupTopo, setupPara):
             HDF = 0.5 * (HDF_max + HDF_min)
 
         # 0127 (DPWMMIN)
-        if setupPara['PWM']['seq'] == "0127" and setupPara['PWM']['zero'] == "DPWMMIN":
+        if setup['Par']['PWM']['seq'] == "0127" and setup['Par']['PWM']['zero'] == "DPWMMIN":
             HDF_max = 6 * Mi ** 2 - (8 * np.sqrt(3) + 45) / (2 * np.pi) * Mi ** 3 + (
                         27 / 8 + 27 * np.sqrt(3) / (32 * np.pi)) * Mi ** 4
             HDF_min = 6 * Mi ** 2 + (45 - 62 * np.sqrt(3)) / (2 * np.pi) * Mi ** 3 + (
@@ -166,7 +182,7 @@ def calcDistB6_Ana(t, i_a, v_a, Ia1, Mi, Vdc, setupTopo, setupPara):
     # ==============================================================================
     # Denormalization
     # ==============================================================================
-    if setupPara['PWM']['type'] != "FF":
+    if setup['Par']['PWM']['type'] != "FF":
         I_a_thd = Vdc / (24 * L * fs) * np.sqrt(HDF)
 
     # ==============================================================================

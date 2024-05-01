@@ -3,12 +3,25 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcSweepB4
-# Date:         14.08.2023
+# Date:         01.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the results for a parameter sweep of the B4 full-bridge circuit.
+Inputs:     1) mdl:     all models and transfer functions of the architecture
+            2) para:    all parameters used in the simulation
+            3) setup:   includes all simulation variables
+Outputs:    1) time:    results in the time domain
+            2) freq:    results in the frequency domain
+            3) dist:    results in the distortion domain
+"""
 
 #######################################################################################################################
 # Import libs
@@ -36,7 +49,7 @@ from tqdm import tqdm
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcSweepB4(mdl, _, setupTopo, setupData, setupPara, setupExp):
+def calcSweepB4(mdl, _, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -53,12 +66,12 @@ def calcSweepB4(mdl, _, setupTopo, setupData, setupPara, setupExp):
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    fel = setupTopo['fel']
-    fsim = setupExp['fsim']
+    fel = setup['Top']['fel']
+    fsim = setup['Exp']['fsim']
     N = int(fsim / fel)
-    K = setupData['stat']['cyc']
-    W = setupData['stat']['W']
-    Mi = setupData['stat']['Mi']
+    K = int(setup['Dat']['stat']['cyc'])
+    W = int(setup['Dat']['stat']['W'])
+    Mi = setup['Dat']['stat']['Mi']
 
     # ==============================================================================
     # Variables
@@ -71,10 +84,10 @@ def calcSweepB4(mdl, _, setupTopo, setupData, setupPara, setupExp):
     # ------------------------------------------
     # Inputs 
     # ------------------------------------------
-    E = setupTopo['E']
-    Vdc = setupData['stat']['Vdc']
-    phiE = math.radians(setupTopo['phiE'])
-    phiV = math.radians(setupData['stat']['phi'])
+    E = setup['Top']['E']
+    Vdc = setup['Dat']['stat']['Vdc']
+    phiE = math.radians(setup['Top']['phiE'])
+    phiV = math.radians(setup['Dat']['stat']['phi'])
 
     ###################################################################################################################
     # Pre-Processing
@@ -90,9 +103,9 @@ def calcSweepB4(mdl, _, setupTopo, setupData, setupPara, setupExp):
     # ------------------------------------------
     # Reference
     # ------------------------------------------
-    v_ref['A'] = +(Vdc / 2) * Mi * genWave(t, fel, phiV, 0, setupTopo)
-    v_ref['B'] = -(Vdc / 2) * Mi * genWave(t, fel, phiV, 0, setupTopo)
-    e_ref = E * genWave(t, fel, phiE, 0, setupTopo)
+    v_ref['A'] = +(Vdc / 2) * Mi * genWave(t, fel, phiV, setup)
+    v_ref['B'] = -(Vdc / 2) * Mi * genWave(t, fel, phiV, setup)
+    e_ref = E * genWave(t, fel, phiE, setup)
 
     # ==============================================================================
     # Maximum Modulation Index
@@ -117,19 +130,19 @@ def calcSweepB4(mdl, _, setupTopo, setupData, setupPara, setupExp):
     # ------------------------------------------
     # Switching Function
     # ------------------------------------------
-    if setupPara['PWM']['type'] == "FF":
-        [xs, xsh, s, c] = calcSSeqB4_FF(v_ref, t, Mi, setupPara, setupTopo)
-    elif setupPara['PWM']['type'] == "CB":
-        [xs, xsh, s, c] = calcSSeqB4_CB(v_ref, t, Mi, setupPara, setupTopo)
-    elif setupPara['PWM']['type'] == "OPP":
-        [xs, xsh, s, c] = calcSSeqB4_OPP(v_ref, t, Mi, setupPara, setupTopo)
+    if setup['Par']['PWM']['type'] == "FF":
+        [xs, xsh, s, c] = calcSSeqB4_FF(v_ref, t, Mi, setup)
+    elif setup['Par']['PWM']['type'] == "CB":
+        [xs, xsh, s, c] = calcSSeqB4_CB(v_ref, t, Mi, setup)
+    elif setup['Par']['PWM']['type'] == "OPP":
+        [xs, xsh, s, c] = calcSSeqB4_OPP(v_ref, t, Mi, setup)
     else:
-        [xs, xsh, s, c] = calcSSeqB4_CB(v_ref, t, Mi, setupPara, setupTopo)
+        [xs, xsh, s, c] = calcSSeqB4_CB(v_ref, t, Mi, setup)
 
     # ------------------------------------------
     # Time Domain
     # ------------------------------------------
-    [timeAc, timeDc] = calcTimeB4(t, s, e_ref, Vdc, Mi, mdl, setupTopo, start, ende)
+    [timeAc, timeDc] = calcTimeB4(t, s, e_ref, Vdc, Mi, mdl, setup, start, ende)
 
     # ==============================================================================
     # Sweeping
@@ -138,26 +151,26 @@ def calcSweepB4(mdl, _, setupTopo, setupData, setupPara, setupExp):
         # ------------------------------------------
         # Switching
         # ------------------------------------------
-        if setupPara['PWM']['type'] == "FF":
-            [_, _, s_i, _] = calcSSeqB4_FF(v_ref, t, M_i[i], setupPara, setupTopo)
-        elif setupPara['PWM']['type'] == "CB":
-            [_, _, s_i, _] = calcSSeqB4_CB(v_ref, t, M_i[i], setupPara, setupTopo)
-        elif setupPara['PWM']['type'] == "OPP":
-            [_, _, s_i, _] = calcSSeqB4_OPP(v_ref, t, M_i[i], setupPara, setupTopo)
+        if setup['Par']['PWM']['type'] == "FF":
+            [_, _, s_i, _] = calcSSeqB4_FF(v_ref, t, M_i[i], setup)
+        elif setup['Par']['PWM']['type'] == "CB":
+            [_, _, s_i, _] = calcSSeqB4_CB(v_ref, t, M_i[i], setup)
+        elif setup['Par']['PWM']['type'] == "OPP":
+            [_, _, s_i, _] = calcSSeqB4_OPP(v_ref, t, M_i[i], setup)
         else:
-            [_, _, s_i, _] = calcSSeqB4_CB(v_ref, t, M_i[i], setupPara, setupTopo)
+            [_, _, s_i, _] = calcSSeqB4_CB(v_ref, t, M_i[i], setup)
 
         # ------------------------------------------
         # Time
         # ------------------------------------------
-        [tempTimeAc, tempTimeDc] = calcTimeB4(t, s_i, e_ref, Vdc, M_i[i], mdl, setupTopo, start, ende)
+        [tempTimeAc, tempTimeDc] = calcTimeB4(t, s_i, e_ref, Vdc, M_i[i], mdl, setup, start, ende)
 
         # ------------------------------------------
         # Distortion
         # ------------------------------------------
         [numDistAc, numDistDc] = calcDistNum(t[start:ende], tempTimeAc['i_a'], tempTimeAc['v_a'],
                                              tempTimeDc['i_dc'], tempTimeDc['v_dc'], 2*Vdc, fel)
-        [anaTimeAc, anaTimeDc] = calcDistB4_Ana(M_i[i], Vdc, setupTopo, setupPara)
+        [anaTimeAc, anaTimeDc] = calcDistB4_Ana(M_i[i], Vdc, setup)
 
         # ------------------------------------------
         # Output

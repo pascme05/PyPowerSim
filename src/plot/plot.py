@@ -38,7 +38,7 @@ mplstyle.use('fast')
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def plot(mdl, para, time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
+def plot(mdl, para, time, freq, sweep, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -49,7 +49,7 @@ def plot(mdl, para, time, freq, sweep, setupPara, setupData, setupTopo, setupExp
     ###################################################################################################################
     # General
     ###################################################################################################################
-    if setupExp['plotGen'] == 1:
+    if setup['Exp']['plotGen'] == 1:
         # ------------------------------------------
         # Msg
         # ------------------------------------------
@@ -59,7 +59,7 @@ def plot(mdl, para, time, freq, sweep, setupPara, setupData, setupTopo, setupExp
         # Bode Plots
         # ------------------------------------------
         try:
-            plotGenTF(mdl, setupPara, setupTopo)
+            plotGenTF(mdl, setup['Par'], setup['Top'])
         except:
             print("WARN: Bode plots could not been created")
 
@@ -67,7 +67,7 @@ def plot(mdl, para, time, freq, sweep, setupPara, setupData, setupTopo, setupExp
         # Loss Models
         # ------------------------------------------
         try:
-            plotGenLoss(para, setupPara, setupData)
+            plotGenLoss(para, setup['Par'], setup['Dat'])
         except:
             print("WARN: Loss plots could not been created")
 
@@ -82,68 +82,68 @@ def plot(mdl, para, time, freq, sweep, setupPara, setupData, setupTopo, setupExp
     ###################################################################################################################
     # B2
     ###################################################################################################################
-    if setupTopo['sourceType'] == "B2":
+    if setup['Top']['sourceType'] == "B2":
         # ------------------------------------------
         # Sweep
         # ------------------------------------------
-        if setupExp['type'] == 0:
-            plotSweep_B2(time, freq, sweep, setupPara, setupData, setupTopo, setupExp)
+        if setup['Exp']['type'] == 0:
+            plotSweep_B2(time, freq, sweep, setup['Par'], setup['Dat'], setup['Top'], setup['Exp'])
 
         # ------------------------------------------
         # Stationary
         # ------------------------------------------
-        if setupExp['type'] == 1:
-            plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp)
+        if setup['Exp']['type'] == 1:
+            plotStat_B2(time, freq, setup['Par'], setup['Dat'], setup['Top'], setup['Exp'])
 
         # ------------------------------------------
         # Transient
         # ------------------------------------------
-        if setupExp['type'] == 2:
-            plotTrans_B2(time, freq, setupPara, setupData, setupTopo, setupExp)
+        if setup['Exp']['type'] == 2:
+            plotTrans_B2(time, freq, setup['Par'], setup['Dat'], setup['Top'], setup['Exp'])
 
     ###################################################################################################################
     # B4
     ###################################################################################################################
-    if setupTopo['sourceType'] == "B4":
+    if setup['Top']['sourceType'] == "B4":
         # ------------------------------------------
         # Sweep
         # ------------------------------------------
-        if setupExp['type'] == 0:
-            plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp)
+        if setup['Exp']['type'] == 0:
+            plotSweep_B4(time, freq, sweep, setup['Par'], setup['Dat'], setup['Top'], setup['Exp'])
 
         # ------------------------------------------
         # Stationary
         # ------------------------------------------
-        if setupExp['type'] == 1:
-            plotStat_B4(time, freq, setupPara, setupData, setupTopo, setupExp)
+        if setup['Exp']['type'] == 1:
+            plotStat_B4(time, freq, setup['Par'], setup['Dat'], setup['Top'], setup['Exp'])
 
         # ------------------------------------------
         # Transient
         # ------------------------------------------
-        if setupExp['type'] == 2:
-            plotTrans_B4(time, freq, setupPara, setupData, setupTopo, setupExp)
+        if setup['Exp']['type'] == 2:
+            plotTrans_B4(time, freq, setup['Par'], setup['Dat'], setup['Top'], setup['Exp'])
 
     ###################################################################################################################
     # B6
     ###################################################################################################################
-    if setupTopo['sourceType'] == "B6":
+    if setup['Top']['sourceType'] == "B6":
         # ------------------------------------------
         # Sweep
         # ------------------------------------------
-        if setupExp['type'] == 0:
-            plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp)
+        if setup['Exp']['type'] == 0:
+            plotSweep_B6(time, freq, sweep, setup['Par'], setup['Dat'], setup['Top'], setup['Exp'])
 
         # ------------------------------------------
         # Stationary
         # ------------------------------------------
-        if setupExp['type'] == 1:
-            plotStat_B6(time, freq, setupPara, setupData, setupTopo, setupExp)
+        if setup['Exp']['type'] == 1:
+            plotStat_B6(time, freq, setup['Par'], setup['Dat'], setup['Top'], setup['Exp'])
 
         # ------------------------------------------
         # Transient
         # ------------------------------------------
-        if setupExp['type'] == 2:
-            plotTrans_B6(time, freq, setupPara, setupData, setupTopo, setupExp)
+        if setup['Exp']['type'] == 2:
+            plotTrans_B6(time, freq, setup['Par'], setup['Dat'], setup['Top'], setup['Exp'])
 
     ###################################################################################################################
     # MSG Out

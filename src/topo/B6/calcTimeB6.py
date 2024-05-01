@@ -3,12 +3,30 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcTimeB6
-# Date:         14.08.2023
+# Date:         01.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the time domain output of the B4 full-bridge circuit.
+Inputs:     1) t:       input time vector (sec)
+            2) s:       switching function
+            3) e:       induced voltage
+            4) Vdc:     dc link voltage (V)
+            5) Mi:      modulation index (p.u.)
+            6) mdl:     model transfer functions
+            7) setup:   file including all setup variables
+            8) start:   starting sample for evaluation
+            9) ende:    end sample for the evaluation
+Outputs:    1) timeAc:  results in the time domain Ac
+            2) timeDc:  results in the time domain Dc
+"""
 
 #######################################################################################################################
 # Import libs
@@ -27,15 +45,15 @@ import scipy.signal as sig
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
+def calcTimeB6(t, s, e, Vdc, Mi, mdl, setup, start, ende):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    id = ['A', 'B', 'C']
-    fel = setupTopo['fel']
+    id1 = ['A', 'B', 'C']
+    fel = setup['Top']['fel']
     K = int((ende-start-1)*fel*(t[1] - t[0]))
 
     # ==============================================================================
@@ -58,31 +76,31 @@ def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     # ------------------------------------------
     # Inverter Output
     # ------------------------------------------
-    for j in range(0, len(id)):
-        v0[id[j]] = 0.5 * (s[id[j]] - np.mean(s[id[j]])) * Vdc
+    for j in range(0, len(id1)):
+        v0[id1[j]] = 0.5 * (s[id1[j]] - np.mean(s[id1[j]])) * Vdc
     v_n0 = 1 / 3 * (v0['A'] + v0['B'] + v0['C'])
 
     # ------------------------------------------
     # Phase Voltages
     # ------------------------------------------
-    for j in range(0, len(id)):
-        v[id[j]] = v0[id[j]] - v_n0
+    for j in range(0, len(id1)):
+        v[id1[j]] = v0[id1[j]] - v_n0
 
     # ------------------------------------------
     # Filter Output
     # ------------------------------------------
-    for j in range(0, len(id)):
-        if setupTopo['outFilter'] == 0:
-            v_out[id[j]] = v[id[j]]
+    for j in range(0, len(id1)):
+        if setup['Top']['outFilter'] == 0:
+            v_out[id1[j]] = v[id1[j]]
         else:
-            _, v_out[id[j]], _, = sig.lsim(mdl['SS']['Out'], v[id[j]], t)
+            _, v_out[id1[j]], _, = sig.lsim(mdl['SS']['Out'], v[id1[j]], t)
 
     # ------------------------------------------
     # Load
     # ------------------------------------------
     # Voltage
-    for j in range(0, len(id)):
-        v_L[id[j]] = v_out[id[j]] - Mi * e[id[j]]
+    for j in range(0, len(id1)):
+        v_L[id1[j]] = v_out[id1[j]] - Mi * e[id1[j]]
 
     # LL Current
     _, i_a, _, = sig.lsim(mdl['SS']['Load'], v_L['A'], t)
@@ -91,9 +109,9 @@ def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     i['C'] = np.roll(i_a[start:ende], int(np.floor(240 / 360 / K * len(s['A'][start:ende]))))
 
     # LN Current
-    if setupTopo['wave'] != 'con':
-        for j in range(0, len(id)):
-            i[id[j]] = i[id[j]] - np.mean(i[id[j]])
+    if setup['Top']['wave'] != 'con':
+        for j in range(0, len(id1)):
+            i[id1[j]] = i[id1[j]] - np.mean(i[id1[j]])
 
     # ==============================================================================
     # DC-Side
@@ -113,7 +131,7 @@ def calcTimeB6(t, s, e, Vdc, Mi, mdl, setupTopo, start, ende):
     # ------------------------------------------
     # Filter Input
     # ------------------------------------------
-    if setupTopo['inpFilter'] == 0:
+    if setup['Top']['inpFilter'] == 0:
         v_in = v_dc
     else:
         _, v_in, _, = sig.lsim(mdl['SS']['Inp'], (v_dc - Vdc), t[start:ende])

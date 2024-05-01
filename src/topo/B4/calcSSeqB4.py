@@ -3,12 +3,28 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcSSeqB4
-# Date:         14.08.2023
+# Date:         01.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function calculates the switching functions for different modulation techniques including carrier
+based PWM, fundamental switching frequency, and optimal pulse patterns.
+Inputs:     1) ref:     reference waveform for the PWM
+            2) t:       time vector of the PWM (sec)
+            3) Mi:      modulation index (p.u.)
+            4) setup:   includes all simulation variables
+Outputs:    1) xs:      sampled reference waveform
+            2) xsh:     sampled reference waveform including zero order hold
+            3) c:       carrier signal
+            4) s:       switching sequence
+"""
 
 #######################################################################################################################
 # Import libs
@@ -29,7 +45,7 @@ from scipy import signal
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcSSeqB4_CB(ref, t, Mi, setupPara, setupTopo):
+def calcSSeqB4_CB(ref, t, Mi, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
@@ -45,16 +61,16 @@ def calcSSeqB4_CB(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    fs = setupPara['PWM']['fs']
+    fs = setup['Par']['PWM']['fs']
     Ts = 1/fs
-    fel = setupTopo['fel']
-    id = ['A', 'B']
+    fel = setup['Top']['fel']
+    id1 = ['A', 'B']
     
     # ==============================================================================
     # Variables
     # ==============================================================================
-    tmin = int(setupPara['PWM']['tmin']/(t[1]-t[0]))
-    td = int(setupPara['PWM']['td']/(t[1]-t[0]))
+    tmin = int(setup['Par']['PWM']['tmin']/(t[1]-t[0]))
+    td = int(setup['Par']['PWM']['td']/(t[1]-t[0]))
 
     ###################################################################################################################
     # Pre-Processing
@@ -74,13 +90,13 @@ def calcSSeqB4_CB(ref, t, Mi, setupPara, setupTopo):
     # ------------------------------------------
     # Interleaved
     # ------------------------------------------
-    if setupPara['PWM']['tri'] == "RE":
+    if setup['Par']['PWM']['tri'] == "RE":
         c['A'] = signal.sawtooth(2*np.pi*fs*t, 1) * (-1)
         c['B'] = signal.sawtooth(2*np.pi*fs*(t - 0.5/fs), 1)
-    elif setupPara['PWM']['tri'] == "FE":
+    elif setup['Par']['PWM']['tri'] == "FE":
         c['A'] = signal.sawtooth(2*np.pi*fs*(t - 0.5/fs), 0) * (-1)
         c['B'] = signal.sawtooth(2*np.pi*fs*t, 0)
-    elif setupPara['PWM']['tri'] == "AM":
+    elif setup['Par']['PWM']['tri'] == "AM":
         c['A'] = signal.sawtooth(2*np.pi*fs*t, 1/3) * (-1)
         c['B'] = signal.sawtooth(2*np.pi*fs*(t - 0.5/fs), 1/3)
     else:
@@ -92,23 +108,23 @@ def calcSSeqB4_CB(ref, t, Mi, setupPara, setupTopo):
     # ------------------------------------------
     # Non-Interleaved
     # ------------------------------------------
-    if setupPara['PWM']['int'] == 0:
+    if setup['Par']['PWM']['int'] == 0:
         c['B'] = c['A']
 
     # ==============================================================================
     # Sampling
     # ==============================================================================
-    for i in range(0, len(id)):
-        if setupPara['PWM']['samp'] == "RS":
-            if setupPara['PWM']['upd'] == "SE":
-                xs[id[i]] = con2dis(x[id[i]], t, Ts)
-                xsh[id[i]] = np.roll(x[id[i]], int(len(xs[id[i]])*fel/fs))
+    for i in range(0, len(id1)):
+        if setup['Par']['PWM']['samp'] == "RS":
+            if setup['Par']['PWM']['upd'] == "SE":
+                xs[id1[i]] = con2dis(x[id1[i]], t, Ts)
+                xsh[id1[i]] = np.roll(x[id1[i]], int(len(xs[id1[i]])*fel/fs))
             else:
-                xs[id[i]] = con2dis(x[id[i]], t, Ts/2)
-                xsh[id[i]] = np.roll(x[id[i]], int(len(xs[id[i]])*fel/fs/2))
+                xs[id1[i]] = con2dis(x[id1[i]], t, Ts/2)
+                xsh[id1[i]] = np.roll(x[id1[i]], int(len(xs[id1[i]])*fel/fs/2))
         else:
-            xs[id[i]] = x[id[i]]
-            xsh[id[i]] = x[id[i]]
+            xs[id1[i]] = x[id1[i]]
+            xsh[id1[i]] = x[id1[i]]
 
     # ==============================================================================
     # Intersections
@@ -122,22 +138,22 @@ def calcSSeqB4_CB(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Minimum Pulse Width
     # ==============================================================================
-    if setupPara['PWM']['tmin'] > 0:
-        for i in range(0, len(id)):
+    if setup['Par']['PWM']['tmin'] > 0:
+        for i in range(0, len(id1)):
             hold = tmin
             for ii in range(0, len(s)):
                 if hold >= tmin:
                     if Mi != 0:
-                        s[id[i]][ii] = s[id[i]][ii]
+                        s[id1[i]][ii] = s[id1[i]][ii]
                     hold = 0
                 else:
-                    s[id[i]][i] = s[id[i]][ii - 1]
+                    s[id1[i]][i] = s[id1[i]][ii - 1]
                     hold = hold + 1
 
     # ==============================================================================
     # Dead-time
     # ==============================================================================
-    if setupPara['PWM']['td'] > 0:
+    if setup['Par']['PWM']['td'] > 0:
         s['A'] = deadTime(s['A'], td)
         s['B'] = deadTime(s['B'], td)
 
@@ -150,14 +166,14 @@ def calcSSeqB4_CB(ref, t, Mi, setupPara, setupTopo):
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcSSeqB4_FF(ref, t, Mi, _, setupTopo):
+def calcSSeqB4_FF(ref, t, Mi, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    fel = setupTopo['fel']
+    fel = setup['Top']['fel']
     alpha = np.arccos(Mi*np.pi/4)
     
     # ==============================================================================
@@ -206,7 +222,7 @@ def calcSSeqB4_FF(ref, t, Mi, _, setupTopo):
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcSSeqB4_OPP(ref, t, Mi, setupPara, setupTopo):
+def calcSSeqB4_OPP(ref, t, Mi, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
@@ -222,16 +238,16 @@ def calcSSeqB4_OPP(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    fs = setupPara['PWM']['fs']
+    fs = setup['Par']['PWM']['fs']
     Ts = 1 / fs
-    fel = setupTopo['fel']
+    fel = setup['Top']['fel']
     Tel = 1 / fel
     q = int(fs / fel)
     kmax = 10 * q
     N = int((t[-1] - t[0]) / Tel)
-    tmin = int(setupPara['PWM']['tmin'] / (t[1] - t[0]))
-    td = int(setupPara['PWM']['td'] / (t[1] - t[0]))
-    id = ['A', 'B']
+    tmin = int(setup['Par']['PWM']['tmin'] / (t[1] - t[0]))
+    td = int(setup['Par']['PWM']['td'] / (t[1] - t[0]))
+    id1 = ['A', 'B']
 
     # ==============================================================================
     # Variables
@@ -258,7 +274,7 @@ def calcSSeqB4_OPP(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Fundamental Angles (0, 2pi)
     # ==============================================================================
-    [ang_fun, val_fun, _] = oppPWM(kmax, q*2, Mi/4*np.pi, 4, setupTopo)
+    [ang_fun, val_fun, _] = oppPWM(kmax, q*2, Mi/4*np.pi, 4, setup['Top'])
 
     # ==============================================================================
     # Complete Angles
@@ -327,23 +343,23 @@ def calcSSeqB4_OPP(ref, t, Mi, setupPara, setupTopo):
     # ------------------------------------------
     # Non-Interleaved
     # ------------------------------------------
-    if setupPara['PWM']['int'] == 0:
+    if setup['Par']['PWM']['int'] == 0:
         c['B'] = c['A']
 
     # ==============================================================================
     # Sampling
     # ==============================================================================
-    for i in range(0, len(id)):
-        if setupPara['PWM']['samp'] == "RS":
-            if setupPara['PWM']['upd'] == "SE":
-                xs[id[i]] = con2dis(x[id[i]], t, Ts)
-                xsh[id[i]] = np.roll(x[id[i]], int(len(xs[id[i]]) * fel / fs))
+    for i in range(0, len(id1)):
+        if setup['Par']['PWM']['samp'] == "RS":
+            if setup['Par']['PWM']['upd'] == "SE":
+                xs[id1[i]] = con2dis(x[id1[i]], t, Ts)
+                xsh[id1[i]] = np.roll(x[id1[i]], int(len(xs[id1[i]]) * fel / fs))
             else:
-                xs[id[i]] = con2dis(x[id[i]], t, Ts / 2)
-                xsh[id[i]] = np.roll(x[id[i]], int(len(xs[id[i]]) * fel / fs / 2))
+                xs[id1[i]] = con2dis(x[id1[i]], t, Ts / 2)
+                xsh[id1[i]] = np.roll(x[id1[i]], int(len(xs[id1[i]]) * fel / fs / 2))
         else:
-            xs[id[i]] = x[id[i]]
-            xsh[id[i]] = x[id[i]]
+            xs[id1[i]] = x[id1[i]]
+            xsh[id1[i]] = x[id1[i]]
 
     ###################################################################################################################
     # Post-Processing
@@ -351,22 +367,22 @@ def calcSSeqB4_OPP(ref, t, Mi, setupPara, setupTopo):
     # ==============================================================================
     # Minimum Pulse Width
     # ==============================================================================
-    if setupPara['PWM']['tmin'] > 0:
-        for i in range(0, len(id)):
+    if setup['Par']['PWM']['tmin'] > 0:
+        for i in range(0, len(id1)):
             hold = tmin
             for ii in range(0, len(s)):
                 if hold >= tmin:
                     if Mi != 0:
-                        s[id[i]][ii] = s[id[i]][ii]
+                        s[id1[i]][ii] = s[id1[i]][ii]
                     hold = 0
                 else:
-                    s[id[i]][i] = s[id[i]][ii - 1]
+                    s[id1[i]][i] = s[id1[i]][ii - 1]
                     hold = hold + 1
 
     # ==============================================================================
     # Dead-time
     # ==============================================================================
-    if setupPara['PWM']['td'] > 0:
+    if setup['Par']['PWM']['td'] > 0:
         s['A'] = deadTime(s['A'], td)
         s['B'] = deadTime(s['B'], td)
 

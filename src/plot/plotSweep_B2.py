@@ -76,7 +76,7 @@ def plotSweep_B2(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     Mi = setupData['stat']['Mi']
     Vdc = setupData['stat']['Vdc']
     phiE = setupTopo['phiE']
-    down = setupData['stat']['cyc'] - 2
+    down = int(setupData['stat']['cyc']) - 2
     down2 = int(fsim/fs/200)
     if down2 < 1:
         down2 = 1
