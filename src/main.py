@@ -29,6 +29,8 @@ Outputs:    None
 # ==============================================================================
 from src.data.loadPara import loadPara
 from src.data.loadSetup import loadSetup
+from src.topo.B2.classB2 import classB2
+from src.topo.calcSweep import calcSweep
 from src.topo.B2.calcSweepB2 import calcSweepB2
 from src.topo.B4.calcSweepB4 import calcSweepB4
 from src.topo.B6.calcSweepB6 import calcSweepB6
@@ -156,6 +158,20 @@ def main(setup, path):
     print("=======================================================================")
 
     # ==============================================================================
+    # Init Topology
+    # ==============================================================================
+    if setup['Top']['sourceType'] == "B2":
+        top = classB2(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Exp']['fsim'],
+                      setup['Par']['PWM']['td'], setup['Par']['PWM']['tmin'], setup['Dat']['stat']['cyc'],
+                      setup['Dat']['stat']['W'], setup['Dat']['stat']['Mi'], setup['Dat']['stat']['Vdc'],
+                      setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], setup['Dat']['trans']['Tc'],
+                      setup['Dat']['trans']['Tj'])
+    elif setup['Top']['sourceType'] == "B4":
+        top = []
+    else:
+        top = []
+
+    # ==============================================================================
     # B2
     # ==============================================================================
     if setup['Top']['sourceType'] == "B2":
@@ -167,7 +183,8 @@ def main(setup, path):
         # Sweep
         # ------------------------------------------
         if setup['Exp']['type'] == 0:
-            [time, freq, sweep] = calcSweepB2(mdl, para, setup)
+            # [time, freq, sweep] = calcSweepB2(mdl, para, setup)
+            [time, freq, sweep] = calcSweep(top, mdl, para, setup)
 
         # ------------------------------------------
         # Stationary

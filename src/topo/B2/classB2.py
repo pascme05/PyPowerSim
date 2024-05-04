@@ -15,9 +15,19 @@
 #######################################################################################################################
 """
 This class initialises an object of the B2 (half-bridge) circuit.
-Inputs:     1)
-            2)
-            N)
+Inputs:     1) fel:     electrical frequency at the output (Hz)
+            2) fs:      switching frequency of the converter cell (Hz)
+            3) fsim:    simulation frequency of the converter cell (Hz)
+            4) td:      dead-time of the switching devices (sec)
+            5) tmin:    minimum on-time of a pulse (sec)
+            6) cyc:     number of cycles till convergence
+            7) W:       number of points evaluated for distortion analysis
+            8) Mi:      modulation index (p.u.)
+            9) Vdc:     dc link voltage at the input of the converter cell (V)
+            10) Tc_st:  case temperature for stationary analysis
+            11) Tj_st:  core temperature for stationary analysis
+            12) Tc_tr:  case temperature for transient analysis
+            13) Tj_tr:  core temperature for transient analysis
 """
 
 #######################################################################################################################
@@ -28,6 +38,7 @@ Inputs:     1)
 # ==============================================================================
 from src.general.helpFnc import cbInter, con2dis, deadTime
 from src.pwm.oppPWM import oppPWM
+from src.pwm.genWaveform import genWave
 
 # ==============================================================================
 # External
@@ -35,7 +46,6 @@ from src.pwm.oppPWM import oppPWM
 import numpy as np
 import pandas as pd
 from scipy import signal
-from scipy.fft import fft
 
 
 #######################################################################################################################
@@ -45,24 +55,36 @@ class classB2:
     ###################################################################################################################
     # Constructor
     ###################################################################################################################
-    def __init__(self, fel, fs, fsim, td, tmin, cyc, W, Mi, Vdc, Tc, Tj):
+    def __init__(self, fel, fs, fsim, td, tmin, cyc, W, Mi, Vdc, Tc_st, Tj_st, Tc_tr, Tj_tr):
         self.fel = fel
         self.fs = fs
         self.fsim = fsim
         self.td = td
         self.tmin = tmin
-        self.cyc = cyc
-        self.W = W
+        self.K = int(cyc)
+        self.W = int(W)
         self.Mi = Mi
         self.Vdc = Vdc
-        self.Tc = Tc
-        self.Tj = Tj
+        self.Tc_st = Tc_st
+        self.Tj_st = Tj_st
+        self.Tc_tr = Tc_tr
+        self.Tj_tr = Tj_tr
         self.Nsim = int(np.ceil(fsim/fel))
         self.Npwm = int(np.ceil(fs/fel))
         self.q = int(fs / fel)
-        self.N = int(fel / fsim)
+        self.N = int(fsim / fel)
         self.Ts = 1 / fs
         self.Tel = 1 / fel
+        self.Mi_max = 1
+        self.id1 = ['A']
+        self.id2 = ['S1', 'S2']
+        self.id3 = ['A', 'A']
+        self.id4 = ['i_a', 'i_a']
+        self.id5 = ['HS', 'LS']
+        self.id6 = ['T1', 'T2']
+        self.id7 = ['D1', 'D2']
+        self.id8 = ['C1', 'C2']
+        self.name = 'B2'
 
     ###################################################################################################################
     # Init Output
@@ -78,14 +100,14 @@ class classB2:
 
         Output:
         1) timeSw:      time domain switching function
-        1) timeElec:    time domain electrical
-        1) timeLoss:    time domain losses
-        1) timeTher:    time domain thermal
-        1) freqSw:      frequency domain switching function
-        1) freqDc:      frequency domain dc
-        1) freqAc:      frequency domain ac
-        1) distAc:      distortion ac
-        1) distDc:      distortion dc
+        2) timeElec:    time domain electrical
+        3) timeLoss:    time domain losses
+        4) timeTher:    time domain thermal
+        5) freqSw:      frequency domain switching function
+        6) freqDc:      frequency domain dc
+        7) freqAc:      frequency domain ac
+        8) distAc:      distortion ac
+        9) distDc:      distortion dc
         """
 
         # ==============================================================================
@@ -118,6 +140,94 @@ class classB2:
         # Return
         # ==============================================================================
         return [timeSw, timeElec, timeLoss, timeTher, freqSw, freqDc, freqAc, distAc, distDc]
+
+    ###################################################################################################################
+    # Init Output
+    ###################################################################################################################
+    def out(self, timeAc, timeDc, freqSw, freqAc, freqDc, distAc, distDc, t_ref, v_ref, e_ref, s, c, xs, xsh, x, xN0, M_i, t0, t1):
+        # ==============================================================================
+        # Description
+        # ==============================================================================
+        """
+        This function summarizes the output structure of the B2 bridge.
+
+        Input:
+        1) timeAc:      ac time domain signals
+        2) timeDc:      dc time domain signals
+        3) freqSw:      frequency domain switching functions
+        4) freqAc:      freq domain switching functions ac
+        5) freqDc:      freq domain switching functions dc
+        6) distAc:      distortion domain ac signals
+        7) distDc:      distortion domain dc signals
+        8) t_ref:       reference time vector (sec)
+        9) v_ref:       reference voltage vector (V)
+        10) e_ref:      reference back emf vector (V)
+        11) s:          switching function time domain
+        12) c:          carrier waveform time domain
+        13) xs:         sampled reference signal
+        14) xsh:        sampled reference signal including zero order hold
+        15) x:          reference signal
+        16) xN0:        reference zero sequence
+        17) M_i:        vector of modulation indices
+        18) t0:         starting sample
+        19) t1:         ending sample
+
+        Output:
+        1) time:        time domain output signals
+        2) freq:        frequency domain output signals
+        3) sweep:       sweeping domain output signals
+
+        """
+
+        # ==============================================================================
+        # Initialisation
+        # ==============================================================================
+        time = {}
+        freq = {}
+        sweep = {}
+        [timeSw, _, _, _, _, _, _, _, _] = self.initOut()
+
+        # ==============================================================================
+        # Calculation
+        # ==============================================================================
+        timeSw['t'] = t_ref[0:(t1 - t0)]
+        timeSw['v_ref'] = v_ref['A'][t0:t1]
+        timeSw['e'] = e_ref['A'][t0:t1]
+        timeSw['s'] = s['A'][t0:t1]
+        timeSw['c'] = c['A'][t0:t1]
+        timeSw['xs'] = xs['A'][t0:t1]
+        timeSw['xsh'] = xsh['A'][t0:t1]
+        timeSw['x'] = x['A'][t0:t1]
+        timeSw['xN0'] = xN0['A'][t0:t1]
+
+        # ==============================================================================
+        # Combine
+        # ==============================================================================
+        # ------------------------------------------
+        # Time
+        # ------------------------------------------
+        time['Sw'] = timeSw
+        time['Ac'] = timeAc
+        time['Dc'] = timeDc
+
+        # ------------------------------------------
+        # Frequency
+        # ------------------------------------------
+        freq['Sw'] = freqSw
+        freq['Ac'] = freqAc
+        freq['Dc'] = freqDc
+
+        # ------------------------------------------
+        # Sweep
+        # ------------------------------------------
+        sweep['Ac'] = distAc
+        sweep['Dc'] = distDc
+        sweep['Mi'] = M_i
+
+        # ==============================================================================
+        # Return
+        # ==============================================================================
+        return [time, freq, sweep]
 
     ###################################################################################################################
     # Dead Time and Minimum Pulse Width
@@ -194,6 +304,8 @@ class classB2:
         2) xsh:     sampled reference signal including zero order hold
         3) s:       switching instances
         4) c:       carrier signal
+        5) x:       reference signal
+        6) xN0:     zero sequence reference signal
         """
 
         # ==============================================================================
@@ -205,6 +317,7 @@ class classB2:
         # Calculation
         # ==============================================================================
         x = Mi * v_ref / np.max(v_ref)
+        xN0 = np.zero(np.size(x))
         s = signal.square(2 * np.pi * self.fel * t_ref, duty=0.5)
         xs = x
         xsh = x
@@ -212,7 +325,7 @@ class classB2:
         # ==============================================================================
         # Return
         # ==============================================================================
-        return [xs, xsh, s, c]
+        return [xs, xsh, s, c, x, xN0]
 
     ###################################################################################################################
     # Carrier based PWM
@@ -234,6 +347,8 @@ class classB2:
         2) xsh:     sampled reference signal including zero order hold
         3) s:       switching instances
         4) c:       carrier signal
+        5) x:       reference signal
+        6) xN0:     zero sequence reference signal
         """
 
         # ==============================================================================
@@ -248,6 +363,7 @@ class classB2:
         # Reference
         # ------------------------------------------
         x = Mi * v_ref / np.max(v_ref)
+        xN0 = np.zeros(np.size(x))
 
         # ------------------------------------------
         # Carrier
@@ -285,7 +401,7 @@ class classB2:
         # ==============================================================================
         # Return
         # ==============================================================================
-        return [xs, xsh, s, c]
+        return [xs, xsh, s, c, x, xN0]
 
     ###################################################################################################################
     # Optimal Pulse Patterns
@@ -307,6 +423,8 @@ class classB2:
         2) xsh:     sampled reference signal including zero order hold
         3) s:       switching instances
         4) c:       carrier signal
+        5) x:       reference signal
+        6) xN0:     zero sequence reference signal
         """
 
         # ==============================================================================
@@ -326,6 +444,7 @@ class classB2:
         # Reference
         # ------------------------------------------
         x = Mi * v_ref / np.max(v_ref)
+        xN0 = np.zero(np.size(x))
 
         # ------------------------------------------
         # Optimal Angles
@@ -384,7 +503,69 @@ class classB2:
         # ==============================================================================
         # Return
         # ==============================================================================
-        return [xs, xsh, s, c]
+        return [xs, xsh, s, c, x, xN0]
+
+    ###################################################################################################################
+    # Carrier based PWM
+    ###################################################################################################################
+    def calcPWM(self, v_ref, t_ref, Mi, setup):
+        # ==============================================================================
+        # Description
+        # ==============================================================================
+        """
+        This function calculates the switching times assuming any provided PWM method. Valid
+        PWM methods are carrier-based, fundamental frequency, and optimal pulse patterns.
+
+        Input:
+        1) v_ref:   Reference voltage (V)
+        2) t_ref:   Reference time (sec)
+        3) Mi:      Modulation index (0 ... 4/pi)
+
+        Output:
+        1) xs:      sampled reference signal
+        2) xsh:     sampled reference signal including zero order hold
+        3) s:       switching instances
+        4) c:       carrier signal
+        5) x:       reference signal
+        6) xN0:     zero sequence reference signal
+        """
+
+        # ==============================================================================
+        # Init
+        # ==============================================================================
+        x_out = {}
+        xs_out = {}
+        xsh_out = {}
+        c_out = {}
+        s_out = {}
+        xN0_out = {}
+
+        # ==============================================================================
+        # Calculation
+        # ==============================================================================
+        if setup['Par']['PWM']['type'] == "FF":
+            [xs, xsh, s, c, x, xN0] = self.calcSeqFF(v_ref['A'], t_ref, Mi)
+        elif setup['Par']['PWM']['type'] == "CB":
+            [xs, xsh, s, c, x, xN0] = self.calcSeqCB(v_ref['A'], t_ref, Mi, setup)
+        elif setup['Par']['PWM']['type'] == "OPP":
+            [xs, xsh, s, c, x, xN0] = self.calcSeqOPP(v_ref['A'], t_ref, Mi, setup)
+        else:
+            [xs, xsh, s, c, x, xN0] = self.calcSeqCB(v_ref['A'], t_ref, Mi, setup)
+
+        # ==============================================================================
+        # Post-Processing
+        # ==============================================================================
+        xs_out['A'] = xs
+        xsh_out['A'] = xsh
+        s_out['A'] = s
+        c_out['A'] = c
+        x_out['A'] = x
+        xN0_out['A'] = xN0
+
+        # ==============================================================================
+        # Return
+        # ==============================================================================
+        return [xs_out, xsh_out, s_out, c_out, x_out, xN0_out]
 
     ###################################################################################################################
     # Temporal Output
@@ -424,7 +605,7 @@ class classB2:
         # AC Side
         # ------------------------------------------
         # Inverter Output
-        v_a0 = 0.5 * s * self.Vdc
+        v_a0 = 0.5 * s['A'] * self.Vdc
 
         # Filter Output
         if setup['Top']['outFilter'] == 0:
@@ -433,7 +614,7 @@ class classB2:
             _, v_L, _, = signal.lsim(mdl['SS']['Out'], v_a0, t)
 
         # Load
-        v_a = v_L - Mi * e
+        v_a = v_L - Mi * e['A']
 
         # Current
         if setup['Top']['wave'] == "con":
@@ -448,8 +629,8 @@ class classB2:
         # DC Side
         # ------------------------------------------
         # Inverter Input
-        i_d_p = i_a * (1 + s[t0:t1]) / 2
-        i_d_m = i_a * (1 - s[t0:t1]) / 2
+        i_d_p = i_a * (1 + s['A'][t0:t1]) / 2
+        i_d_m = i_a * (1 - s['A'][t0:t1]) / 2
         i_dc = i_d_p
 
         # DC-Link
@@ -563,167 +744,51 @@ class classB2:
         return [outAc, outDc]
 
     ###################################################################################################################
-    # Analytical distortion
-    ###################################################################################################################
-    def calcDistNum(self, t, i_a, v_a, i_dc, v_dc):
-        # ==============================================================================
-        # Description
-        # ==============================================================================
-        """
-        This function calculates the numerical distortion of the B2 bridge current and
-        voltage waveforms.
-
-        Input:
-        1) t:       input time vector (sec)
-        2) i_a:     load current (A)
-        3) v_a:     load voltage (V)
-        4) i_dc:    dc current (A)
-        5) v_dc:    dc voltage (V)
-
-        Output:
-        1) outAc:   outputs distortion ac side
-        2) outDc:   outputs distortion dc side
-        """
-
-        # ==============================================================================
-        # Initialisation
-        # ==============================================================================
-        dt = t[1] - t[0]
-        K = int(np.round((t[-1] - t[0]) / self.Tel))
-        N = int(len(v_a))
-        outAc = {}
-        outDc = {}
-
-        # ==============================================================================
-        # Calculation
-        # ==============================================================================
-        # ------------------------------------------
-        # AC Side
-        # ------------------------------------------
-        V_a_eff = np.sqrt(1 / self.Tel / K * np.sum(v_a ** 2 * dt))
-        V_a_v1_eff = (1 / np.sqrt(2)) * 2 * np.abs(fft(v_a) / N)[K]
-        V_a_thd = np.sqrt(V_a_eff ** 2 - V_a_v1_eff ** 2) / V_a_eff * self.Vdc / 2
-        I_a_eff = np.sqrt(1 / self.Tel / K * np.sum(i_a ** 2 * dt))
-        I_a_v1_eff = (1 / np.sqrt(2)) * 2 * np.abs(fft(i_a) / N)[K]
-        I_a_thd = np.sqrt(I_a_eff ** 2 - I_a_v1_eff ** 2)
-
-        # ------------------------------------------
-        # DC Side
-        # ------------------------------------------
-        V_dc_eff = np.sqrt(1 / self.Tel / K * np.sum(v_dc ** 2 * dt))
-        V_dc_v1_eff = np.abs(fft(v_dc) / N)[0]
-        V_dc_thd = np.sqrt((np.sqrt(1 / self.Tel / K * np.sum((v_dc - self.Vdc) ** 2 * dt))) ** 2 - (np.abs(fft(v_dc - self.Vdc) / N)[0]) ** 2)
-        I_dc_eff = np.sqrt(1 / self.Tel / K * np.sum(i_dc ** 2 * dt))
-        I_dc_v1_eff = np.abs(fft(i_dc) / N)[0]
-        I_dc_thd = np.sqrt(I_dc_eff ** 2 - I_dc_v1_eff ** 2)
-
-        # ==============================================================================
-        # Post-Processing
-        # ==============================================================================
-        # ------------------------------------------
-        # AC Side
-        # ------------------------------------------
-        outAc['V_a_eff'] = V_a_eff
-        outAc['V_a_v1_eff'] = V_a_v1_eff
-        outAc['V_a_thd'] = V_a_thd
-        outAc['I_a_eff'] = I_a_eff
-        outAc['I_a_v1_eff'] = I_a_v1_eff
-        outAc['I_a_thd'] = I_a_thd
-
-        # ------------------------------------------
-        # DC Side
-        # ------------------------------------------
-        outDc['V_dc_eff'] = V_dc_eff
-        outDc['V_dc_v1_eff'] = V_dc_v1_eff
-        outDc['V_dc_thd'] = V_dc_thd
-        outDc['I_dc_eff'] = I_dc_eff
-        outDc['I_dc_v1_eff'] = I_dc_v1_eff
-        outDc['I_dc_thd'] = I_dc_thd
-
-        # ==============================================================================
-        # Return
-        # ==============================================================================
-        return [outAc, outDc]
-
-    ###################################################################################################################
     # Calculations frequency domain
     ###################################################################################################################
-    def calcFreq(self, s, xs, i_a, v_a, v_a0, i_dc, v_dc):
+    def calcRef(self, E, phiE, phiV, setup):
         # ==============================================================================
         # Description
         # ==============================================================================
         """
-        This function calculates the frequency domain results based on the time domain
-        waveforms of the B2 bridge.
+        This function calculates the reference voltage and back EMF functions based on the
+        B2 topology and the given parameters.
 
         Input:
-        1) t:       input time vector (sec)
-        2) i_a:     load current (A)
-        3) v_a:     load voltage (V)
-        4) i_dc:    dc current (A)
-        5) v_dc:    dc voltage (V)
+        1) E:       amplitude of the back emf (V)
+        2) phiE:    angle of the back emf (rad)
+        3) v_a:     load angle of the output (rad)
+        4) setup:   file including all setup parameters
 
         Output:
-        1) outAc:   outputs distortion ac side
-        2) outDc:   outputs distortion dc side
+        1) v_ref:   reference voltage for given load scenario (V)
+        2) e_ref:   reference back emf for given load scenario (V)
         """
 
         # ==============================================================================
         # Initialisation
         # ==============================================================================
-        N = int(len(s))
-        freqAc = {}
-        freqDc = {}
-        freqSw = {}
+        v_ref = {}
+        e_ref = {}
 
         # ==============================================================================
         # Calculation
         # ==============================================================================
         # ------------------------------------------
-        # AC Side
+        # Time
         # ------------------------------------------
-        # Sequence
-        Y = np.abs(fft(s) / N)[0:int(N / 2)]
-        Y[1:-2] = 2 * Y[1:-2]
-        freqSw['Sa'] = Y
-
-        # Sampled Reference
-        Y = np.abs(fft(xs) / N)[0:int(N / 2)]
-        Y[1:-2] = 2 * Y[1:-2]
-        freqSw['Xas'] = Y
-
-        # Current
-        Y = np.abs(fft(i_a) / N)[0:int(N / 2)]
-        Y[1:-2] = 2 * Y[1:-2]
-        freqAc['I_a'] = Y
-
-        # Line Voltage
-        Y = np.abs(fft(v_a) / N)[0:int(N / 2)]
-        Y[1:-2] = 2 * Y[1:-2]
-        freqAc['V_a'] = Y
-
-        # Line-Neutral Voltage
-        Y = np.abs(fft(v_a0) / N)[0:int(N / 2)]
-        Y[1:-2] = 2 * Y[1:-2]
-        freqAc['V_a0'] = Y
+        t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
 
         # ------------------------------------------
-        # DC Side
+        # Reference
         # ------------------------------------------
-        # Current
-        Y = np.abs(fft(i_dc) / N)[0:int(N / 2)]
-        Y[1:-2] = 2 * Y[1:-2]
-        freqDc['I_dc'] = Y
-
-        # Voltage
-        Y = np.abs(fft(v_dc) / N)[0:int(N / 2)]
-        Y[1:-2] = 2 * Y[1:-2]
-        freqDc['V_dc'] = Y
+        v_ref['A'] = (self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
+        e_ref['A'] = E * genWave(t, self.fel, phiE, setup)
 
         # ==============================================================================
         # Return
         # ==============================================================================
-        return [freqSw, freqAc, freqDc]
+        return [v_ref, e_ref]
 
 #######################################################################################################################
 # References
