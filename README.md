@@ -77,6 +77,67 @@ where $R_{L}$, $L_{L}$ are the resistance and the inductance of the load, $e(t)$
 are the load voltage and current respectively.
 
 
+# Usage
+Using PyPowerSim is straight forward and requires only two inputs, namely the model parameters for the switching devices
+and the dc-link capacitor and the configuration file including experimental, data, topology, as well as parameter
+information. Detailed information about these two inputs are provided below:
+
+## Configuration 
+The configuration file is an .xlsx file that is stored under \config and includes all parameter which are relevant for
+the simulation. In detail, these parameters are grouped in four different categories, namely experimental, data, topology,
+as well as parameters. Explanation as well as valid inputs for each parameter can be found in the configuration file, 
+description of the configuration file can be found below:
+
+1) Name:          Descriptive name of the variable (arbitrary identifier)
+2) Category:      Category of the variable (might be empty) 
+3) Description:   Detailed description of the variable including valid options
+4) Variable:      Variable name used inside the source code
+5) Value:         Value of the respective variable
+6) Unit:          Unit of the respective variable
+
+From the above column only the 'Value' column should be adapted by the user, the other columns must not be changed as
+they are used for reading the value.
+
+## Parameters
+The parameter files include one .xlsx file for the switching devices and one for the dc-lin capacitor respectively. In
+detail, these files include electrical and thermal parameters of the respective component. Explanation as well as valid
+inputs for each parameter can be found in the configuration file, description of the configuration file can be found 
+below: 
+
+1) Parameter:     Arbitrary identifier for the respective parameter
+2) Description:   Description of the parameter
+3) Model:         Definition for which modeling approach the parameter is used (constant, linear, or tabular)
+4) Symbol:        Symbol used inside the source code
+5) Typical:       Typical value of the variable
+6) Values:        Values of the variable
+7) Unit:          Unit of the variable
+
+From the above column only the 'Value' column should be adapted by the user, the other columns must not be changed as
+they are used for reading the value.
+
+## Start Script
+To execute a new simulation three things are needed. First, a valid configuration file as discussed above. Second, valid
+parameter files for the switching devices and the capacitor. Third a start script as provided in start.py used for
+defining the configuration and the parameter .xlsx files as well as the simulation mode. The following aspects can be 
+defined in the start script:
+
+### General
+1) Name:    Name of the simulation file (used for saving outputs)
+2) Author:  Author of the simulation
+3) Debug:   Debug mode for checking internal results
+4) Output:  Simulation output, i.e. output variable that is controlled (Current, Voltage, Power, etc.)
+5) Type:    Simulation type, i.e. operating mode of the toolkit (Sweep, Steady-State, Transient, etc.)
+
+### Input Files
+1) Conf:    Configuration .xlsx file stored under \config used as input for general parameters and settings
+2) Swi:     Parameter .xlsx file of the switching devices stored under \para\Swi
+3) Cap      Parameter .xlsx file of the dc-link capacitor stored under \para\Cap
+
+### Plotting and Saving
+1) Plot:    Plotting options for displaying results
+2) PlotGen: Generic plots for thermal and electrical models as well as transfer functions
+3) Save:    Option for saving results to \results
+
 # Results
 In the following chapter a set of reference results is provided using the B6 converter 
 architecture and the default setup file. For the default operation an IFX switch is chosen (
@@ -157,11 +218,11 @@ file under \setup.
 
 | Losses           | PLECs (W) | PyPowerSim (W) | Error (W) | Error (%) | 
 |------------------|-----------|----------------|-----------|-----------|
-| Transistor (Swi) | 11.1      | 11.5           | 0.40      | 3.60      |
-| Transistor (Con) | 18.0      | 17.4           | 0.60      | 3.33      |
-| Diode (Swi)      | 5.79      | 6.17           | 0.38      | 6.56      |
-| Diode (Con)      | 19.5      | 19.1           | 0.40      | 2.05      |
-| Total            | 54.4      | 54.2           | 0.20      | 3.89      |
+| Transistor (Swi) | 11.1      | 11.4           | 0.30      | 2.70      |
+| Transistor (Con) | 18.0      | 17.3           | 0.70      | 3.89      |
+| Diode (Swi)      | 5.79      | 6.08           | 0.29      | 5.00      |
+| Diode (Con)      | 19.5      | 19.2           | 0.30      | 1.54      |
+| Total            | 54.4      | 54.0           | 0.40      | 0.74      |
 
 
 # Development
@@ -190,6 +251,10 @@ The software framework is provided under the Creative Commons Attribution-NonCom
     - Fixing bug in switching losses
     - Adding direct comparison with semiconductor datasheets
     - General housekeeping
+6) v.1.0: (01.05.2024) First complete version of PyPowerSim
+    - Introducing classes per topology and simplifying the topology definition
+    - Closed loop simulation including hysteresis and PI control
+    - General housekeeping including function description for each file
    
 # References
 [1] Holmes, D. Grahame, and Thomas A. Lipo. Pulse width modulation for power converters: principles and practice. 
