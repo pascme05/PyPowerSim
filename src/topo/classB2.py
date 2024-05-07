@@ -84,6 +84,7 @@ class classB2:
         self.id6 = ['T1', 'T2']
         self.id7 = ['D1', 'D2']
         self.id8 = ['C1', 'C2']
+        self.id9 = [1, 1]
         self.name = 'B2'
 
     ###################################################################################################################
@@ -279,7 +280,13 @@ class classB2:
         # ------------------------------------------
         # Time
         # ------------------------------------------
-        time['t'] = np.linspace(0, self.Tel * Nel, int(len(timeLoss['sw']['S1']['p_T'])))
+        # Transient time
+        if not timeLoss:
+            time['t'] = timeSw['t']
+        else:
+            time['t'] = np.linspace(0, self.Tel * Nel, int(len(timeLoss['sw']['S1']['p_T'])))
+
+        # Variables
         time['Sw'] = timeSw
         time['Ac'] = timeAc
         time['Dc'] = timeDc
@@ -394,7 +401,7 @@ class classB2:
         # Calculation
         # ==============================================================================
         x = Mi * v_ref / np.max(v_ref)
-        xN0 = np.zero(np.size(x))
+        xN0 = np.zeros(np.size(x))
         s = signal.square(2 * np.pi * self.fel * t_ref, duty=0.5)
         xs = x
         xsh = x
@@ -521,7 +528,7 @@ class classB2:
         # Reference
         # ------------------------------------------
         x = Mi * v_ref / np.max(v_ref)
-        xN0 = np.zero(np.size(x))
+        xN0 = np.zeros(np.size(x))
 
         # ------------------------------------------
         # Optimal Angles

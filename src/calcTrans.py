@@ -55,7 +55,9 @@ def calcTrans(top, mdl, para, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
+    print("------------------------------------------")
     print("START: Transient solution class", top.name)
+    print("------------------------------------------")
 
     ###################################################################################################################
     # Initialisation
@@ -181,7 +183,7 @@ def calcTrans(top, mdl, para, setup):
 
             # Switch
             for j in range(0, len(top.id2)):
-                timeElec['sw'][top.id2[j]] = calcElecSwi(Vdc, timeAc[top.id4[j]][start:ende], (s[top.id3[j]][start:ende] == (-1) ** j), Tj[j], top.id5[j], para, setup)
+                timeElec['sw'][top.id2[j]] = calcElecSwi(Vdc, top.id9[j] * timeAc[top.id4[j]][start:ende], (s[top.id3[j]][start:ende] == (-1) ** j), Tj[j], top.id5[j], para, setup)
                 timeLoss['sw'][top.id2[j]] = calcLossSwi(s[top.id3[j]][start:ende] * (-1) ** j, timeElec['sw'][top.id2[j]]['i_T'], timeElec['sw'][top.id2[j]]['i_D'], timeElec['sw'][top.id2[j]]['v_T'], timeElec['sw'][top.id2[j]]['v_D'], Tj[j], para, setup)
 
                 if setup['Par']['Ther']['Heatsink'] == 1 and setup['Par']['Ther']['Coupling'] == 1:
@@ -284,7 +286,7 @@ def calcTrans(top, mdl, para, setup):
     # MSG Out
     ###################################################################################################################
     print("------------------------------------------")
-    print("END: Transient simulation B6")
+    print("END: Transient class", top.name)
     print("------------------------------------------")
 
     ###################################################################################################################

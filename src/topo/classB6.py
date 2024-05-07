@@ -87,6 +87,7 @@ class classB6:
         self.id6 = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6']
         self.id7 = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6']
         self.id8 = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6']
+        self.id9 = [1, 1, 1, 1, 1, 1]
         self.name = 'B6'
 
     ###################################################################################################################
@@ -301,7 +302,13 @@ class classB6:
         # ------------------------------------------
         # Time
         # ------------------------------------------
-        time['t'] = np.linspace(0, self.Tel * Nel, int(len(timeLoss['sw']['S1']['p_T'])))
+        # Transient time
+        if not timeLoss:
+            time['t'] = timeSw['t']
+        else:
+            time['t'] = np.linspace(0, self.Tel * Nel, int(len(timeLoss['sw']['S1']['p_T'])))
+
+        # Variables
         time['Sw'] = timeSw
         time['Ac'] = timeAc
         time['Dc'] = timeDc
@@ -444,7 +451,6 @@ class classB6:
         # ------------------------------------------
         # Output
         # ------------------------------------------
-        xN0 = c
         xs = x
         xsh = x
 
@@ -577,7 +583,6 @@ class classB6:
         # ------------------------------------------
         # Carrier
         # ------------------------------------------
-        # Interleaved
         if setup['Par']['PWM']['tri'] == "RE":
             c = signal.sawtooth(2 * np.pi * self.fs * t_ref, 1) * (-1)
         elif setup['Par']['PWM']['tri'] == "FE":
@@ -587,10 +592,6 @@ class classB6:
         else:
             c = signal.sawtooth(2 * np.pi * self.fs * (t_ref - 0.5 / self.fs), 0.5)
         c = (2 * (c - min(c)) / (max(c) - min(c))) - 1
-
-        # Non-Interleaved
-        if setup['Par']['PWM']['int'] == 0:
-            c['B'] = c['A']
 
         # ------------------------------------------
         # Sampling
@@ -655,12 +656,13 @@ class classB6:
         # ------------------------------------------
         # Parameters
         # ------------------------------------------
+        N1 = int(len(t_ref) / (self.q * self.K))
         if setup['Par']['PWM']['upd'] == "SE":
             Ns = self.q
-            Terr = -self.K / 2
+            Terr = -N1 / 2
         else:
             Ns = 2 * self.q
-            Terr = -self.K / 4
+            Terr = -N1 / 4
 
         # ------------------------------------------
         # Variables
@@ -680,15 +682,15 @@ class classB6:
         xs['A'] = np.zeros(np.size(t_ref))
         xs['B'] = np.zeros(np.size(t_ref))
         xs['C'] = np.zeros(np.size(t_ref))
-        ts = np.linspace(0, 2, self.K)
+        ts = np.linspace(0, 2, N1)
         ss = np.zeros(np.size(t_ref))
         c = np.zeros(np.size(t_ref))
         xN0 = np.zeros(np.size(t_ref))
-        rr = np.zeros((Ns * self.N, 1))
-        t1 = np.zeros((Ns * self.N, 1))
-        t2 = np.zeros((Ns * self.N, 1))
-        t0 = np.zeros((Ns * self.N, 1))
-        t7 = np.zeros((Ns * self.N, 1))
+        rr = np.zeros((Ns * self.K, 1))
+        t1 = np.zeros((Ns * self.K, 1))
+        t2 = np.zeros((Ns * self.K, 1))
+        t0 = np.zeros((Ns * self.K, 1))
+        t7 = np.zeros((Ns * self.K, 1))
 
         # Mapping
         mS['A'] = [-1, +1, +1, -1, -1, -1, +1, +1]
@@ -721,8 +723,7 @@ class classB6:
         # Zero-Sequence
         # ------------------------------------------
         for i in range(0, len(t_ref)):
-            alpha = i * self.N / len(t_ref) * 2 * np.pi + phi[0] + 2 * np.pi
-            alpha = alpha + Terr / len(t_ref) * self.N * (2 * np.pi)
+            alpha = i * self.K / len(t_ref) * 2 * np.pi + phi[0] + 2 * np.pi
             [d0, d1, d2, d7, _] = svPWM(k, alpha, Mi)
             xN0[i] = (-d0 - d1 / 3 + d2 / 3 + d7)
 
@@ -739,20 +740,19 @@ class classB6:
         # ------------------------------------------
         # Determine Sector
         # ------------------------------------------
-        for i in range(0, Ns * self.N):
+        for i in range(0, Ns * self.K):
             alpha = i / Ns * 2 * np.pi + phi[0] + 2 * np.pi
-            alpha = alpha + Terr / len(t_ref) * self.N * (2 * np.pi)
+            alpha = alpha + Terr / len(t_ref) * self.K * (2 * np.pi)
             [t0[i], t1[i], t2[i], t7[i], rr[i]] = svPWM(k, alpha, Mi)
 
         # ------------------------------------------
         # Switching times
         # ------------------------------------------
         if setup['Par']['PWM']['upd'] == "SE":
-            st = np.hstack(
-                (t0, t0 + t1, 1 - t7, np.ones((Ns * self.N, 1)), 1 + t7, 1 + t7 + t2, 2 - t0, 2 * np.ones((Ns * self.N, 1))))
+            st = np.hstack((t0, t0 + t1, 1 - t7, np.ones((Ns * self.K, 1)), 1 + t7, 1 + t7 + t2, 2 - t0, 2 * np.ones((Ns * self.K, 1))))
         else:
-            st1 = np.hstack((t0, t0 + t1, 1 - t7, np.ones((Ns * self.N, 1))))
-            st2 = np.roll(np.hstack((1 + t7, 1 + t7 + t2, 2 - t0, 2 * np.ones((Ns * self.N, 1)))), -1, axis=0)
+            st1 = np.hstack((t0, t0 + t1, 1 - t7, np.ones((Ns * self.K, 1))))
+            st2 = np.roll(np.hstack((1 + t7, 1 + t7 + t2, 2 - t0, 2 * np.ones((Ns * self.K, 1)))), -1, axis=0)
             st = np.hstack((st1, st2))
             st = st[::2]
             rr = rr[::2]
@@ -760,21 +760,21 @@ class classB6:
         # ------------------------------------------
         # Switching states
         # ------------------------------------------
-        for i in range(0, self.q * self.N):
+        for i in range(0, self.q * self.K):
             j = 0
-            for ii in range(0, self.K):
+            for ii in range(0, N1):
                 if st[i, j] > ts[ii]:
-                    ss[ii + self.K * i] = seq[int(rr[i] - 1)][j]
+                    ss[ii + N1 * i] = seq[int(rr[i] - 1)][j]
                 else:
                     j = j + 1
-                    ss[ii + self.K * i] = ss[ii + self.K * i - 1]
+                    ss[ii + N1 * i] = ss[ii + N1 * i - 1]
 
         # ------------------------------------------
         # Sampling
         # ------------------------------------------
         for i in range(0, len(self.id1)):
             for ii in range(0, len(x[self.id1[i]])):
-                if (ii % int(len(t_ref) / (Ns * self.N))) == 0:
+                if (ii % int(len(t_ref) / (Ns * self.K))) == 0:
                     xs[self.id1[i]][ii] = x[self.id1[i]][ii]
                 else:
                     xs[self.id1[i]][ii] = xs[self.id1[i]][ii - 1]
@@ -787,6 +787,14 @@ class classB6:
                 xsh[self.id1[i]] = np.roll(x0[self.id1[i]], int(len(xs[self.id1[i]]) * self.fel / self.fs))
             else:
                 xsh[self.id1[i]] = np.roll(x0[self.id1[i]], int(len(xs[self.id1[i]]) * self.fel / self.fs / 2))
+
+        # ------------------------------------------
+        # Mapping
+        # ------------------------------------------
+        for i in range(0, len(self.id1)):
+            for ii in range(0, len(ss)):
+                if Mi != 0:
+                    s[self.id1[i]][ii] = mS[self.id1[i]][int(ss[ii])]
 
         # ------------------------------------------
         # Dead time
@@ -1018,6 +1026,9 @@ class classB6:
         # ==============================================================================
         # Initialisation
         # ==============================================================================
+        # ------------------------------------------
+        # Variables
+        # ------------------------------------------
         v0 = {}
         v = {}
         v_out = {}
@@ -1025,6 +1036,11 @@ class classB6:
         i = {}
         outAc = {}
         outDc = {}
+
+        # ------------------------------------------
+        # Parameters
+        # ------------------------------------------
+        K1 = int((t1 - t0 - 1) * self.fel * (t[1] - t[0]))
 
         # ==============================================================================
         # Calculation
@@ -1055,8 +1071,8 @@ class classB6:
         # LL Current
         _, i_a, _, = signal.lsim(mdl['SS']['Load'], v_L['A'], t)
         i['A'] = i_a[t0:t1]
-        i['B'] = np.roll(i_a[t0:t1], int(np.floor(120 / 360 / self.K * len(s['A'][t0:t1]))))
-        i['C'] = np.roll(i_a[t0:t1], int(np.floor(240 / 360 / self.K * len(s['A'][t0:t1]))))
+        i['B'] = np.roll(i_a[t0:t1], int(np.floor(120 / 360 / K1 * len(s['A'][t0:t1]))))
+        i['C'] = np.roll(i_a[t0:t1], int(np.floor(240 / 360 / K1 * len(s['A'][t0:t1]))))
 
         # LN Current
         if setup['Top']['wave'] != 'con':

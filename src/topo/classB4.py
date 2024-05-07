@@ -79,11 +79,12 @@ class classB4:
         self.id1 = ['A', 'B']
         self.id2 = ['S1', 'S2', 'S3', 'S4']
         self.id3 = ['A', 'A', 'B', 'B']
-        self.id4 = [+1, +1, -1, -1]
+        self.id4 = ['i_a', 'i_a', 'i_a', 'i_a']
         self.id5 = ['HS', 'LS', 'HS', 'LS']
         self.id6 = ['T1', 'T2', 'T3', 'T4']
         self.id7 = ['D1', 'D2', 'D3', 'D4']
         self.id8 = ['C1', 'C2', 'C3', 'C4']
+        self.id9 = [+1, +1, -1, -1]
         self.name = 'B4'
 
     ###################################################################################################################
@@ -272,7 +273,7 @@ class classB4:
         timeSw['t'] = t_ref[0:(t1 - t0)]
         timeSw['v_a_ref'] = v_ref['A'][t0:t1]
         timeSw['v_b_ref'] = v_ref['B'][t0:t1]
-        timeSw['e'] = e_ref[t0:t1]
+        timeSw['e'] = e_ref['A'][t0:t1]
         timeSw['sA'] = s['A'][t0:t1]
         timeSw['sB'] = s['B'][t0:t1]
         timeSw['cA'] = c['A'][t0:t1]
@@ -292,7 +293,13 @@ class classB4:
         # ------------------------------------------
         # Time
         # ------------------------------------------
-        time['t'] = np.linspace(0, self.Tel * Nel, int(len(timeLoss['sw']['S1']['p_T'])))
+        # Transient time
+        if not timeLoss:
+            time['t'] = timeSw['t']
+        else:
+            time['t'] = np.linspace(0, self.Tel * Nel, int(len(timeLoss['sw']['S1']['p_T'])))
+
+        # Variables
         time['Sw'] = timeSw
         time['Ac'] = timeAc
         time['Dc'] = timeDc
@@ -489,8 +496,6 @@ class classB4:
         # ------------------------------------------
         x['A'] = Mi * v_ref['A'] / np.max(np.abs(v_ref['A']))
         x['B'] = Mi * v_ref['B'] / np.max(np.abs(v_ref['B']))
-        xN0['A'] = np.zeros(np.size(x))
-        xN0['B'] = np.zeros(np.size(x))
 
         # ------------------------------------------
         # Carrier
@@ -541,6 +546,12 @@ class classB4:
         # ------------------------------------------
         s['A'] = self.calcDead(s['A'], t_ref, Mi)
         s['B'] = self.calcDead(s['B'], t_ref, Mi)
+
+        # ==============================================================================
+        # Post-Processing
+        # ==============================================================================
+        xN0['A'] = np.zeros(np.size(c['A']))
+        xN0['B'] = np.zeros(np.size(c['B']))
 
         # ==============================================================================
         # Return
@@ -869,11 +880,11 @@ class classB4:
         # Calculation
         # ==============================================================================
         # ------------------------------------------
-        # AC Side
+        # AC Side (Line-to-Neutral)
         # ------------------------------------------
-        V_ab_eff = self.Vdc * np.sqrt(2 / np.pi * Mi)
-        V_ab_v1_eff = 1 / np.sqrt(2) * self.Vdc * Mi
-        V_ab_thd = self.Vdc * np.sqrt(1 - np.pi / 4 * Mi)
+        V_ab_eff = self.Vdc * np.sqrt(2 / np.pi * Mi) / 2
+        V_ab_v1_eff = 1 / np.sqrt(2) * self.Vdc * Mi / 2
+        V_ab_thd = self.Vdc * np.sqrt(1 - np.pi / 4 * Mi) / 2
         I_a_thd = 1 / np.sqrt(48) * self.Vdc * self.Ts / L * np.sqrt(3 / 8 * Mi ** 4 - 8 / (3 * np.pi) * Mi ** 3 + 0.5 * Mi ** 2)
 
         # ------------------------------------------

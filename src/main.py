@@ -33,6 +33,9 @@ from src.calcSweep import calcSweep
 from src.calcSteady import calcSteady
 from src.calcTrans import calcTrans
 from src.topo.initTopo import initTopo
+from src.topo.B2.calcSweepB2 import calcSweepB2
+from src.topo.B4.calcSweepB4 import calcSweepB4
+from src.topo.B6.calcSweepB6 import calcSweepB6
 from src.topo.B2.calcSteadyB2 import calcSteadyB2
 from src.topo.B4.calcSteadyB4 import calcSteadyB4
 from src.topo.B6.calcSteadyB6 import calcSteadyB6
@@ -164,110 +167,106 @@ def main(setup, path):
     # ==============================================================================
     # Operating Mode
     # ==============================================================================
-    # ------------------------------------------
-    # Sweep
-    # ------------------------------------------
-    if setup['Exp']['type'] == 0:
-        [time, freq, sweep] = calcSweep(top, mdl, para, setup)
+    if setup['Exp']['debug'] == 1:
+        # ------------------------------------------
+        # Sweep
+        # ------------------------------------------
+        if setup['Exp']['type'] == 0:
+            [time, freq, sweep] = calcSweep(top, mdl, para, setup)
 
-    # ------------------------------------------
-    # Stationary
-    # ------------------------------------------
-    if setup['Exp']['type'] == 1:
-        [time, freq] = calcSteady(top, mdl, para, setup)
+        # ------------------------------------------
+        # Stationary
+        # ------------------------------------------
+        if setup['Exp']['type'] == 1:
+            [time, freq] = calcSteady(top, mdl, para, setup)
 
-    # ------------------------------------------
-    # Transient
-    # ------------------------------------------
-    if setup['Exp']['type'] == 2:
-        [time, freq] = calcTrans(top, mdl, para, setup)
+        # ------------------------------------------
+        # Transient
+        # ------------------------------------------
+        if setup['Exp']['type'] == 2:
+            [time, freq] = calcTrans(top, mdl, para, setup)
 
-    # ------------------------------------------
-    # Default
-    # ------------------------------------------
+        # ------------------------------------------
+        # Default
+        # ------------------------------------------
+        else:
+            print("ERROR: Invalid operation or topology")
     else:
-        print("ERROR: Invalid operation or topology")
+        # ==============================================================================
+        # B2
+        # ==============================================================================
+        if setup['Top']['sourceType'] == "B2":
+            # ------------------------------------------
+            # Init Topology
+            # ------------------------------------------
 
-    '''
-    # ==============================================================================
-    # B2
-    # ==============================================================================
-    if setup['Top']['sourceType'] == "B2":
-        # ------------------------------------------
-        # Init Topology
-        # ------------------------------------------
+            # ------------------------------------------
+            # Sweep
+            # ------------------------------------------
+            if setup['Exp']['type'] == 0:
+                [time, freq, sweep] = calcSweepB2(mdl, para, setup)
 
-        # ------------------------------------------
-        # Sweep
-        # ------------------------------------------
-        if setup['Exp']['type'] == 0:
-            # [time, freq, sweep] = calcSweepB2(mdl, para, setup)
-            [time, freq, sweep] = calcSweep(top, mdl, para, setup)
+            # ------------------------------------------
+            # Stationary
+            # ------------------------------------------
+            if setup['Exp']['type'] == 1:
+                [time, freq] = calcSteadyB2(mdl, para, setup)
 
-        # ------------------------------------------
-        # Stationary
-        # ------------------------------------------
-        if setup['Exp']['type'] == 1:
-            [time, freq] = calcSteadyB2(mdl, para, setup)
+            # ------------------------------------------
+            # Transient
+            # ------------------------------------------
+            if setup['Exp']['type'] == 2:
+                [time, freq] = calcTransB2(mdl, para, setup)
 
-        # ------------------------------------------
-        # Transient
-        # ------------------------------------------
-        if setup['Exp']['type'] == 2:
-            [time, freq] = calcTransB2(mdl, para, setup)
+        # ==============================================================================
+        # B4
+        # ==============================================================================
+        elif setup['Top']['sourceType'] == "B4":
+            # ------------------------------------------
+            # Sweep
+            # ------------------------------------------
+            if setup['Exp']['type'] == 0:
+                [time, freq, sweep] = calcSweepB4(mdl, para, setup)
 
-    # ==============================================================================
-    # B4 
-    # ==============================================================================
-    elif setup['Top']['sourceType'] == "B4":
-        # ------------------------------------------
-        # Sweep
-        # ------------------------------------------
-        if setup['Exp']['type'] == 0:
-            # [time, freq, sweep] = calcSweepB4(mdl, para, setup)
-            [time, freq, sweep] = calcSweep(top, mdl, para, setup)
+            # ------------------------------------------
+            # Stationary
+            # ------------------------------------------
+            if setup['Exp']['type'] == 1:
+                [time, freq] = calcSteadyB4(mdl, para, setup)
 
-        # ------------------------------------------
-        # Stationary
-        # ------------------------------------------
-        if setup['Exp']['type'] == 1:
-            [time, freq] = calcSteadyB4(mdl, para, setup)
+            # ------------------------------------------
+            # Transient
+            # ------------------------------------------
+            if setup['Exp']['type'] == 2:
+                [time, freq] = calcTransB4(mdl, para, setup)
 
-        # ------------------------------------------
-        # Transient
-        # ------------------------------------------
-        if setup['Exp']['type'] == 2:
-            [time, freq] = calcTransB4(mdl, para, setup)
+        # ==============================================================================
+        # B6
+        # ==============================================================================
+        elif setup['Top']['sourceType'] == "B6":
+            # ------------------------------------------
+            # Sweep
+            # ------------------------------------------
+            if setup['Exp']['type'] == 0:
+                [time, freq, sweep] = calcSweepB6(mdl, para, setup)
 
-    # ==============================================================================
-    # B6
-    # ==============================================================================
-    elif setup['Top']['sourceType'] == "B6":
-        # ------------------------------------------
-        # Sweep
-        # ------------------------------------------
-        if setup['Exp']['type'] == 0:
-            # [time, freq, sweep] = calcSweepB6(mdl, para, setup)
-            [time, freq, sweep] = calcSweep(top, mdl, para, setup)
+            # ------------------------------------------
+            # Stationary
+            # ------------------------------------------
+            if setup['Exp']['type'] == 1:
+                [time, freq] = calcSteadyB6(mdl, para, setup)
 
-        # ------------------------------------------
-        # Stationary
-        # ------------------------------------------
-        if setup['Exp']['type'] == 1:
-            [time, freq] = calcSteadyB6(mdl, para, setup)
+            # ------------------------------------------
+            # Transient
+            # ------------------------------------------
+            if setup['Exp']['type'] == 2:
+                [time, freq] = calcTransB6(mdl, para, setup)
 
-        # ------------------------------------------
-        # Transient
-        # ------------------------------------------
-        if setup['Exp']['type'] == 2:
-            [time, freq] = calcTransB6(mdl, para, setup)
-
-    # ==============================================================================
-    # Default
-    # ==============================================================================
-    else:
-        print("ERROR: Invalid topology")
-    '''
+        # ==============================================================================
+        # Default
+        # ==============================================================================
+        else:
+            print("ERROR: Invalid topology")
 
     # ==============================================================================
     # MSG OUT
