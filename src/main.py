@@ -29,12 +29,10 @@ Outputs:    None
 # ==============================================================================
 from src.data.loadPara import loadPara
 from src.data.loadSetup import loadSetup
-from src.topo.classB2 import classB2
-from src.topo.classB4 import classB4
-from src.topo.classB6 import classB6
 from src.calcSweep import calcSweep
 from src.calcSteady import calcSteady
 from src.calcTrans import calcTrans
+from src.topo.initTopo import initTopo
 from src.topo.B2.calcSteadyB2 import calcSteadyB2
 from src.topo.B4.calcSteadyB4 import calcSteadyB4
 from src.topo.B6.calcSteadyB6 import calcSteadyB6
@@ -161,24 +159,7 @@ def main(setup, path):
     # ==============================================================================
     # Init Topology
     # ==============================================================================
-    if setup['Top']['sourceType'] == "B2":
-        top = classB2(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Exp']['fsim'],
-                      setup['Par']['PWM']['td'], setup['Par']['PWM']['tmin'], setup['Dat']['stat']['cyc'],
-                      setup['Dat']['stat']['W'], setup['Dat']['stat']['Mi'], setup['Dat']['stat']['Vdc'],
-                      setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], setup['Dat']['trans']['Tc'],
-                      setup['Dat']['trans']['Tj'])
-    elif setup['Top']['sourceType'] == "B4":
-        top = classB4(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Exp']['fsim'],
-                      setup['Par']['PWM']['td'], setup['Par']['PWM']['tmin'], setup['Dat']['stat']['cyc'],
-                      setup['Dat']['stat']['W'], setup['Dat']['stat']['Mi'], setup['Dat']['stat']['Vdc'],
-                      setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], setup['Dat']['trans']['Tc'],
-                      setup['Dat']['trans']['Tj'])
-    else:
-        top = classB6(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Exp']['fsim'],
-                      setup['Par']['PWM']['td'], setup['Par']['PWM']['tmin'], setup['Dat']['stat']['cyc'],
-                      setup['Dat']['stat']['W'], setup['Dat']['stat']['Mi'], setup['Dat']['stat']['Vdc'],
-                      setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], setup['Dat']['trans']['Tc'],
-                      setup['Dat']['trans']['Tj'])
+    top = initTopo(setup['Top']['sourceType'], setup)
 
     # ==============================================================================
     # Operating Mode

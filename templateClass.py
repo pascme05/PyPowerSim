@@ -1,12 +1,12 @@
 #######################################################################################################################
 #######################################################################################################################
-# Title:        Evaluating Sensors and Uncertainties for Reliability of Electrical and Electronic applications (EnSURE)
-# Topic:        Power Electronics and Electric Machinery
-# File:         templateClass
-# Date:         03.01.2024
-# Author:       Dr. Pascal A. Schirmer and Dr. Daniel Glose
-# Version:      V.0.1
-# Copyright:    Pascal Schirmer and Daniel Glose
+# Title:        PWM Distortion Toolkit for Standard Topologies
+# Topic:        Power Electronics
+# File:         tempClass
+# Date:         27.04.2024
+# Author:       Dr. Pascal A. Schirmer
+# Version:      V.1.0
+# Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
 
