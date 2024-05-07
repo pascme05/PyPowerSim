@@ -29,11 +29,12 @@ Outputs:    None
 # ==============================================================================
 from src.data.loadPara import loadPara
 from src.data.loadSetup import loadSetup
-from src.topo.B2.classB2 import classB2
-from src.topo.calcSweep import calcSweep
-from src.topo.B2.calcSweepB2 import calcSweepB2
-from src.topo.B4.calcSweepB4 import calcSweepB4
-from src.topo.B6.calcSweepB6 import calcSweepB6
+from src.topo.classB2 import classB2
+from src.topo.classB4 import classB4
+from src.topo.classB6 import classB6
+from src.calcSweep import calcSweep
+from src.calcSteady import calcSteady
+from src.calcTrans import calcTrans
 from src.topo.B2.calcSteadyB2 import calcSteadyB2
 from src.topo.B4.calcSteadyB4 import calcSteadyB4
 from src.topo.B6.calcSteadyB6 import calcSteadyB6
@@ -167,10 +168,46 @@ def main(setup, path):
                       setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], setup['Dat']['trans']['Tc'],
                       setup['Dat']['trans']['Tj'])
     elif setup['Top']['sourceType'] == "B4":
-        top = []
+        top = classB4(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Exp']['fsim'],
+                      setup['Par']['PWM']['td'], setup['Par']['PWM']['tmin'], setup['Dat']['stat']['cyc'],
+                      setup['Dat']['stat']['W'], setup['Dat']['stat']['Mi'], setup['Dat']['stat']['Vdc'],
+                      setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], setup['Dat']['trans']['Tc'],
+                      setup['Dat']['trans']['Tj'])
     else:
-        top = []
+        top = classB6(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Exp']['fsim'],
+                      setup['Par']['PWM']['td'], setup['Par']['PWM']['tmin'], setup['Dat']['stat']['cyc'],
+                      setup['Dat']['stat']['W'], setup['Dat']['stat']['Mi'], setup['Dat']['stat']['Vdc'],
+                      setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], setup['Dat']['trans']['Tc'],
+                      setup['Dat']['trans']['Tj'])
 
+    # ==============================================================================
+    # Operating Mode
+    # ==============================================================================
+    # ------------------------------------------
+    # Sweep
+    # ------------------------------------------
+    if setup['Exp']['type'] == 0:
+        [time, freq, sweep] = calcSweep(top, mdl, para, setup)
+
+    # ------------------------------------------
+    # Stationary
+    # ------------------------------------------
+    if setup['Exp']['type'] == 1:
+        [time, freq] = calcSteady(top, mdl, para, setup)
+
+    # ------------------------------------------
+    # Transient
+    # ------------------------------------------
+    if setup['Exp']['type'] == 2:
+        [time, freq] = calcTrans(top, mdl, para, setup)
+
+    # ------------------------------------------
+    # Default
+    # ------------------------------------------
+    else:
+        print("ERROR: Invalid operation or topology")
+
+    '''
     # ==============================================================================
     # B2
     # ==============================================================================
@@ -206,7 +243,8 @@ def main(setup, path):
         # Sweep
         # ------------------------------------------
         if setup['Exp']['type'] == 0:
-            [time, freq, sweep] = calcSweepB4(mdl, para, setup)
+            # [time, freq, sweep] = calcSweepB4(mdl, para, setup)
+            [time, freq, sweep] = calcSweep(top, mdl, para, setup)
 
         # ------------------------------------------
         # Stationary
@@ -228,7 +266,8 @@ def main(setup, path):
         # Sweep
         # ------------------------------------------
         if setup['Exp']['type'] == 0:
-            [time, freq, sweep] = calcSweepB6(mdl, para, setup)
+            # [time, freq, sweep] = calcSweepB6(mdl, para, setup)
+            [time, freq, sweep] = calcSweep(top, mdl, para, setup)
 
         # ------------------------------------------
         # Stationary
@@ -247,6 +286,7 @@ def main(setup, path):
     # ==============================================================================
     else:
         print("ERROR: Invalid topology")
+    '''
 
     # ==============================================================================
     # MSG OUT
