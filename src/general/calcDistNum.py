@@ -14,16 +14,18 @@
 # Function Description
 #######################################################################################################################
 """
-This function calculates the numerical distortion of the B2 bridge current and voltage waveforms.
-Inputs:     1) t:       input time vector (sec)
-            2) i_a:     load current (A)
-            3) v_a:     load voltage (V)
-            4) i_dc:    dc current (A)
-            5) v_dc:    dc voltage (V)
-            6) Vdc:     dc link voltage
-            7) fel:     fundamental frequency
-Outputs:    1) outAc:   outputs distortion ac side
-            2) outDc:   outputs distortion dc side
+This function calculates the numerical distortion of the current and voltage waveforms.
+
+Input:
+1) t:       input time vector (sec)
+2) i_a:     phase current (A)
+3) v_a:     phase voltage (V)
+4) i_dc:    dc current (A)
+5) v_dc:    dc voltage (V)
+
+Output:
+1) outAc:   outputs distortion ac side
+2) outDc:   outputs distortion dc side
 """
 
 #######################################################################################################################

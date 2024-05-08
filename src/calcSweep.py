@@ -30,8 +30,8 @@ Outputs:    1) time:    results in the time domain
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.general.calcFreq2 import calcFreq
-from src.general.calcDistNum2 import calcDistNum
+from src.general.calcFreq import calcFreq
+from src.general.calcDistNum import calcDistNum
 
 # ==============================================================================
 # External

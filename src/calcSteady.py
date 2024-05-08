@@ -30,14 +30,14 @@ Outputs:    1) time:    results in the time domain
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.general.calcFreq2 import calcFreq
+from src.general.calcFreq import calcFreq
 from src.elec.calcElecSwi import calcElecSwi
 from src.elec.calcLossSwi import calcLossSwi
 from src.elec.calcLossCap import calcLossCap
 from src.therm.calcTherRC import calcTherRC
 from src.therm.initRC import initRC
 from src.elec.calcElecCap import calcElecCap
-from src.general.calcAvg2 import calcAvg
+from src.general.calcAvg import calcAvg
 
 # ==============================================================================
 # External

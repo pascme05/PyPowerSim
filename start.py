@@ -3,9 +3,9 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         start
-# Date:         14.08.2023
+# Date:         08.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
@@ -50,13 +50,13 @@ setup = initSetup()
 # ------------------------------------------
 setup['Exp']['Name'] = "default"                                                                                         # name of the simulation (str)
 setup['Exp']['Author'] = "Pascal Schirmer"                                                                               # name of the responsible person (str)
-setup['Exp']['debug'] = 1                                                                                                # (0): debug mode de-activated, (1): debug mode activated level-1, (2): debug mode activated level-2
+setup['Exp']['debug'] = 0                                                                                                # (0): debug mode de-activated, (1): debug mode activated level-1, (2): debug mode activated level-2
 
 # ------------------------------------------
 # Operating Mode
 # ------------------------------------------
 setup['Exp']['output'] = 'Mi'                                                                                            # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled
-setup['Exp']['type'] = 2                                                                                                 # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
+setup['Exp']['type'] = 0                                                                                                 # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
 
 # ==============================================================================
 # Input Files

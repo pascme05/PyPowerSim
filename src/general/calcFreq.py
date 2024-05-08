@@ -14,14 +14,20 @@
 # Function Description
 #######################################################################################################################
 """
-This function calculates the frequency domain results based on the time domain waveforms of the B2 bridge.
-Inputs:     1) t:       input time vector (sec)
-            2) i_a:     load current (A)
-            3) v_a:     load voltage (V)
-            4) i_dc:    dc current (A)
-            5) v_dc:    dc voltage (V)
-Outputs:    1) outAc:   outputs distortion ac side
-            2) outDc:   outputs distortion dc side
+This function calculates the frequency domain results based on the time domain waveforms.
+
+Input:
+1) s:       switching sequence
+2) xs:      sampled switching sequence
+3) i_a:     phase current (A)
+4) v_a:     phase voltage (V)
+5) v_a0:    line-neutral voltage (V)
+6) i_dc:    dc current (A)
+7) v_dc:    dc voltage (V)
+
+Output:
+1) outAc:   outputs distortion ac side
+2) outDc:   outputs distortion dc side
 """
 
 #######################################################################################################################
@@ -41,7 +47,7 @@ from scipy.fft import fft
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcFreq(s, xs, timeAc, timeDc):
+def calcFreq(s, xs, i_a, v_a, v_a0, i_dc, v_dc):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
@@ -83,15 +89,15 @@ def calcFreq(s, xs, timeAc, timeDc):
     # Phase
     # ------------------------------------------
     # Current
-    Y = np.abs(fft(timeAc['i_a']) / N)[0:int(N / 2)]
+    Y = np.abs(fft(i_a) / N)[0:int(N / 2)]
     Y[1:-2] = 2 * Y[1:-2]
     freqAc['I_a'] = Y
 
     # Voltage
-    Y = np.abs(fft(timeAc['v_a']) / N)[0:int(N / 2)]
+    Y = np.abs(fft(v_a) / N)[0:int(N / 2)]
     Y[1:-2] = 2 * Y[1:-2]
     freqAc['V_a'] = Y
-    Y = np.abs(fft(timeAc['v_a0']) / N)[0:int(N / 2)]
+    Y = np.abs(fft(v_a0) / N)[0:int(N / 2)]
     Y[1:-2] = 2 * Y[1:-2]
     freqAc['V_a0'] = Y
 
@@ -102,12 +108,12 @@ def calcFreq(s, xs, timeAc, timeDc):
     # DC-Link
     # ------------------------------------------
     # Current
-    Y = np.abs(fft(timeDc['i_dc']) / N)[0:int(N / 2)]
+    Y = np.abs(fft(i_dc) / N)[0:int(N / 2)]
     Y[1:-2] = 2 * Y[1:-2]
     freqDc['I_dc'] = Y
 
     # Voltage
-    Y = np.abs(fft(timeDc['v_dc']) / N)[0:int(N / 2)]
+    Y = np.abs(fft(v_dc) / N)[0:int(N / 2)]
     Y[1:-2] = 2 * Y[1:-2]
     freqDc['V_dc'] = Y
 
