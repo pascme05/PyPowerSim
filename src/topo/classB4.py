@@ -273,19 +273,21 @@ class classB4:
         timeSw['t'] = t_ref[0:(t1 - t0)]
         timeSw['v_a_ref'] = v_ref['A'][t0:t1]
         timeSw['v_b_ref'] = v_ref['B'][t0:t1]
-        timeSw['e'] = e_ref['A'][t0:t1]
+        timeSw['e_a'] = e_ref['A'][t0:t1]
         timeSw['sA'] = s['A'][t0:t1]
         timeSw['sB'] = s['B'][t0:t1]
+        timeSw['c'] = c['A'][t0:t1]
         timeSw['cA'] = c['A'][t0:t1]
         timeSw['cB'] = c['B'][t0:t1]
         timeSw['xAs'] = xs['A'][t0:t1]
         timeSw['xBs'] = xs['B'][t0:t1]
         timeSw['xAsh'] = xsh['A'][t0:t1]
         timeSw['xBsh'] = xsh['B'][t0:t1]
-        timeSw['x'] = x['A'][t0:t1]
-        timeSw['x'] = x['B'][t0:t1]
-        timeSw['xN0A'] = xN0['A'][t0:t1]
-        timeSw['xN0B'] = xN0['B'][t0:t1]
+        timeSw['xA'] = x['A'][t0:t1]
+        timeSw['xB'] = x['B'][t0:t1]
+        timeSw['n0'] = xN0['A'][t0:t1]
+        timeSw['n0A'] = xN0['A'][t0:t1]
+        timeSw['n0B'] = xN0['B'][t0:t1]
 
         # ==============================================================================
         # Combine
@@ -830,7 +832,7 @@ class classB4:
         outAc['v_a0'] = v_a0[t0:t1]
         outAc['v_b0'] = v_a0[t0:t1]
         outAc['v_L'] = v_L[t0:t1]
-        outAc['v_out'] = v_out[t0:t1]
+        outAc['v_a_out'] = v_out[t0:t1]
         outAc['v_a'] = v_ab[t0:t1]
         outAc['i_a'] = i_a
 
@@ -901,19 +903,19 @@ class classB4:
         outAc['V_a_eff'] = V_ab_eff
         outAc['V_a_v1_eff'] = V_ab_v1_eff
         outAc['V_a_thd'] = V_ab_thd
-        outAc['I_a_eff'] = 0
-        outAc['I_a_v1_eff'] = 0
+        outAc['I_a_eff'] = np.nan
+        outAc['I_a_v1_eff'] = np.nan
         outAc['I_a_thd'] = I_a_thd
 
         # ------------------------------------------
         # DC Side
         # ------------------------------------------
         outDc['V_dc_eff'] = V_dc_eff
-        outDc['V_dc_v1_eff'] = 0
-        outDc['V_dc_thd'] = 0
-        outDc['I_dc_eff'] = 0
-        outDc['I_dc_v1_eff'] = 0
-        outDc['I_dc_thd'] = 0
+        outDc['V_dc_v1_eff'] = np.nan
+        outDc['V_dc_thd'] = np.nan
+        outDc['I_dc_eff'] = np.nan
+        outDc['I_dc_v1_eff'] = np.nan
+        outDc['I_dc_thd'] = np.nan
 
         # ==============================================================================
         # Return

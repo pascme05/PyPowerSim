@@ -39,8 +39,8 @@ improved, are not yet implemented or lack verification with numerical models or 
 In the following a list of know issues and limitations is provided:
 - The transfer functions for the input and output filter are not yet verified. Also, there is no protection against instability of the transfer functions.
 - Soft switching architectures are not included yet.
-- The interpolation methods for calculating the tabulated parameter options are only linear now.
-
+- The interpolation methods for calculating the tabulated parameter options are only linear.
+- Plotting error for average DC voltage in B6 configuration
 
 # Architecture
 The architecture implemented in the PyPowerSim toolkit is exemplary illustrated for a B2 
@@ -229,7 +229,10 @@ file under \setup.
 As failure and mistakes are inextricably linked to human nature, the toolkit is obviously not perfect, 
 thus suggestions and constructive feedback are always welcome. If you want to contribute to the PyPowerSim 
 toolkit or spotted any mistake, please contact me via: p.schirmer@herts.ac.uk
-
+The following aspects will be improved in future version:
+- Temperature, current, and frequency dependencies for the load parameters
+- Calculation of long term mission profiles
+- Generation of efficiency maps for the converter operation range
 
 # License
 The software framework is provided under the Creative Commons Attribution-NonCommercial (CC BY-NC) license.

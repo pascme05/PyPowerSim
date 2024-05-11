@@ -75,7 +75,7 @@ setup['Exp']['Cap'] = "Elco"                                                    
 # ==============================================================================
 # Plotting and Saving
 # ==============================================================================
-setup['Exp']['plot'] = 2                                                                                                 # (0): no results are plotted, (1): results are plotted, (2): analytic results are plotted
+setup['Exp']['plot'] = 2                                                                                                 # (0): no results are plotted, (1): results are plotted, (2): analytic results are plotted, (3): topology specific plots
 setup['Exp']['plotGen'] = 0                                                                                              # (0): no generic plots, (1): loss and thermal models are plotted
 setup['Exp']['save'] = 0                                                                                                 # (0): no results are saved, (1): results are saved
 

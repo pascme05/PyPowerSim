@@ -1276,9 +1276,9 @@ class classB6:
         # ------------------------------------------
         # DC Side
         # ------------------------------------------
-        outDc['V_dc_eff'] = 0
-        outDc['V_dc_v1_eff'] = 0
-        outDc['V_dc_thd'] = V_dc_thd
+        outDc['V_dc_eff'] = np.nan
+        outDc['V_dc_v1_eff'] = np.nan
+        outDc['V_dc_thd'] = np.nan
         outDc['I_dc_eff'] = I_dc_eff
         outDc['I_dc_v1_eff'] = I_dc_v1_eff
         outDc['I_dc_thd'] = I_dc_thd

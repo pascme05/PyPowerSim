@@ -193,7 +193,7 @@ class classB2:
         # Calculation
         # ==============================================================================
         timeElec['cap']['C1'] = pd.DataFrame(columns=['i_c', 'v_c'])
-        timeSw = pd.DataFrame(columns=['t', 'v_ref', 'e', 'xs', 'xsh', 's', 'c'])
+        timeSw = pd.DataFrame(columns=['t', 'v_a_ref', 'e_a', 'xAs', 'xAsh', 'sA', 'c'])
         freqSw = pd.DataFrame(columns=['S', 'Xs'])
         freqAc = pd.DataFrame(columns=['I_a', 'V_a'])
         freqDc = pd.DataFrame(columns=['I_dc', 'I_d_p', 'I_d_m', 'V_dc'])
@@ -267,12 +267,12 @@ class classB2:
         timeSw['t'] = t_ref[0:(t1 - t0)]
         timeSw['v_ref'] = v_ref['A'][t0:t1]
         timeSw['e'] = e_ref['A'][t0:t1]
-        timeSw['s'] = s['A'][t0:t1]
+        timeSw['sA'] = s['A'][t0:t1]
         timeSw['c'] = c['A'][t0:t1]
-        timeSw['xs'] = xs['A'][t0:t1]
-        timeSw['xsh'] = xsh['A'][t0:t1]
-        timeSw['x'] = x['A'][t0:t1]
-        timeSw['xN0'] = xN0['A'][t0:t1]
+        timeSw['xAs'] = xs['A'][t0:t1]
+        timeSw['xAsh'] = xsh['A'][t0:t1]
+        timeSw['xA'] = x['A'][t0:t1]
+        timeSw['n0'] = xN0['A'][t0:t1]
 
         # ==============================================================================
         # Combine
@@ -736,6 +736,7 @@ class classB2:
         # ------------------------------------------
         outAc['v_a0'] = v_a0[t0:t1]
         outAc['v_L'] = v_L[t0:t1]
+        outAc['v_a_out'] = v_L[t0:t1]
         outAc['v_a'] = v_a[t0:t1]
         outAc['i_a'] = i_a
 
@@ -800,7 +801,6 @@ class classB2:
         # DC Side
         # ------------------------------------------
         V_dc_eff = Mi * 4 / np.pi * self.Vdc / 2
-        I_dc_thd = 1 / np.sqrt(48) * self.Vdc / 2 * self.Ts / L * np.sqrt(3 / 8 * Mi ** 4 - Mi ** 2 + 1)
 
         # ==============================================================================
         # Post-Processing
@@ -819,11 +819,11 @@ class classB2:
         # DC Side
         # ------------------------------------------
         outDc['V_dc_eff'] = V_dc_eff
-        outDc['V_dc_v1_eff'] = 0
-        outDc['V_dc_thd'] = 0
-        outDc['I_dc_eff'] = 0
-        outDc['I_dc_v1_eff'] = 0
-        outDc['I_dc_thd'] = I_dc_thd
+        outDc['V_dc_v1_eff'] = np.nan
+        outDc['V_dc_thd'] = np.nan
+        outDc['I_dc_eff'] = np.nan
+        outDc['I_dc_v1_eff'] = np.nan
+        outDc['I_dc_thd'] = np.nan
 
         # ==============================================================================
         # Return

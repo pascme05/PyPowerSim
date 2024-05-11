@@ -2,13 +2,25 @@
 #######################################################################################################################
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
-# File:         plotSweep_B6
-# Date:         14.08.2023
+# File:         plotSweep
+# Date:         08.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function unifies the sweeping plots for all topologies. It always plots the results of the first phase.
+Inputs:     1) time:    time domain results
+            2) freq:    frequency domain results
+            3) sweep:   sweeping and distortion results
+            4) setup:   includes all simulation variables
+Outputs:    None
+"""
 
 #######################################################################################################################
 # Import libs
@@ -33,11 +45,11 @@ from scipy.fft import fft
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
+def plotSweep(time, freq, sweep, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
-    print("START: Plotting B6")
+    print("START: Plotting Sweeping Results")
 
     ###################################################################################################################
     # Initialisation
@@ -45,39 +57,28 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # ==============================================================================
     # Init
     # ==============================================================================
-    # ------------------------------------------
-    # Time
-    # ------------------------------------------
     timeSw = time['Sw']
     timeAc = time['Ac']
     timeDc = time['Dc']
-
-    # ------------------------------------------
-    # Frequency
-    # ------------------------------------------
     freqSw = freq['Sw']
     freqAc = freq['Ac']
     freqDc = freq['Dc']
-
-    # ------------------------------------------
-    # Sweep
-    # ------------------------------------------
     distAc = sweep['Ac']
     distDc = sweep['Dc']
 
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    fel = setupTopo['fel']
-    fs = setupPara['PWM']['fs']
-    fsim = setupExp['fsim']
+    fel = setup['Top']['fel']
+    fs = setup['Par']['PWM']['fs']
+    fsim = setup['Exp']['fsim']
     Q = int(fs / fel)
-    R = setupTopo['R']
-    L = setupTopo['L']
-    Mi = setupData['stat']['Mi']
-    Vdc = setupData['stat']['Vdc']
-    phiE = setupTopo['phiE']
-    down = int(setupData['stat']['cyc']) - 2
+    R = setup['Top']['R']
+    L = setup['Top']['L']
+    Mi = setup['Dat']['stat']['Mi']
+    Vdc = setup['Dat']['stat']['Vdc']
+    phiE = setup['Top']['phiE']
+    down = int(setup['Dat']['stat']['cyc']) - 2
     down2 = int(fsim/fs/200)
     if down2 < 1:
         down2 = 1
@@ -145,8 +146,8 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     gs = gridspec.GridSpec(3, 2)
     pl.figure()
     txt = "Modulation Functions for: " + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) + ", Sampling: " + str(
-        setupPara['PWM']['samp']) + ", Update: " + str(setupPara['PWM']['upd']) + " and Edge Trigger: " + str(
-        setupPara['PWM']['tri'])
+        setup['Par']['PWM']['samp']) + ", Update: " + str(setup['Par']['PWM']['upd']) + " and Edge Trigger: " + str(
+        setup['Par']['PWM']['tri'])
     pl.suptitle(txt, size=18)
     pl.subplots_adjust(hspace=0.35, wspace=0.20, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
@@ -172,12 +173,10 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Time-Domain
     pl.subplot(gs[1, 0])
     pl.plot(t[::down2], timeSw['sA'][::down2])
-    pl.plot(t[::down2], timeSw['sB'][::down2])
-    pl.plot(t[::down2], timeSw['sC'][::down2])
     pl.title('Time-domain Switching Functions')
     pl.xlabel('t in (sec)')
-    pl.ylabel("$s_{a,b,c}(t)$ (p.u)")
-    pl.legend(["$s_{a}$", "$s_{b}$", "$s_{c}$"], loc='upper right')
+    pl.ylabel("$s_{a}(t)$ (p.u)")
+    pl.legend(["$s_{a}$"], loc='upper right')
     pl.grid('on')
 
     # Freq-Domain
@@ -197,12 +196,10 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Time-Domain
     pl.subplot(gs[1, 1])
     pl.plot(t[::down2], timeSw['xAs'][::down2])
-    pl.plot(t[::down2], timeSw['xBs'][::down2])
-    pl.plot(t[::down2], timeSw['xCs'][::down2])
     pl.title('Time-domain Sampled References')
     pl.xlabel('t in (sec)')
-    pl.ylabel("$x_{a,b,c}(t)$ (p.u)")
-    pl.legend(["$x_{a}$", "$x_{b}$", "$x_{c}$"], loc='upper right')
+    pl.ylabel("$x_{a}(t)$ (p.u)")
+    pl.legend(["$x_{a}$"], loc='upper right')
     pl.grid('on')
 
     # Freq-Domain
@@ -220,7 +217,7 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Current
     # ==============================================================================
     plt.figure()
-    txt = "Currents B6 Bridge for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+    txt = "Currents for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
         Mi) + "$ ,Q$=" + str(Q) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(
         int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
     plt.suptitle(txt, size=18)
@@ -232,12 +229,10 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Time
     plt.subplot(2, 3, 1)
     plt.plot(t[::down2], timeAc['i_a'][::down2])
-    plt.plot(t[::down2], timeAc['i_b'][::down2])
-    plt.plot(t[::down2], timeAc['i_c'][::down2])
-    plt.ylabel("$i_{a,b,c}(t)$ (A)")
+    plt.ylabel("$i_{a}(t)$ (A)")
     plt.title('Time-domain Currents AC-Side')
     plt.xlabel('time in (sec)')
-    pl.legend(["$i_{a}$", "$i_{b}$", "$i_{c}$"], loc='upper right')
+    pl.legend(["$i_{a}$"], loc='upper right')
     plt.grid('on')
 
     # Frequency
@@ -256,7 +251,7 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Modulation
     plt.subplot(233)
     plt.plot(M_i, distAc['num']['I_a_thd'])
-    if setupExp['plot'] == 2:
+    if setup['Exp']['plot'] == 2:
         plt.plot(M_i, distAc['ana']['I_a_thd'], 'tab:blue', linestyle="", marker="o")
         plt.legend(['Numerical', 'Analytical'])
     plt.ylim(0, )
@@ -293,7 +288,7 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Modulation
     plt.subplot(236)
     plt.plot(M_i, distDc['num']['I_dc_thd'])
-    if setupExp['plot'] == 2:
+    if setup['Exp']['plot'] == 2:
         plt.plot(M_i, distDc['ana']['I_dc_thd'], 'tab:blue', linestyle="", marker="o")
         plt.legend(['Numerical', 'Analytical'])
     plt.ylim(0, )
@@ -306,7 +301,7 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Voltage
     # ==============================================================================
     plt.figure()
-    txt = "Voltages B6 Bridge for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+    txt = "Voltages for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
         Mi) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(
         int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
     plt.suptitle(txt, size=18)
@@ -340,7 +335,7 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Modulation
     plt.subplot(233)
     plt.plot(M_i, distAc['num']['V_a_thd'])
-    if setupExp['plot'] == 2:
+    if setup['Exp']['plot'] == 2:
         plt.plot(M_i, distAc['ana']['V_a_thd'], 'tab:blue', linestyle="", marker="o")
         plt.legend(['Numerical', 'Analytical'])
     plt.title('Distortion Voltage AC-Side')
@@ -376,9 +371,9 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Modulation
     plt.subplot(236)
     plt.plot(M_i, distDc['num']['V_dc_thd'])
-    # if setupExp['plot'] == 2:
-    #    plt.plot(M_i, distDc['ana']['V_dc_thd'], 'tab:blue', linestyle="", marker="o")
-    #    plt.legend(['Numerical', 'Analytical'])
+    if setup['Exp']['plot'] == 2:
+        plt.plot(M_i, distDc['ana']['V_dc_thd'], 'tab:blue', linestyle="", marker="o")
+        plt.legend(['Numerical', 'Analytical'])
     plt.title('Distortion Voltage DC-Side')
     plt.ylabel("$V_{dc,rms}^{THD}$ (V)")
     plt.xlabel("$M_{i}$ in (p.u)")
@@ -386,14 +381,6 @@ def plotSweep_B6(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     plt.show()
 
     ###################################################################################################################
-    # Post-Processing
-    ###################################################################################################################
-
-    ###################################################################################################################
     # MSG OUT
     ###################################################################################################################
-    print("END: Plotting B6")
-
-    ###################################################################################################################
-    # Return
-    ###################################################################################################################
+    print("END: Plotting Sweeping Results")

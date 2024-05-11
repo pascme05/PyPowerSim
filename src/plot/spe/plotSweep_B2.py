@@ -2,7 +2,7 @@
 #######################################################################################################################
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
-# File:         plotSweep_B4
+# File:         plotSweep_B2
 # Date:         14.08.2023
 # Author:       Dr. Pascal A. Schirmer
 # Version:      V.0.2
@@ -16,8 +16,7 @@
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.general.helpFnc import OoM
-from src.general.helpFnc import thd
+from src.general.helpFnc import OoM, thd
 
 # ==============================================================================
 # External
@@ -33,11 +32,11 @@ from scipy.fft import fft
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
+def plotSweep_B2(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
-    print("START: Plotting B4")
+    print("START: Plotting Sweep B2")
 
     ###################################################################################################################
     # Initialisation
@@ -93,7 +92,7 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Pre-Processing
     ###################################################################################################################
     # ==============================================================================
-    # Start and End Plotting
+    # General
     # ==============================================================================
     # ------------------------------------------
     # Limits
@@ -119,7 +118,7 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     phiV = np.angle(Y)[1]
     Y = fft(timeAc['i_a'])
     phiI = np.angle(Y)[1]
-    phi = phiV - phiI
+    phi = phiV - phiI + 2 * np.pi
     while phi > 2 * np.pi:
         phi = phi - 2 * np.pi
 
@@ -155,15 +154,13 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     ax1 = pl.subplot(gs[0, :])
     ax2 = ax1.twinx()
-    ax1.plot(t[::down2], timeSw['cA'][::down2], 'tab:blue')
+    ax1.plot(t[::down2], timeSw['c'][::down2], 'k')
     ax2.plot(t[::down2], timeSw['v_a_ref'][::down2] / (Vdc / 2), color='tab:blue')
-    ax1.plot(t[::down2], timeSw['cB'][::down2], 'tab:orange')
-    ax2.plot(t[::down2], timeSw['v_b_ref'][::down2] / (Vdc / 2), color='tab:orange')
     pl.title('Carrier and Reference Waveform')
     pl.xlabel('t in (sec)')
     ax1.set_ylabel('c(t)', color='black')
     ax2.set_ylabel('v(t) (p.u)', color='black')
-    pl.legend(["$c_{a}$", "$v_{a}^{*}$", "$c_{b}$", "$v_{b}^{*}$"], loc='upper right')
+    pl.legend(["$c$", "$v_{a}^{*}$"], loc='upper right')
     pl.grid('on')
 
     # ------------------------------------------
@@ -172,11 +169,9 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Time-Domain
     pl.subplot(gs[1, 0])
     pl.plot(t[::down2], timeSw['sA'][::down2])
-    pl.plot(t[::down2], timeSw['sB'][::down2])
-    pl.title('Time-domain Switching Functions')
+    pl.title('Time-domain Switching Function')
     pl.xlabel('t in (sec)')
-    pl.ylabel("$s_{x}(t)$ (p.u)")
-    pl.legend(["$s_{a}$", "$s_{b}$"], loc='upper right')
+    pl.ylabel("$s_{a}(t)$ (p.u)")
     pl.grid('on')
 
     # Freq-Domain
@@ -196,11 +191,9 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Time-Domain
     pl.subplot(gs[1, 1])
     pl.plot(t[::down2], timeSw['xAs'][::down2])
-    pl.plot(t[::down2], timeSw['xBs'][::down2])
-    pl.title('Time-domain Sampled References')
+    pl.title('Time-domain Sampled Reference')
     pl.xlabel('t in (sec)')
-    pl.ylabel("$x_{x}(t)$ (p.u)")
-    pl.legend(["$x_{a}$", "$x_{b}$"], loc='upper right')
+    pl.ylabel("$x_{a}(t)$ (p.u)")
     pl.grid('on')
 
     # Freq-Domain
@@ -218,7 +211,7 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Current
     # ==============================================================================
     plt.figure()
-    txt = "Currents B4 Bridge for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+    txt = "Currents B2 Bridge for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
         Mi) + "$ ,Q$=" + str(Q) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(
         int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
     plt.suptitle(txt, size=18)
@@ -251,7 +244,7 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Modulation
     plt.subplot(233)
     plt.plot(M_i, distAc['num']['I_a_thd'])
-    if setupExp['plot'] == 2:
+    if setupExp['plot'] >= 2:
         plt.plot(M_i, distAc['ana']['I_a_thd'], 'tab:blue', linestyle="", marker="o")
         plt.legend(['Numerical', 'Analytical'])
     plt.ylim(0, )
@@ -265,11 +258,11 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time
     plt.subplot(2, 3, 4)
-    plt.plot(t[::down2], timeDc['i_dc'][::down2], t[::down2], np.mean(timeDc['i_dc']) * np.ones(np.size(timeDc['i_dc'][::down2])), '--')
+    plt.plot(t[::down2], timeDc['i_d_p'][::down2], t[::down2], np.mean(timeDc['i_d_p']) * np.ones(np.size(timeDc['i_d_p'][::down2])), '--')
     plt.ylabel("$i_{dc}(t)$ (A)")
     plt.title('Time-domain Currents DC-Side')
     plt.xlabel('time in (sec)')
-    plt.legend(["$i_{dc}$", "$I_{dc,avg}$"], loc='upper right')
+    plt.legend(["$i_{dc}^{+}$", "$I_{dc,avg}^{+}$"], loc='upper right')
     plt.grid('on')
 
     # Frequency
@@ -288,7 +281,7 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Modulation
     plt.subplot(236)
     plt.plot(M_i, distDc['num']['I_dc_thd'])
-    # if setupExp['plot'] == 2:
+    # if setupExp['plot'] >= 2:
     #    plt.plot(M_i, distDc['ana']['I_dc_thd'], 'tab:blue', linestyle="", marker="o")
     #    plt.legend(['Numerical', 'Analytical'])
     plt.ylim(0, )
@@ -301,7 +294,7 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Voltage
     # ==============================================================================
     plt.figure()
-    txt = "Voltages B4 Bridge for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+    txt = "Voltages B2 Bridge for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
         Mi) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(
         int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
     plt.suptitle(txt, size=18)
@@ -312,17 +305,17 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time
     plt.subplot(2, 3, 1)
-    plt.plot(t[::down2], timeAc['v_a'][::down2], t[::down2], timeAc['v_a0'][::down2], t[::down2], timeSw['e'][::down2])
-    plt.ylabel("$v_{ab}(t)$ (V)")
+    plt.plot(t[::down2], timeAc['v_a0'][::down2], t[::down2], timeAc['v_a'][::down2], t[::down2], timeAc['v_L'][::down2], t[::down2], timeSw['e_a'][::down2])
+    plt.ylabel("$v_{a}(t)$ (V)")
     plt.title('Time-domain Voltages AC-Side')
     plt.xlabel('time in (sec)')
-    plt.legend(["$v_{ab}(t)$", "$v_{a0}(t)$", "$e(t)$"], loc='upper right')
+    plt.legend(["$v_{a0}(t)$", "$v_{a}(t)$", "$v_{L}(t)$", "$e(t)$"], loc='upper right')
     plt.grid('on')
 
     # Frequency
     ax = plt.subplot(2, 3, 2)
     plt.stem(f[::down][0:50], freqAc['V_a'][::down][0:50])
-    plt.ylabel("$V_{ab}(f)$ (V)")
+    plt.ylabel("$V_{a}(f)$ (V)")
     plt.xlim(0, 50)
     plt.title('Frequency-domain Voltages AC-Side')
     plt.xlabel("$f/f_{1}$ (Hz/Hz)")
@@ -335,11 +328,11 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Modulation
     plt.subplot(233)
     plt.plot(M_i, distAc['num']['V_a_thd'])
-    if setupExp['plot'] == 2:
+    if setupExp['plot'] >= 2:
         plt.plot(M_i, distAc['ana']['V_a_thd'], 'tab:blue', linestyle="", marker="o")
         plt.legend(['Numerical', 'Analytical'])
     plt.title('Distortion Voltage AC-Side')
-    plt.ylabel("$V_{ab,rms}^{THD}$ (V)")
+    plt.ylabel("$V_{a,rms}^{THD}$ (V)")
     plt.xlabel("$M_{i}$ in (p.u)")
     plt.grid('on')
 
@@ -371,7 +364,7 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     # Modulation
     plt.subplot(236)
     plt.plot(M_i, distDc['num']['V_dc_thd'])
-    # if setupExp['plot'] == 2:
+    # if setupExp['plot'] >= 2:
     #    plt.plot(M_i, distDc['ana']['V_dc_thd'], 'tab:blue', linestyle="", marker="o")
     #    plt.legend(['Numerical', 'Analytical'])
     plt.title('Distortion Voltage DC-Side')
@@ -387,7 +380,7 @@ def plotSweep_B4(time, freq, sweep, setupPara, setupData, setupTopo, setupExp):
     ###################################################################################################################
     # MSG OUT
     ###################################################################################################################
-    print("END: Plotting B4")
+    print("END: Plotting Sweep B2")
 
     ###################################################################################################################
     # Return

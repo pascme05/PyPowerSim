@@ -2,10 +2,10 @@
 #######################################################################################################################
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
-# File:         plotStat_B2
-# Date:         14.08.2023
+# File:         plotStat
+# Date:         11.05.2024
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.0.2
+# Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
@@ -32,15 +32,20 @@ from scipy.fft import fft
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
+def plotStat(time, freq, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
-    print("START: Plotting Stationary B2")
+    print("START: Plotting Stationary Waveforms")
 
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
+    # ==============================================================================
+    # id
+    # ==============================================================================
+    id1 = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+
     # ==============================================================================
     # Init
     # ==============================================================================
@@ -64,18 +69,18 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    fel = setupTopo['fel']
-    fs = setupPara['PWM']['fs']
-    fsim = setupExp['fsim']
+    fel = setup['Top']['fel']
+    fs = setup['Par']['PWM']['fs']
+    fsim = setup['Exp']['fsim']
     Q = int(fs / fel)
-    R = setupTopo['R']
-    L = setupTopo['L']
-    Mi = setupData['stat']['Mi']
-    Vdc = setupData['stat']['Vdc']
-    phiE = setupTopo['phiE']
-    down = int(setupData['stat']['cyc']) - 2
-    Ta = setupData['stat']['Tc']
-    down2 = int(fsim/fs/200)
+    R = setup['Top']['R']
+    L = setup['Top']['L']
+    Mi = setup['Dat']['stat']['Mi']
+    Vdc = setup['Dat']['stat']['Vdc']
+    phiE = setup['Top']['phiE']
+    down = int(setup['Dat']['stat']['cyc']) - 2
+    down2 = int(fsim / fs / 200)
+    Ta = setup['Dat']['stat']['Tc']
     if down2 < 1:
         down2 = 1
 
@@ -150,8 +155,8 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     gs = gridspec.GridSpec(3, 2)
     pl.figure()
     txt = "Modulation Functions for: " + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) + ", Sampling: " + str(
-        setupPara['PWM']['samp']) + ", Update: " + str(setupPara['PWM']['upd']) + " and Edge Trigger: " + str(
-        setupPara['PWM']['tri'])
+        setup['Par']['PWM']['samp']) + ", Update: " + str(setup['Par']['PWM']['upd']) + " and Edge Trigger: " + str(
+        setup['Par']['PWM']['tri'])
     pl.suptitle(txt, size=18)
     pl.subplots_adjust(hspace=0.35, wspace=0.20, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
@@ -160,13 +165,15 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     ax1 = pl.subplot(gs[0, :])
     ax2 = ax1.twinx()
-    ax1.plot(t[::down2], timeSw['c'][::down2], 'k')
-    ax2.plot(t[::down2], timeSw['v_ref'][::down2] / (Vdc / 2), color='tab:blue')
+    ax1.plot(t[::down2], timeSw['c'][::down2], 'black')
+    ax2.plot(t[::down2], timeSw['v_a_ref'][::down2] / (Vdc / 2), color='tab:blue')
+    ax2.plot(t[::down2], timeSw['xA'][::down2], '--', color='tab:blue')
+    ax2.plot(t[::down2], timeSw['n0'][::down2], '-.', color='tab:blue')
     pl.title('Carrier and Reference Waveform')
     pl.xlabel('t in (sec)')
-    ax1.set_ylabel('c(t)', color='black')
-    ax2.set_ylabel('v(t) (p.u)', color='black')
-    pl.legend(["$c$", "$v_{a}^{*}$"], loc='upper right')
+    ax1.set_ylabel('c(t)/s(t)', color='black')
+    ax2.set_ylabel('v(t) (p.u)', color='tab:blue')
+    pl.legend(["$c_{a}$", "$v_{a}^{*}$", "$v_{a0}^{*}$", "$v_{n0}^{*}$"], loc='upper right')
     pl.grid('on')
 
     # ------------------------------------------
@@ -174,10 +181,11 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time-Domain
     pl.subplot(gs[1, 0])
-    pl.plot(t[::down2], timeSw['s'][::down2])
-    pl.title('Time-domain Switching Function')
+    pl.plot(t[::down2], timeSw['sA'][::down2])
+    pl.title('Time-domain Switching Functions')
     pl.xlabel('t in (sec)')
     pl.ylabel("$s_{a}(t)$ (p.u)")
+    pl.legend(["$s_{a}$"], loc='upper right')
     pl.grid('on')
 
     # Freq-Domain
@@ -196,10 +204,11 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time-Domain
     pl.subplot(gs[1, 1])
-    pl.plot(t[::down2], timeSw['xs'][::down2])
-    pl.title('Time-domain Sampled Reference')
+    pl.plot(t[::down2], timeSw['xAs'][::down2])
+    pl.title('Time-domain Sampled References')
     pl.xlabel('t in (sec)')
     pl.ylabel("$x_{a}(t)$ (p.u)")
+    pl.legend(["$x_{a}$"], loc='upper right')
     pl.grid('on')
 
     # Freq-Domain
@@ -217,7 +226,7 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # Current
     # ==============================================================================
     plt.figure()
-    txt = "Currents B2 Bridge for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+    txt = "Currents for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
         Mi) + "$ ,Q$=" + str(Q) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(
         int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
     plt.suptitle(txt, size=18)
@@ -232,6 +241,7 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     plt.ylabel("$i_{a}(t)$ (A)")
     plt.title('Time-domain Currents AC-Side')
     plt.xlabel('time in (sec)')
+    pl.legend(["$i_{a}$"], loc='upper right')
     plt.grid('on')
 
     # Frequency
@@ -252,11 +262,12 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time
     plt.subplot(2, 2, 3)
-    plt.plot(t[::down2], timeDc['i_d_p'][::down2], t[::down2], np.mean(timeDc['i_d_p']) * np.ones(np.size(timeDc['i_d_p'][::down2])), '--')
+    plt.plot(t[::down2], timeDc['i_dc'][::down2], t[::down2],
+             np.mean(timeDc['i_dc']) * np.ones(np.size(timeDc['i_dc'][::down2])), '--')
     plt.ylabel("$i_{dc}(t)$ (A)")
     plt.title('Time-domain Currents DC-Side')
     plt.xlabel('time in (sec)')
-    plt.legend(["$i_{dc}^{+}$", "$I_{dc,avg}^{+}$"], loc='upper right')
+    plt.legend(["$i_{dc}$", "$I_{dc,avg}$"], loc='upper right')
     plt.grid('on')
 
     # Frequency
@@ -276,7 +287,7 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # Voltage
     # ==============================================================================
     plt.figure()
-    txt = "Voltages B2 Bridge for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+    txt = "Voltages for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
         Mi) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(
         int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
     plt.suptitle(txt, size=18)
@@ -287,11 +298,12 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time
     plt.subplot(2, 2, 1)
-    plt.plot(t[::down2], timeAc['v_a0'][::down2], t[::down2], timeAc['v_a'][::down2], t[::down2], timeAc['v_L'][::down2], t[::down2], timeSw['e'][::down2])
+    plt.plot(t[::down2], timeAc['v_a'][::down2], t[::down2], timeAc['v_a0'][::down2], t[::down2],
+             timeAc['v_a_out'][::down2], t[::down2], timeSw['e_a'][::down2])
     plt.ylabel("$v_{a}(t)$ (V)")
     plt.title('Time-domain Voltages AC-Side')
     plt.xlabel('time in (sec)')
-    plt.legend(["$v_{a0}(t)$", "$v_{a}(t)$", "$v_{L}(t)$", "$e(t)$"], loc='upper right')
+    plt.legend(["$v_{a}(t)$", "$v_{a0}(t)$", "$v_{a,out}(t)$", "$e_{a}(t)$"], loc='upper right')
     plt.grid('on')
 
     # Frequency
@@ -312,7 +324,8 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # ------------------------------------------
     # Time
     plt.subplot(2, 2, 3)
-    plt.plot(t[::down2], timeDc['v_in'][::down2], t[::down2], timeDc['v_dc'][::down2], t[::down2], np.mean(timeDc['v_dc']) * np.ones(np.size(timeDc['v_dc'][::down2])), '--')
+    plt.plot(t[::down2], timeDc['v_in'][::down2], t[::down2], timeDc['v_dc'][::down2], t[::down2],
+             np.mean(timeDc['v_dc']) * np.ones(np.size(timeDc['v_dc'][::down2])), '--')
     plt.ylabel("$v_{dc}(t)$ (V)")
     plt.title('Time-domain Voltages DC-Side')
     plt.xlabel('time in (sec)')
@@ -336,120 +349,113 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     # Time-domain Switches
     # ==============================================================================
     plt.figure()
-    txt = "Time domain switches B2 bridge for PWM control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+    txt = "Time domain switches for PWM control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
         Mi) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(
         int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
     plt.suptitle(txt, size=18)
     plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
     # ------------------------------------------
-    # Switch HS
+    # Losses
     # ------------------------------------------
-    # Current
-    ax = plt.subplot(5, 2, 1)
-    plt.plot(t[::down2], timeElec['sw']['S1']['i_T'][::down2], t[::down2], timeElec['sw']['S1']['i_D'][::down2])
-    plt.ylabel("$i(t)$ (A)")
-    plt.title('Time-domain Currents HS Switch')
-    ax.set_xticklabels([])
-    plt.legend(["$i_{T1}$", "$i_{D1}$"], loc='upper right')
-    plt.grid('on')
+    for i in range(0, 2):
+        plt.subplot(4, 2, 1 + i)
+        plt.plot(t[::down2], timeElec['sw'][id1[i]]['i_T'][::down2], t[::down2], timeElec['sw'][id1[i]]['i_D'][::down2])
+        plt.ylabel("$i(t)$ (A)")
+        txt = 'Time-domain Currents Switch ' + str(id1[i])
+        plt.title(txt)
+        plt.xticks([], [])
+        plt.legend(["$i_{T}$", "$i_{D}$"], loc='upper right')
+        plt.grid('on')
 
-    # Voltage
-    ax = plt.subplot(5, 2, 3)
-    plt.plot(t[::down2], timeElec['sw']['S1']['v_T'][::down2], t[::down2], timeElec['sw']['S1']['v_D'][::down2])
-    plt.ylabel("$v(t)$ (V)")
-    plt.title('Time-domain Voltages HS Switch')
-    ax.set_xticklabels([])
-    plt.legend(["$v_{T1}$", "$v_{D1}$"], loc='upper right')
-    plt.grid('on')
+        # Voltage
+        plt.subplot(4, 2, 3 + i)
+        plt.plot(t[::down2], timeElec['sw'][id1[i]]['v_T'][::down2], t[::down2], timeElec['sw'][id1[i]]['v_D'][::down2])
+        plt.ylabel("$v(t)$ (V)")
+        txt = 'Time-domain Voltages Switch ' + str(id1[i])
+        plt.title(txt)
+        plt.xticks([], [])
+        plt.legend(["$v_{T}$", "$v_{D}$"], loc='upper right')
+        plt.grid('on')
 
-    # Losses
-    ax = plt.subplot(5, 2, 5)
-    plt.plot(t[::down2], timeLoss['sw']['S1']['p_T_c'][::down2], t[::down2], timeLoss['sw']['S1']['p_D_c'][::down2])
+        # Losses
+        plt.subplot(4, 2, 5 + i)
+        plt.plot(t[::down2], timeLoss['sw'][id1[i]]['p_T_c'][::down2], t[::down2], timeLoss['sw'][id1[i]]['p_D_c'][::down2])
+        plt.ylabel("$p(t)$ (W)")
+        txt = 'Time-domain Conduction Losses Switch ' + str(id1[i])
+        plt.title(txt)
+        plt.xticks([], [])
+        plt.legend(["$p_{T}$", "$p_{D}$"], loc='upper right')
+        plt.grid('on')
+
+        # Losses
+        plt.subplot(4, 2, 7 + i)
+        plt.plot(t[::down2], timeLoss['sw'][id1[i]]['p_T_s'][::down2], t[::down2], timeLoss['sw'][id1[i]]['p_D_s'][::down2])
+        plt.ylabel("$p(t)$ (W)")
+        txt = 'Time-domain Switching Losses Switch ' + str(id1[i])
+        plt.title(txt)
+        plt.xlabel('time in (sec)')
+        plt.legend(["$p_{T}$", "$p_{D}$"], loc='upper right')
+        plt.grid('on')
+
+    # ------------------------------------------
+    # Thermal
+    # ------------------------------------------
+    plt.figure()
+    plt.subplot(2, 2, 1)
+    plt.plot(t[::down2], timeLoss['sw']['S1']['p_T'][::down2], t[::down2], timeLoss['sw']['S1']['p_D'][::down2])
     plt.ylabel("$p(t)$ (W)")
-    plt.title('Time-domain Conduction Losses HS Switch')
-    ax.set_xticklabels([])
-    plt.legend(["$p_{T1}$", "$p_{D1}$"], loc='upper right')
-    plt.grid('on')
-
-    # Losses
-    ax = plt.subplot(5, 2, 7)
-    plt.plot(t[::down2], timeLoss['sw']['S1']['p_T_s'][::down2], t[::down2], timeLoss['sw']['S1']['p_D_s'][::down2])
-    plt.ylabel("$p(t)$ (W)")
-    plt.title('Time-domain Switching Losses HS Switch')
-    ax.set_xticklabels([])
-    plt.legend(["$p_{T1}$", "$p_{D1}$"], loc='upper right')
+    txt = 'Time-domain Total Losses Switch S1'
+    plt.title(txt)
+    plt.xticks([], [])
+    plt.legend(["$p_{T}$", "$p_{D}$"], loc='upper right')
     plt.grid('on')
 
     # Temperature
-    plt.subplot(5, 2, 9)
-    plt.plot(t[::down2], timeTher['sw']['T1'][::down2], t[::down2], timeTher['sw']['D1'][::down2], t[::down2], timeTher['sw']['C1'][::down2], t[::down2], Ta * np.ones(np.size(t[::down2])))
+    plt.subplot(2, 2, 3)
+    plt.plot(t[::down2], timeTher['sw']['T1'][::down2], t[::down2], timeTher['sw']['D1'][::down2], t[::down2], timeTher['sw']['C1'][::down2], t[::down2],
+             Ta * np.ones(np.size(t[::down2])))
     plt.ylabel("$\Theta(t)$ (°C)")
-    plt.title('Time-domain Thermal HS Switch')
+    txt = 'Time-domain Thermal Switch S1'
+    plt.title(txt)
     plt.xlabel('time in (sec)')
     plt.legend(["$\Theta_{T}$", "$\Theta_{D}$", "$\Theta_{C}$", "$\Theta_{A}$"], loc='upper right')
     plt.grid('on')
 
-    # ------------------------------------------
-    # Switch LS
-    # ------------------------------------------
-    # Current
-    ax = plt.subplot(5, 2, 2)
-    plt.plot(t[::down2], timeElec['sw']['S2']['i_T'][::down2], t[::down2], timeElec['sw']['S2']['i_D'][::down2])
-    plt.ylabel("$i(t)$ (A)")
-    plt.title('Time-domain Currents LS Switch')
-    ax.set_xticklabels([])
-    plt.legend(["$i_{T1}$", "$i_{D1}$"], loc='upper right')
-    plt.grid('on')
-
-    # Voltage
-    ax = plt.subplot(5, 2, 4)
-    plt.plot(t[::down2], timeElec['sw']['S2']['v_T'][::down2], t[::down2], timeElec['sw']['S2']['v_D'][::down2])
-    plt.ylabel("$v(t)$ (V)")
-    plt.title('Time-domain Voltages LS Switch')
-    ax.set_xticklabels([])
-    plt.legend(["$v_{T2}$", "$v_{D2}$"], loc='upper right')
-    plt.grid('on')
-
     # Losses
-    ax = plt.subplot(5, 2, 6)
-    plt.plot(t[::down2], timeLoss['sw']['S2']['p_T_c'][::down2], t[::down2], timeLoss['sw']['S2']['p_D_c'][::down2])
+    plt.subplot(2, 2, 2)
+    plt.plot(t[::down2], timeLoss['sw']['S2']['p_T'][::down2], t[::down2], timeLoss['sw']['S2']['p_D'][::down2])
     plt.ylabel("$p(t)$ (W)")
-    plt.title('Time-domain Conduction Losses LS Switch')
-    ax.set_xticklabels([])
-    plt.legend(["$p_{T2}$", "$p_{D2}$"], loc='upper right')
-    plt.grid('on')
-
-    # Losses
-    ax = plt.subplot(5, 2, 8)
-    plt.plot(t[::down2], timeLoss['sw']['S2']['p_T_s'][::down2], t[::down2], timeLoss['sw']['S2']['p_D_s'][::down2])
-    plt.ylabel("$p(t)$ (W)")
-    plt.title('Time-domain Switching Losses LS Switch')
-    ax.set_xticklabels([])
-    plt.legend(["$p_{T2}$", "$p_{D2}$"], loc='upper right')
+    txt = 'Time-domain Total Losses Switch S2'
+    plt.title(txt)
+    plt.xticks([], [])
+    plt.legend(["$p_{T}$", "$p_{D}$"], loc='upper right')
     plt.grid('on')
 
     # Temperature
-    plt.subplot(5, 2, 10)
-    plt.plot(t[::down2], timeTher['sw']['T2'][::down2], t[::down2], timeTher['sw']['D2'][::down2], t[::down2], timeTher['sw']['C2'][::down2], t[::down2], Ta * np.ones(np.size(t[::down2])))
+    plt.subplot(2, 2, 4)
+    plt.plot(t[::down2], timeTher['sw']['T2'][::down2], t[::down2], timeTher['sw']['D2'][::down2], t[::down2],
+             timeTher['sw']['C2'][::down2], t[::down2],
+             Ta * np.ones(np.size(t[::down2])))
     plt.ylabel("$\Theta(t)$ (°C)")
-    plt.title('Time-domain Thermal LS Switch')
+    txt = 'Time-domain Thermal Switch S2'
+    plt.title(txt)
     plt.xlabel('time in (sec)')
-    plt.legend(["$\Theta_{T2}$", "$\Theta_{D2}$"], loc='upper right')
+    plt.legend(["$\Theta_{T}$", "$\Theta_{D}$", "$\Theta_{C}$", "$\Theta_{A}$"], loc='upper right')
     plt.grid('on')
 
     # ==============================================================================
     # Time-domain Capacitor
     # ==============================================================================
     plt.figure()
-    txt = "Time domain capacitor B2 bridge for PWM control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+    txt = "Time domain capacitor for PWM control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
         Mi) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(
         int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
     plt.suptitle(txt, size=18)
     plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
     # ------------------------------------------
-    # Capacitor
+    # DC Link
     # ------------------------------------------
     # Current
     plt.subplot(4, 1, 1)
@@ -482,14 +488,6 @@ def plotStat_B2(time, freq, setupPara, setupData, setupTopo, setupExp):
     plt.show()
 
     ###################################################################################################################
-    # Post-Processing
-    ###################################################################################################################
-
-    ###################################################################################################################
     # MSG OUT
     ###################################################################################################################
-    print("END: Plotting Stationary B2")
-
-    ###################################################################################################################
-    # Return
-    ###################################################################################################################
+    print("END: Plotting Stationary Waveforms")
