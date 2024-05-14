@@ -258,7 +258,7 @@ The software framework is provided under the Creative Commons Attribution-NonCom
     - Introducing classes per topology and simplifying the topology definition
     - Closed loop simulation including hysteresis and PI control
     - General housekeeping including function description for each file and update to Python 3.11
-    - Introducing GUI for user friendliness 
+    - Introducing GUI for user-friendliness including an extensive tutorial as ppt
    
 # References
 [1] Holmes, D. Grahame, and Thomas A. Lipo. Pulse width modulation for power converters: principles and practice. 
