@@ -129,12 +129,9 @@ def calcClose(top, mdl, para, setup):
     # ==============================================================================
     # Controller Init
     # ==============================================================================
-    t_con = np.linspace(0, 1 / fs, Ncon + 1)
-    e_con = {'A': np.zeros(Ncon + 1)}
     s_i = {'A': np.ones(Ncon + 1)}
     i_act = np.zeros(Ncon + 1)
     Mi_con = 1
-    tempInit = []
     outSw = {'A': []}
 
     # ==============================================================================
@@ -150,22 +147,23 @@ def calcClose(top, mdl, para, setup):
         # Controller
         # ------------------------------------------
         if i == 0 or i % updRate == 0:
-            # New Switching
             [s_i, Mi_con, _] = top.calcCON(i_ref, i_act, s_i, setup)
-
-            # New Back EMF (TODO: Must be changed to a proper function only init with zero)
-            e_con = {'A': np.zeros(Ncon + 1)}
-
-        # ------------------------------------------
-        # Calculate Output
-        # ------------------------------------------
-        [tempAc, _, tempInit] = top.calcTime(s_i, e_con, t_con, Mi_con, mdl, 0, Ncon + 1, tempInit, 0, setup)
-        i_act = tempAc['i_a']
 
         # ------------------------------------------
         # Append Result
         # ------------------------------------------
         outSw['A'] = np.append(outSw['A'], s_i['A'])
+        e_con = {'A': np.zeros(len(outSw['A']))}
+        t_con = np.linspace(0, (i+1) / fs, len(outSw['A']))
+
+        # ------------------------------------------
+        # Calculate Output
+        # ------------------------------------------
+        [tempAc, _, _] = top.calcTime(outSw, e_con, t_con, Mi_con, mdl, 0, len(outSw['A']), [], 0, setup)
+        if i == 0:
+            i_act = tempAc['i_a']
+        else:
+            i_act = tempAc['i_a'][-2-Ncon:-1]
 
     ###################################################################################################################
     # Post-Processing
