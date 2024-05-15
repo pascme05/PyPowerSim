@@ -52,19 +52,19 @@ def initTopo(name, setup):
     # Initialisation
     ###################################################################################################################
     if name == "B2":
-        top = classB2(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Exp']['fsim'],
+        top = classB2(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Par']['Cont']['fc'], setup['Exp']['fsim'],
                       setup['Par']['PWM']['td'], setup['Par']['PWM']['tmin'], setup['Dat']['stat']['cyc'],
                       setup['Dat']['stat']['W'], setup['Dat']['stat']['Mi'], setup['Dat']['stat']['Vdc'],
                       setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], setup['Dat']['trans']['Tc'],
                       setup['Dat']['trans']['Tj'])
     elif name == "B4":
-        top = classB4(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Exp']['fsim'],
+        top = classB4(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Par']['Cont']['fc'], setup['Exp']['fsim'],
                       setup['Par']['PWM']['td'], setup['Par']['PWM']['tmin'], setup['Dat']['stat']['cyc'],
                       setup['Dat']['stat']['W'], setup['Dat']['stat']['Mi'], setup['Dat']['stat']['Vdc'],
                       setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], setup['Dat']['trans']['Tc'],
                       setup['Dat']['trans']['Tj'])
     elif name == "B6":
-        top = classB6(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Exp']['fsim'],
+        top = classB6(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Par']['Cont']['fc'], setup['Exp']['fsim'],
                       setup['Par']['PWM']['td'], setup['Par']['PWM']['tmin'], setup['Dat']['stat']['cyc'],
                       setup['Dat']['stat']['W'], setup['Dat']['stat']['Mi'], setup['Dat']['stat']['Vdc'],
                       setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], setup['Dat']['trans']['Tc'],

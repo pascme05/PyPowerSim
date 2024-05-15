@@ -22,6 +22,7 @@ Inputs:     1) top:     topology class
 Outputs:    1) time:    results in the time domain
             2) freq:    results in the frequency domain
 """
+import copy
 
 #######################################################################################################################
 # Import libs
@@ -41,7 +42,6 @@ from src.elec.calcElecCap import calcElecCap
 # ==============================================================================
 import numpy as np
 import math
-import pandas as pd
 from tqdm import tqdm
 
 
@@ -64,11 +64,9 @@ def calcClose(top, mdl, para, setup):
     # ==============================================================================
     fel = setup['Top']['fel']
     fsim = setup['Exp']['fsim']
-    fs = setup['Par']['PWM']['fs']
     fc = setup['Par']['Cont']['fc']
     Tel = 1 / fel
     Nsim = int(np.ceil(fsim / fel))
-    Npwm = int(np.ceil(fs / fel))
     Ncon = int(fsim/fc)
     K = int(setup['Dat']['stat']['cyc'])
     Nel = int(np.ceil(setup['Dat']['trans']['tmax'] * fel))
@@ -123,9 +121,7 @@ def calcClose(top, mdl, para, setup):
     # ==============================================================================
     # Controller Init
     # ==============================================================================
-    s_i = {'A': np.ones(Ncon)}
-    i_act = {'A': np.zeros(Ncon)}
-    outSw = {'A': []}
+    [s_i, i_act, outSw] = top.initCON()
 
     # ==============================================================================
     # Step Response
@@ -155,7 +151,7 @@ def calcClose(top, mdl, para, setup):
         # Calculate Output
         # ------------------------------------------
         [tempAc, _, _] = top.calcTime(outSw, e_con, t_con, Mi_con, mdl, 0, len(outSw['A']), [], 0, setup)
-        i_act['A'] = tempAc['i_a']
+        i_act = copy.deepcopy(tempAc)
 
     ###################################################################################################################
     # Post-Processing
