@@ -2,8 +2,8 @@
 #######################################################################################################################
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
-# File:         calcTrans
-# Date:         01.05.2024
+# File:         calcClose
+# Date:         14.05.2024
 # Author:       Dr. Pascal A. Schirmer
 # Version:      V.1.0
 # Copyright:    Pascal Schirmer
@@ -14,7 +14,7 @@
 # Function Description
 #######################################################################################################################
 """
-This function calculates the results for a transient solution for any given topology class.
+This function calculates the results for a closed loop solution for any given topology class.
 Inputs:     1) top:     topology class
             2) mdl:     all models and transfer functions of the architecture
             3) para:    all parameters used in the simulation
@@ -78,33 +78,14 @@ def calcTrans(top, mdl, para, setup):
     # ==============================================================================
     # Variables
     # ==============================================================================
-    # ------------------------------------------
-    # Electrical
-    # ------------------------------------------
     E = setup['Top']['E']
     Vdc = setup['Dat']['stat']['Vdc']
     phiE = math.radians(setup['Top']['phiE'])
     phiV = math.radians(setup['Dat']['stat']['phi'])
 
-    # ------------------------------------------
-    # Thermal
-    # ------------------------------------------
-    Ta = setup['Dat']['stat']['Tc']
-    Tj = setup['Dat']['stat']['Tj'] * np.ones((6, 1))
-    Tcap = setup['Dat']['stat']['Tj']
-
     # ==============================================================================
     # Update Frequency
     # ==============================================================================
-    if setup['Exp']['therFeed'] == 0:
-        iterNel = 1
-        iterNpwm = 1
-    elif setup['Exp']['freqPar'] == 'fel':
-        iterNel = Nel
-        iterNpwm = 1
-    else:
-        iterNel = Nel
-        iterNpwm = Npwm
 
     # ==============================================================================
     # Outputs
@@ -127,21 +108,6 @@ def calcTrans(top, mdl, para, setup):
     # ------------------------------------------
     [v_ref, e_ref] = top.calcRef(E, phiE, phiV, setup)
 
-    # ==============================================================================
-    # Thermal ROM
-    # ==============================================================================
-    # ------------------------------------------
-    # Parameters
-    # ------------------------------------------
-    [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap] = initRC(para, setup)
-
-    # ------------------------------------------
-    # Init
-    # ------------------------------------------
-    Tinit_T = np.zeros((len(Rth_JA), len(top.id2)))
-    Tinit_C = np.zeros((len(Rth_JA), len(top.id2)))
-    Tinit_Cap = np.zeros(np.size(Rth_JA_cap))
-
     ###################################################################################################################
     # Calculation
     ###################################################################################################################
@@ -159,113 +125,7 @@ def calcTrans(top, mdl, para, setup):
     # Electrical cycle
     # ==============================================================================
     for _ in tqdm(range(iterNel), desc='Elec-Period', position=0):
-        # ------------------------------------------
-        # Init
-        # ------------------------------------------
-        dataFel = top.initData()
 
-        # ------------------------------------------
-        # Electrical
-        # ------------------------------------------
-        timeDc['v_dc'] = calcElecCap(t_ref, timeDc['i_c'], Tcap, para, setup)
-
-        # ------------------------------------------
-        # PWM Period
-        # ------------------------------------------
-        for ii in range(iterNpwm):
-            # Init
-            [_, timeElec, timeLoss, timeTher, _, _, _, _, _] = top.initOut()
-            start = int(ii * (Nsim / iterNpwm))
-            if iterNpwm == 1:
-                ende = int(Nsim / iterNpwm * (ii + 1) + 1)
-            else:
-                ende = int(Nsim / iterNpwm * (ii + 1) + 0)
-
-            # Switch
-            for j in range(0, len(top.id2)):
-                timeElec['sw'][top.id2[j]] = calcElecSwi(Vdc, top.id9[j] * timeAc[top.id4[j]][start:ende], (s[top.id3[j]][start:ende] == (-1) ** j), Tj[j], top.id5[j], para, setup)
-                timeLoss['sw'][top.id2[j]] = calcLossSwi(s[top.id3[j]][start:ende] * (-1) ** j, timeElec['sw'][top.id2[j]]['i_T'], timeElec['sw'][top.id2[j]]['i_D'], timeElec['sw'][top.id2[j]]['v_T'], timeElec['sw'][top.id2[j]]['v_D'], Tj[j], para, setup)
-
-                if setup['Par']['Ther']['Heatsink'] == 1 and setup['Par']['Ther']['Coupling'] == 1:
-                    [timeTher['sw'][top.id6[j]], Tinit_T[:, j]] = calcTherRC(Tinit_T[:, j], Ta, timeLoss['sw'][top.id2[j]]['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
-                    [timeTher['sw'][top.id8[j]], Tinit_C[:, j]] = calcTherRC(Tinit_C[:, j], Ta, timeLoss['sw'][top.id2[j]]['p_L'], t_ref[start:ende], Rth_CA, Cth_CA)
-                    timeTher['sw'][top.id6[j]] = timeTher['sw'][top.id6[j]][:] + timeTher['sw'][top.id8[j]][:] - Ta
-                elif setup['Par']['Ther']['Heatsink'] == 1 and setup['Par']['Ther']['Coupling'] == 2:
-                    [timeTher['sw'][top.id6[j]], Tinit_T[:, j]] = calcTherRC(Tinit_T[:, j], Ta, timeLoss['sw'][top.id2[j]]['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
-                    [timeTher['sw'][top.id8[j]], Tinit_C[:, j]] = calcTherRC(Tinit_C[:, j], Ta, np.mean(timeLoss['sw'][top.id2[j]]['p_L'])*np.ones(np.size(timeLoss['sw'][top.id2[j]]['p_L'])), t_ref[start:ende], Rth_CA, Cth_CA)
-                    timeTher['sw'][top.id6[j]] = timeTher['sw'][top.id6[j]][:] + timeTher['sw'][top.id8[j]][:] - Ta
-                else:
-                    [timeTher['sw'][top.id6[j]], Tinit_T[:, j]] = calcTherRC(Tinit_T[:, j], Ta, timeLoss['sw'][top.id2[j]]['p_T'], t_ref[start:ende], Rth_JA, Cth_JA)
-
-            # Capacitor
-            timeElec['cap']['C1']['i_c'] = timeDc['i_c'][start:ende]
-            timeElec['cap']['C1']['v_c'] = timeDc['v_dc'][start:ende]
-            timeLoss['cap']['C1'] = calcLossCap(t_ref, timeDc['i_c'][start:ende], Tcap, para, setup)
-            [timeTher['cap']['C1'], Tinit_Cap] = calcTherRC(Tinit_Cap, Ta, timeLoss['cap']['C1']['p_L'], t_ref[start:ende], Rth_JA_cap, Cth_JA_cap)
-
-            # Appending
-            dataFel = app_fs(dataFel, timeElec, timeLoss, setup)
-
-            # Parameter Update
-            if setup['Exp']['therFeed'] == 1:
-                for j in range(0, len(top.id2)):
-                    Tj[j] = timeTher['sw'][top.id6[j]][-1]
-                Tcap = timeTher['cap']['C1'][-1]
-
-        # ------------------------------------------
-        # Appending
-        # ------------------------------------------
-        out = app_fel(out, dataFel['elec'], dataFel['loss'], Nel, setup)
-
-    # ==============================================================================
-    # Averaging
-    # ==============================================================================
-    out = calcAvg(top, out, setup)
-
-    # ==============================================================================
-    # Thermal
-    # ==============================================================================
-    # ------------------------------------------
-    # Init
-    # ------------------------------------------
-    t = np.linspace(0, Tel * Nel, len(out['loss']['sw']['S1']['p_T']))
-
-    # ------------------------------------------
-    # Calc
-    # ------------------------------------------
-    # Switches
-    for i in range(0, len(top.id2)):
-        [out['ther']['sw'][top.id6[i]], _] = calcTherRC(0, Ta, out['loss']['sw'][top.id2[i]]['p_T'].values, t, Rth_JA, Cth_JA)
-        [out['ther']['sw'][top.id7[i]], _] = calcTherRC(0, Ta, out['loss']['sw'][top.id2[i]]['p_D'].values, t, Rth_DA, Cth_DA)
-
-    # Capacitor
-    [out['ther']['cap']['C1'], _] = calcTherRC(0, Ta, out['loss']['cap']['C1']['p_L'].values, t, Rth_JA_cap, Cth_JA_cap)
-
-    # Coupling
-    for i in range(0, len(top.id2)):
-        if setup['Par']['Ther']['Heatsink'] == 1 and setup['Par']['Ther']['Coupling'] == 1:
-            [out['ther']['sw'][top.id8[i]], _] = calcTherRC(0, Ta, out['loss']['sw'][top.id2[i]]['p_L'].values, t, Rth_CA, Cth_CA)
-            out['ther']['sw'][top.id6[i]] = out['ther']['sw'][top.id6[i]][:] + out['ther']['sw'][top.id8[i]][:] - Ta
-            out['ther']['sw'][top.id7[i]] = out['ther']['sw'][top.id7[i]][:] + out['ther']['sw'][top.id8[i]][:] - Ta
-        elif setup['Par']['Ther']['Heatsink'] == 1 and setup['Par']['Ther']['Coupling'] == 2:
-            Pv_Base = np.mean((out['loss']['sw']['S1']['p_L'] + out['loss']['sw']['S2']['p_L'] + out['loss']['sw']['S3']['p_L'] +
-                               out['loss']['sw']['S4']['p_L'] + out['loss']['sw']['S5']['p_L'] + out['loss']['sw']['S6']['p_L'])) / 6
-            [out['ther']['sw'][top.id8[i]], _] = calcTherRC(0, Ta, Pv_Base*np.ones(np.size(out['loss']['sw']['S1']['p_L'])), t, Rth_CA, Cth_CA)
-            out['ther']['sw'][top.id6[i]] = out['ther']['sw'][top.id6[i]][:] + out['ther']['sw'][top.id8[i]][:] - Ta
-            out['ther']['sw'][top.id7[i]] = out['ther']['sw'][top.id7[i]][:] + out['ther']['sw'][top.id8[i]][:] - Ta
-        else:
-            out['ther']['sw'][top.id8[i]] = Ta
-
-    # ------------------------------------------
-    # Appending
-    # ------------------------------------------
-    # Switch
-    out['ther']['sw'] = pd.DataFrame(out['ther']['sw'], columns=['T1', 'T2', 'T3', 'T4', 'T5', 'T6',
-                                                                 'D1', 'D2', 'D3', 'D4', 'D5', 'D6',
-                                                                 'C1', 'C2', 'C3', 'C4', 'C5', 'C6'])
-
-    # Capacitor
-    out['ther']['cap'] = pd.DataFrame(out['ther']['cap'], columns=['C1'])
 
     ###################################################################################################################
     # Post-Processing
