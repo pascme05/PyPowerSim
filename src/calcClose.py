@@ -69,7 +69,7 @@ def calcClose(top, mdl, para, setup):
     Tel = 1 / fel
     Nsim = int(np.ceil(fsim / fel))
     Npwm = int(np.ceil(fs / fel))
-    Ncon = int(Nsim/Npwm)
+    Ncon = int(fsim/fc)
     K = int(setup['Dat']['stat']['cyc'])
     Nel = int(np.ceil(setup['Dat']['trans']['tmax'] * fel))
     Mi = setup['Dat']['stat']['Mi']
@@ -86,7 +86,7 @@ def calcClose(top, mdl, para, setup):
     # ==============================================================================
     # Update Frequency
     # ==============================================================================
-    iterCon = Nel * Ncon
+    iterCon = int(np.ceil(setup['Dat']['trans']['tmax'] * fc))
 
     # ==============================================================================
     # Outputs
@@ -121,16 +121,10 @@ def calcClose(top, mdl, para, setup):
     [xs, xsh, s, c, x, xN0] = top.calcPWM(v_ref, t_ref, Mi, setup)
 
     # ==============================================================================
-    # Time Domain PWM Waveform (fundamental cycle)
-    # ==============================================================================
-    [timeAc, timeDc, _] = top.calcTime(s, e_ref, t_ref, Mi, mdl, Nsim * (K - 1), (K * Nsim + 1), [], 1, setup)
-
-    # ==============================================================================
     # Controller Init
     # ==============================================================================
     s_i = {'A': np.ones(Ncon)}
     i_act = {'A': np.zeros(Ncon)}
-    err_tot = []
     outSw = {'A': []}
 
     # ==============================================================================
@@ -140,15 +134,22 @@ def calcClose(top, mdl, para, setup):
         # ------------------------------------------
         # Controller
         # ------------------------------------------
-        [s_i, Mi_con, err] = top.calcCON(i_tot, i_act, s_i, i*Ncon-1, setup)
+        if i/iterCon < 0.2:
+            scale = 0.50
+        else:
+            scale = 1.00
+
+        # ------------------------------------------
+        # Controller
+        # ------------------------------------------
+        [s_i, Mi_con, _] = top.calcCON(i_tot, i_act, s_i, i*Ncon-1, scale, setup)
 
         # ------------------------------------------
         # Append Result
         # ------------------------------------------
         outSw['A'] = np.append(outSw['A'], s_i['A'])
-        err_tot = np.append(err_tot, err)
         e_con = {'A': np.zeros(len(outSw['A']))}
-        t_con = np.linspace(0, (i+1) / fs, len(outSw['A']))
+        t_con = np.linspace(0, (i+1) / fc, len(outSw['A']))
 
         # ------------------------------------------
         # Calculate Output
@@ -189,13 +190,15 @@ def calcClose(top, mdl, para, setup):
     # ==============================================================================
     # Frequency domain
     # ==============================================================================
-    [freqSw, freqAc, freqDc] = calcFreq(s['A'][Nsim:(K * Nsim + 1)], xs['A'][Nsim:(K * Nsim + 1)], timeAc['i_a'],
-                                        timeAc['v_a'], timeAc['v_a0'], timeDc['i_dc'], timeDc['v_dc'])
+    [freqSw, freqAc, freqDc] = calcFreq(outSw['A'][-(K * Nsim + 1):-1], xs['A'][-(K * Nsim + 1):-1],
+                                        outAc['i_a'][-(K * Nsim + 1):-1], outAc['v_a'][-(K * Nsim + 1):-1],
+                                        outAc['v_a0'][-(K * Nsim + 1):-1], outDc['i_dc'][-(K * Nsim + 1):-1],
+                                        outDc['v_dc'][-(K * Nsim + 1):-1])
 
     # ==============================================================================
     # Output
     # ==============================================================================
-    [time, freq, _] = top.out(out['elec'], out['loss'], out['ther'], timeAc, timeDc, freqSw, freqAc, freqDc, [], [], t_ref,
+    [time, freq, _] = top.out(out['elec'], out['loss'], out['ther'], outAc, outDc, freqSw, freqAc, freqDc, [], [], t_ref,
                               v_ref, e_ref, s, c, xs, xsh, x, xN0, [], Nsim * (K - 1), (K * Nsim + 1), 1)
 
     ###################################################################################################################

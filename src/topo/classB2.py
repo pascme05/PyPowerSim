@@ -29,6 +29,7 @@ Inputs:     1) fel:     electrical frequency at the output (Hz)
             12) Tc_tr:  case temperature for transient analysis
             13) Tj_tr:  core temperature for transient analysis
 """
+import copy
 
 #######################################################################################################################
 # Import libs
@@ -656,7 +657,7 @@ class classB2:
     ###################################################################################################################
     # Closed Loop Control
     ###################################################################################################################
-    def calcCON(self, i_ref, i_act, s_act, t_con, setup):
+    def calcCON(self, i_ref, i_act, s_act, t_con, scale, setup):
         # ==============================================================================
         # Description
         # ==============================================================================
@@ -670,6 +671,7 @@ class classB2:
         2) i_act:   Actual current (A)
         3) s_act:   Actual switching states
         4) t_con:   time instance of the control action (sample)
+        5) scale:   scaling value to create step response
         5) setup:   variable including all parameters
 
         Output:
@@ -682,13 +684,13 @@ class classB2:
         # Init
         # ==============================================================================
         s_out = {}
-        tol = np.max(abs(i_ref['A'])) * setup['Par']['Cont']['hys'] / 100
+        tol = np.max(abs(i_ref['A'])) * setup['Par']['Cont']['hys'] / 100 * scale
 
         # ==============================================================================
         # Calculation
         # ==============================================================================
         i_act = i_act['A'][t_con]
-        i_ref = i_ref['A'][t_con]
+        i_ref = copy.deepcopy(i_ref['A'][t_con]) * scale
 
         # ==============================================================================
         # Calculation
@@ -953,11 +955,8 @@ class classB2:
         # ------------------------------------------
         # Time
         # ------------------------------------------
-        try:
-            if not t:
-                t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
-        except:
-            test = 1
+        if not t != []:
+            t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
 
         # ------------------------------------------
         # Reference
