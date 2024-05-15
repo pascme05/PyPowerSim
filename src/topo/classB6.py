@@ -1001,7 +1001,7 @@ class classB6:
     ###################################################################################################################
     # Temporal Output
     ###################################################################################################################
-    def calcTime(self, s, e, t, Mi, mdl, t0, t1, setup):
+    def calcTime(self, s, e, t, Mi, mdl, t0, t1, init, avg, setup):
         # ==============================================================================
         # Description
         # ==============================================================================
@@ -1016,11 +1016,13 @@ class classB6:
         5) mdl:     transfer functions
         6) t0:      start time (sample)
         7) t1:      end time (sample)
-        8) setup:   all setup variables
+        9) init:    initial conditions for the lsim solver
+        10) avg:    if 1) mean is subtracted from the signal
 
         Output:
         1) outAc:   outputs ac side
         2) outDc:   outputs dc side
+        3) outIn:   initial conditions for the next period
         """
 
         # ==============================================================================
@@ -1034,8 +1036,19 @@ class classB6:
         v_out = {}
         v_L = {}
         i = {}
+
+        # ------------------------------------------
+        # Outputs
+        # ------------------------------------------
         outAc = {}
         outDc = {}
+        outIn = {}
+
+        # ------------------------------------------
+        # Initial Conditions
+        # ------------------------------------------
+        if not init:
+            init = {'inp': 0, 'out': [0, 0, 0], 'dc': 0, 'load': 0}
 
         # ------------------------------------------
         # Parameters
@@ -1062,14 +1075,14 @@ class classB6:
             if setup['Top']['outFilter'] == 0:
                 v_out[self.id1[j]] = v[self.id1[j]]
             else:
-                _, v_out[self.id1[j]], _, = signal.lsim(mdl['SS']['Out'], v[self.id1[j]], t)
+                _, v_out[self.id1[j]], _, = signal.lsim(mdl['SS']['Out'], v[self.id1[j]], t, X0=init['out'][j])
 
         # Load
         for j in range(0, len(self.id1)):
             v_L[self.id1[j]] = v_out[self.id1[j]] - Mi * e[self.id1[j]]
 
         # LL Current
-        _, i_a, _, = signal.lsim(mdl['SS']['Load'], v_L['A'], t)
+        _, i_a, _, = signal.lsim(mdl['SS']['Load'], v_L['A'], t, X0=init['load'])
         i['A'] = i_a[t0:t1]
         i['B'] = np.roll(i_a[t0:t1], int(np.floor(120 / 360 / K1 * len(s['A'][t0:t1]))))
         i['C'] = np.roll(i_a[t0:t1], int(np.floor(240 / 360 / K1 * len(s['A'][t0:t1]))))
@@ -1077,7 +1090,8 @@ class classB6:
         # LN Current
         if setup['Top']['wave'] != 'con':
             for j in range(0, len(self.id1)):
-                i[self.id1[j]] = i[self.id1[j]] - np.mean(i[self.id1[j]])
+                if avg == 1:
+                    i[self.id1[j]] = i[self.id1[j]] - np.mean(i[self.id1[j]])
 
         # ------------------------------------------
         # DC Side
@@ -1087,14 +1101,14 @@ class classB6:
 
         # DC-Link
         i_cap = np.mean(i_dc) - i_dc
-        _, v_dc, _, = signal.lsim(mdl['SS']['DC'], i_cap, t[t0:t1])
+        _, v_dc, _, = signal.lsim(mdl['SS']['DC'], i_cap, t[t0:t1], X0=init['dc'])
         v_dc = v_dc - np.mean(v_dc) + self.Vdc
 
         # Filter Input
         if setup['Top']['inpFilter'] == 0:
             v_in = v_dc
         else:
-            _, v_in, _, = signal.lsim(mdl['SS']['Inp'], (v_dc - self.Vdc), t[t0:t1])
+            _, v_in, _, = signal.lsim(mdl['SS']['Inp'], (v_dc - self.Vdc), t[t0:t1], X0=init['inp'])
             v_in = v_in + self.Vdc
 
         # ==============================================================================
@@ -1120,10 +1134,18 @@ class classB6:
         outDc['i_dc'] = i_dc
         outDc['i_c'] = i_cap
 
+        # ------------------------------------------
+        # Init Conditions
+        # ------------------------------------------
+        outIn['inp'] = v_in[-1]
+        outIn['out'] = [v_out['A'][-1], v_out['B'][-1], v_out['C'][-1]]
+        outIn['dc'] = v_dc[-1]
+        outIn['load'] = i_a[-1]
+
         # ==============================================================================
         # Return
         # ==============================================================================
-        return [outAc, outDc]
+        return [outAc, outDc, outIn]
 
     ###################################################################################################################
     # Analytical distortion

@@ -114,7 +114,7 @@ def calcSweep(top, mdl, _, setup):
     # ------------------------------------------
     # Time Domain
     # ------------------------------------------
-    [timeAc, timeDc] = top.calcTime(s, e_ref, t_ref, Mi, mdl, start, ende, setup)
+    [timeAc, timeDc, _] = top.calcTime(s, e_ref, t_ref, Mi, mdl, start, ende, [], 1, setup)
 
     # ==============================================================================
     # Sweeping
@@ -128,7 +128,7 @@ def calcSweep(top, mdl, _, setup):
         # ------------------------------------------
         # Time
         # ------------------------------------------
-        [tempAc, tempDc] = top.calcTime(s_i, e_ref, t_ref, M_i[i], mdl, start, ende, setup)
+        [tempAc, tempDc, _] = top.calcTime(s_i, e_ref, t_ref, M_i[i], mdl, start, ende, [], 1, setup)
 
         # ------------------------------------------
         # Distortion

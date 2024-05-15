@@ -68,24 +68,30 @@ def calcTrans(top, mdl, para, setup):
     fel = setup['Top']['fel']
     fsim = setup['Exp']['fsim']
     fs = setup['Par']['PWM']['fs']
+    fc = setup['Par']['Cont']['fc']
     Tel = 1 / fel
     Nsim = int(np.ceil(fsim / fel))
     Npwm = int(np.ceil(fs / fel))
+    Ncon = int(np.ceil(fc / fel))
     K = int(setup['Dat']['stat']['cyc'])
     Nel = int(np.ceil(setup['Dat']['trans']['tmax'] * fel))
     Mi = setup['Dat']['stat']['Mi']
+    upd = 1
 
     # ==============================================================================
     # Variables
     # ==============================================================================
     E = setup['Top']['E']
     Vdc = setup['Dat']['stat']['Vdc']
+    Iref = setup['Dat']['stat']['Io']
     phiE = math.radians(setup['Top']['phiE'])
     phiV = math.radians(setup['Dat']['stat']['phi'])
 
     # ==============================================================================
     # Update Frequency
     # ==============================================================================
+    iterPWM = Nel * Npwm
+    iterCon = Nel * Ncon
 
     # ==============================================================================
     # Outputs
@@ -117,15 +123,50 @@ def calcTrans(top, mdl, para, setup):
     [xs, xsh, s, c, x, xN0] = top.calcPWM(v_ref, t_ref, Mi, setup)
 
     # ==============================================================================
-    # Time Domain
+    # Time Domain PWM Waveform (fundamental cycle)
     # ==============================================================================
     [timeAc, timeDc] = top.calcTime(s, e_ref, t_ref, Mi, mdl, Nsim * (K - 1), (K * Nsim + 1), setup)
 
     # ==============================================================================
-    # Electrical cycle
+    # Controller Init
     # ==============================================================================
-    for _ in tqdm(range(iterNel), desc='Elec-Period', position=0):
+    v_ref_i = 1
+    M_i = 1
 
+    # ==============================================================================
+    # Step Response
+    # ==============================================================================
+    for i in tqdm(range(iterPWM), desc='Step-Response', position=0):
+        # ------------------------------------------
+        # Controller
+        # ------------------------------------------
+        if upd == 1:
+            # New Reference
+            # TODO: Generate a new reference function based on the controller difference
+            v_ref_i = 1
+            M_i = 1
+
+        # ------------------------------------------
+        # PWM Generation
+        # ------------------------------------------
+        # New Switching
+        [_, _, s_i, _, _, _] = top.calcPWM(v_ref_i, t_ref, M_i, setup)
+
+        # New Back EMF
+
+        # ------------------------------------------
+        # Calculate Output
+        # ------------------------------------------
+        # TODO: Add initial conditions to time series solution of lsim solver
+        [tempTimeAc, tempTimeDc] = top.calcTime(s_i, e_ref, t_ref, M_i, mdl, 0, Npwm, setup)
+
+        # ------------------------------------------
+        # Append Result
+        # ------------------------------------------
+
+        # ------------------------------------------
+        # Update Variable
+        # ------------------------------------------
 
     ###################################################################################################################
     # Post-Processing

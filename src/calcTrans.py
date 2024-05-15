@@ -153,7 +153,7 @@ def calcTrans(top, mdl, para, setup):
     # ==============================================================================
     # Time Domain
     # ==============================================================================
-    [timeAc, timeDc] = top.calcTime(s, e_ref, t_ref, Mi, mdl, Nsim * (K - 1), (K * Nsim + 1), setup)
+    [timeAc, timeDc, _] = top.calcTime(s, e_ref, t_ref, Mi, mdl, Nsim * (K - 1), (K * Nsim + 1), [], 1, setup)
 
     # ==============================================================================
     # Electrical cycle

@@ -41,6 +41,7 @@ In the following a list of know issues and limitations is provided:
 - Soft switching architectures are not included yet.
 - The interpolation methods for calculating the tabulated parameter options are only linear.
 - Plotting error for average DC voltage in B6 configuration
+- Currently back emf e(t) is model as a linear function of the modulation index. It would be better to model it using a dependency on the fundamental frequency
 
 # Architecture
 The architecture implemented in the PyPowerSim toolkit is exemplary illustrated for a B2 

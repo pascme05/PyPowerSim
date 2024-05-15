@@ -654,7 +654,7 @@ class classB2:
     ###################################################################################################################
     # Temporal Output
     ###################################################################################################################
-    def calcTime(self, s, e, t, Mi, mdl, t0, t1, setup):
+    def calcTime(self, s, e, t, Mi, mdl, t0, t1, init, avg, setup):
         # ==============================================================================
         # Description
         # ==============================================================================
@@ -670,17 +670,30 @@ class classB2:
         6) t0:      start time (sample)
         7) t1:      end time (sample)
         8) setup:   all setup variables
+        9) init:    initial conditions for the lsim solver
+        10) avg:    if 1) mean is subtracted from the signal
 
         Output:
         1) outAc:   outputs ac side
         2) outDc:   outputs dc side
+        3) outIn:   initial conditions for the next period
         """
 
         # ==============================================================================
         # Initialisation
         # ==============================================================================
+        # ------------------------------------------
+        # Outputs
+        # ------------------------------------------
         outAc = {}
         outDc = {}
+        outIn = {}
+
+        # ------------------------------------------
+        # Initial Conditions
+        # ------------------------------------------
+        if not init:
+            init = {'inp': 0, 'out': 0, 'dc': 0, 'load': 0}
 
         # ==============================================================================
         # Calculation
@@ -695,19 +708,20 @@ class classB2:
         if setup['Top']['outFilter'] == 0:
             v_L = v_a0
         else:
-            _, v_L, _, = signal.lsim(mdl['SS']['Out'], v_a0, t)
+            _, v_L, _, = signal.lsim(mdl['SS']['Out'], v_a0, t, X0=init['out'])
 
         # Load
         v_a = v_L - Mi * e['A']
 
         # Current
         if setup['Top']['wave'] == "con":
-            _, i_a, _, = signal.lsim(mdl['SS']['Load'], v_a, t)
+            _, i_a, _, = signal.lsim(mdl['SS']['Load'], v_a, t, X0=init['load'])
             i_a = i_a[t0:t1]
         else:
-            _, i_a, _, = signal.lsim(mdl['SS']['Load'], (v_a - np.mean(v_a)), t)
+            _, i_a, _, = signal.lsim(mdl['SS']['Load'], (v_a - np.mean(v_a)), t, X0=init['load'])
             i_a = i_a[t0:t1]
-            i_a = i_a - np.mean(i_a)
+            if avg == 1:
+                i_a = i_a - np.mean(i_a)
 
         # ------------------------------------------
         # DC Side
@@ -719,13 +733,13 @@ class classB2:
 
         # DC-Link
         i_c = np.mean(i_d_p) - i_d_p
-        _, v_dc, _, = signal.lsim(mdl['SS']['DC'], i_c, t[t0:t1])
+        _, v_dc, _, = signal.lsim(mdl['SS']['DC'], i_c, t[t0:t1], X0=init['dc'])
 
         # Filter Input
         if setup['Top']['inpFilter'] == 0:
             v_in = v_dc
         else:
-            _, v_in, _, = signal.lsim(mdl['SS']['Inp'], (v_dc - self.Vdc), t[t0:t1])
+            _, v_in, _, = signal.lsim(mdl['SS']['Inp'], (v_dc - self.Vdc), t[t0:t1], X0=init['inp'])
             v_in = v_in + self.Vdc
 
         # ==============================================================================
@@ -750,10 +764,18 @@ class classB2:
         outDc['i_d_m'] = i_d_m
         outDc['i_d_p'] = i_d_p
 
+        # ------------------------------------------
+        # Init Conditions
+        # ------------------------------------------
+        outIn['inp'] = v_in[-1]
+        outIn['out'] = v_L[-1]
+        outIn['dc'] = v_dc[-1]
+        outIn['load'] = i_a[-1]
+
         # ==============================================================================
         # Return
         # ==============================================================================
-        return [outAc, outDc]
+        return [outAc, outDc, outIn]
 
     ###################################################################################################################
     # Analytical distortion

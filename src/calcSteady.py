@@ -145,7 +145,7 @@ def calcSteady(top, mdl, para, setup):
     # ==============================================================================
     # Time Domain
     # ==============================================================================
-    [timeAc, timeDc] = top.calcTime(s, e_ref, t_ref, Mi, mdl, start, ende, setup)
+    [timeAc, timeDc, _] = top.calcTime(s, e_ref, t_ref, Mi, mdl, start, ende, [], 1, setup)
 
     # ==============================================================================
     # Msg
