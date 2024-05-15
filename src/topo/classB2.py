@@ -691,7 +691,7 @@ class classB2:
         # ==============================================================================
         # Calculation
         # ==============================================================================
-        i_act = i_act['A'][t_con]
+        i_act = i_act['i_a'][t_con]
         i_ref = copy.deepcopy(i_ref['A'][t_con]) * scale
 
         # ==============================================================================
@@ -716,7 +716,7 @@ class classB2:
         return [s_out, Mi, err]
 
     ###################################################################################################################
-    # Closed Loop Control
+    # Init controller variables
     ###################################################################################################################
     def initCON(self):
         # ==============================================================================
@@ -727,17 +727,11 @@ class classB2:
         control outputs.
 
         Input:
-        1) i_ref:   Reference current (A)
-        2) i_act:   Actual current (A)
-        3) s_act:   Actual switching states
-        4) t_con:   time instance of the control action (sample)
-        5) scale:   scaling value to create step response
-        5) setup:   variable including all parameters
 
         Output:
         1) s:       switching instances (sec)
-        2) Mi:      updated modulation index
-        3) err:     error between reference and actual signal
+        2) i_act:   actual current vector (A)
+        3) swOut:   switching function output
         """
 
         # ==============================================================================
@@ -749,13 +743,46 @@ class classB2:
         # Calculation
         # ==============================================================================
         s = {'A': np.ones(Ncon)}
-        i_act = {'A': np.zeros(Ncon)}
+        i_act = {'i_a': np.zeros(Ncon)}
         outSw = {'A': []}
 
         # ==============================================================================
         # Return
         # ==============================================================================
         return [s, i_act, outSw]
+
+    ###################################################################################################################
+    # Init controller variables
+    ###################################################################################################################
+    def appCON(self, s_i, outSw, iterC):
+        # ==============================================================================
+        # Description
+        # ==============================================================================
+        """
+        This function append the calculated controller outputs.
+
+        Input:
+        1) s_i:     switching instances (sec)
+        2) outSw:   switching sequence output (sec)
+        3) iterC:   controller iteration
+
+        Output:
+        1) t_con:   time vector for one control iteration (sec)
+        2) e_con:   back emf of the controller (V)
+        3) outSw:   switching function output
+        """
+
+        # ==============================================================================
+        # Calculation
+        # ==============================================================================
+        outSw['A'] = np.append(outSw['A'], s_i['A'])
+        e_con = {'A': np.zeros(len(outSw['A']))}
+        t_con = np.linspace(0, (iterC + 1) / self.fc, len(outSw['A']))
+
+        # ==============================================================================
+        # Return
+        # ==============================================================================
+        return [outSw, e_con, t_con]
 
     ###################################################################################################################
     # Temporal Output

@@ -34,7 +34,6 @@ from src.general.calcFreq import calcFreq
 from src.elec.calcElecSwi import calcElecSwi
 from src.elec.calcLossSwi import calcLossSwi
 from src.elec.calcLossCap import calcLossCap
-from src.general.calcAvg import calcAvg
 from src.elec.calcElecCap import calcElecCap
 
 # ==============================================================================
@@ -89,7 +88,6 @@ def calcClose(top, mdl, para, setup):
     # ==============================================================================
     # Outputs
     # ==============================================================================
-    out = top.initData()
     [_, timeElec, timeLoss, _, _, _, _, _, _] = top.initOut()
 
     ###################################################################################################################
@@ -102,7 +100,7 @@ def calcClose(top, mdl, para, setup):
     # Time
     # ------------------------------------------
     t_ref = np.linspace(0, K / fel, K * Nsim + 1)
-    t_tot = np.linspace(0, Nel * Tel, Nel * Nsim + 1)
+    t_tot = np.linspace(0, Nel * Tel, iterCon * Ncon)
 
     # ------------------------------------------
     # Reference
@@ -143,14 +141,12 @@ def calcClose(top, mdl, para, setup):
         # ------------------------------------------
         # Append Result
         # ------------------------------------------
-        outSw['A'] = np.append(outSw['A'], s_i['A'])
-        e_con = {'A': np.zeros(len(outSw['A']))}
-        t_con = np.linspace(0, (i+1) / fc, len(outSw['A']))
+        [outSw, e_con, t_con] = top.appCON(s_i, outSw, i)
 
         # ------------------------------------------
         # Calculate Output
         # ------------------------------------------
-        [tempAc, _, _] = top.calcTime(outSw, e_con, t_con, Mi_con, mdl, 0, len(outSw['A']), [], 0, setup)
+        [tempAc, _, _] = top.calcTime(outSw, e_con, t_con, Mi_con, mdl, 0, len(t_con), [], 0, setup)
         i_act = copy.deepcopy(tempAc)
 
     ###################################################################################################################
@@ -162,8 +158,6 @@ def calcClose(top, mdl, para, setup):
     # ------------------------------------------
     # Phase and Source
     # ------------------------------------------
-    outSw['A'] = np.append(outSw['A'], s_i['A'])
-    outSw['A'] = outSw['A'][0:len(t_tot)]
     [outAc, outDc, _] = top.calcTime(outSw, e_tot, t_tot, Mi, mdl, 0, len(t_tot), [], 0, setup)
 
     # ------------------------------------------
@@ -194,8 +188,8 @@ def calcClose(top, mdl, para, setup):
     # ==============================================================================
     # Output
     # ==============================================================================
-    [time, freq, _] = top.out(out['elec'], out['loss'], out['ther'], outAc, outDc, freqSw, freqAc, freqDc, [], [], t_ref,
-                              v_ref, e_ref, s, c, xs, xsh, x, xN0, [], Nsim * (K - 1), (K * Nsim + 1), 1)
+    [time, freq, _] = top.out(timeElec, timeLoss, [], outAc, outDc, freqSw, freqAc, freqDc, [], [], t_ref,
+                              v_ref, e_ref, outSw, c, xs, xsh, x, xN0, [], Nsim * (K - 1), (K * Nsim + 1), 1)
 
     ###################################################################################################################
     # MSG Out
