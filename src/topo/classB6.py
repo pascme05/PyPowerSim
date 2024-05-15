@@ -17,17 +17,18 @@
 This class initialises an object of the B6 (three-phase full-bridge) circuit.
 Inputs:     1) fel:     electrical frequency at the output (Hz)
             2) fs:      switching frequency of the converter cell (Hz)
-            3) fsim:    simulation frequency of the converter cell (Hz)
-            4) td:      dead-time of the switching devices (sec)
-            5) tmin:    minimum on-time of a pulse (sec)
-            6) cyc:     number of cycles till convergence
-            7) W:       number of points evaluated for distortion analysis
-            8) Mi:      modulation index (p.u.)
-            9) Vdc:     dc link voltage at the input of the converter cell (V)
-            10) Tc_st:  case temperature for stationary analysis
-            11) Tj_st:  core temperature for stationary analysis
-            12) Tc_tr:  case temperature for transient analysis
-            13) Tj_tr:  core temperature for transient analysis
+            3) fc:      controller frequency (Hz)
+            4) fsim:    simulation frequency of the converter cell (Hz)
+            5) td:      dead-time of the switching devices (sec)
+            6) tmin:    minimum on-time of a pulse (sec)
+            7) cyc:     number of cycles till convergence
+            8) W:       number of points evaluated for distortion analysis
+            9) Mi:      modulation index (p.u.)
+            10) Vdc:     dc link voltage at the input of the converter cell (V)
+            11) Tc_st:  case temperature for stationary analysis
+            12) Tj_st:  core temperature for stationary analysis
+            13) Tc_tr:  case temperature for transient analysis
+            14) Tj_tr:  core temperature for transient analysis
 """
 
 #######################################################################################################################
@@ -59,9 +60,10 @@ class classB6:
     ###################################################################################################################
     # Constructor
     ###################################################################################################################
-    def __init__(self, fel, fs, fsim, td, tmin, cyc, W, Mi, Vdc, Tc_st, Tj_st, Tc_tr, Tj_tr):
+    def __init__(self, fel, fs, fc, fsim, td, tmin, cyc, W, Mi, Vdc, Tc_st, Tj_st, Tc_tr, Tj_tr):
         self.fel = fel
         self.fs = fs
+        self.fc = fc
         self.fsim = fsim
         self.td = td
         self.tmin = tmin
