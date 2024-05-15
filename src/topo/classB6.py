@@ -1330,6 +1330,7 @@ class classB6:
         Output:
         1) v_ref:   reference voltage for given load scenario (V)
         2) e_ref:   reference back emf for given load scenario (V)
+        3) i_ref:   reference current for given load scenario (A)
         """
 
         # ==============================================================================
@@ -1337,6 +1338,7 @@ class classB6:
         # ==============================================================================
         v_ref = {}
         e_ref = {}
+        i_ref = {}
 
         # ==============================================================================
         # Calculation
@@ -1352,11 +1354,12 @@ class classB6:
         for i in range(0, len(self.id1)):
             v_ref[self.id1[i]] = (self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV - i * 2 / 3 * np.pi, setup)
             e_ref[self.id1[i]] = E * genWave(t, self.fel, phiE - i * 2 / 3 * np.pi, setup)
+            i_ref[self.id1[i]] = setup['Dat']['stat']['Io'] * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'] - i * 2 / 3 * np.pi, setup)
 
         # ==============================================================================
         # Return
         # ==============================================================================
-        return [v_ref, e_ref]
+        return [v_ref, e_ref, i_ref]
 
 #######################################################################################################################
 # References

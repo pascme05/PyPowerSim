@@ -872,12 +872,14 @@ class classB2:
         Output:
         1) v_ref:   reference voltage for given load scenario (V)
         2) e_ref:   reference back emf for given load scenario (V)
+        3) i_ref:   reference current for given load scenario (A)
         """
 
         # ==============================================================================
         # Initialisation
         # ==============================================================================
         v_ref = {}
+        i_ref = {}
         e_ref = {}
 
         # ==============================================================================
@@ -893,11 +895,12 @@ class classB2:
         # ------------------------------------------
         v_ref['A'] = (self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
         e_ref['A'] = E * genWave(t, self.fel, phiE, setup)
+        i_ref['A'] = setup['Dat']['stat']['Io'] * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
 
         # ==============================================================================
         # Return
         # ==============================================================================
-        return [v_ref, e_ref]
+        return [v_ref, e_ref, i_ref]
 
 #######################################################################################################################
 # References

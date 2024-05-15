@@ -178,6 +178,7 @@ def genLoadInput(setup):
     setup['Dat']['stat']['Po'] = Po
     setup['Dat']['stat']['Qo'] = Qo
     setup['Dat']['stat']['Mi'] = Mi
+    setup['Dat']['stat']['PhiVI'] = cmath.polar(Io)[1]
 
     ###################################################################################################################
     # MSG Out

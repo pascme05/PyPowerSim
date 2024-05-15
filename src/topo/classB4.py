@@ -964,6 +964,7 @@ class classB4:
         Output:
         1) v_ref:   reference voltage for given load scenario (V)
         2) e_ref:   reference back emf for given load scenario (V)
+        3) i_ref:   reference current for given load scenario (A)
         """
 
         # ==============================================================================
@@ -971,6 +972,7 @@ class classB4:
         # ==============================================================================
         v_ref = {}
         e_ref = {}
+        i_ref = {}
 
         # ==============================================================================
         # Calculation
@@ -987,11 +989,13 @@ class classB4:
         v_ref['B'] = -(self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
         e_ref['A'] = E * genWave(t, self.fel, phiE, setup)
         e_ref['B'] = E * genWave(t, self.fel, phiE, setup)
+        i_ref['A'] = setup['Dat']['stat']['Io'] * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
+        i_ref['B'] = setup['Dat']['stat']['Io'] * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
 
         # ==============================================================================
         # Return
         # ==============================================================================
-        return [v_ref, e_ref]
+        return [v_ref, e_ref, i_ref]
 
 #######################################################################################################################
 # References

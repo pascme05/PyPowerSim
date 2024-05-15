@@ -32,12 +32,10 @@ Outputs:    1) time:    results in the time domain
 from src.general.calcFreq import calcFreq
 from src.elec.calcElecSwi import calcElecSwi
 from src.elec.calcLossSwi import calcLossSwi
-from src.therm.calcTherRC import calcTherRC
 from src.elec.calcLossCap import calcLossCap
 from src.general.calcAvg import calcAvg
-from src.therm.initRC import initRC
 from src.elec.calcElecCap import calcElecCap
-from src.general.append import app_fel, app_fs
+from src.cont.conHys import conHys
 
 # ==============================================================================
 # External
@@ -56,7 +54,7 @@ def calcTrans(top, mdl, para, setup):
     # MSG IN
     ###################################################################################################################
     print("------------------------------------------")
-    print("START: Transient solution class", top.name)
+    print("START: Closed loop solution class", top.name)
     print("------------------------------------------")
 
     ###################################################################################################################
@@ -76,13 +74,13 @@ def calcTrans(top, mdl, para, setup):
     K = int(setup['Dat']['stat']['cyc'])
     Nel = int(np.ceil(setup['Dat']['trans']['tmax'] * fel))
     Mi = setup['Dat']['stat']['Mi']
-    upd = 1
 
     # ==============================================================================
     # Variables
     # ==============================================================================
     E = setup['Top']['E']
     Vdc = setup['Dat']['stat']['Vdc']
+    Tj = setup['Dat']['stat']['Tj']
     Iref = setup['Dat']['stat']['Io']
     phiE = math.radians(setup['Top']['phiE'])
     phiV = math.radians(setup['Dat']['stat']['phi'])
@@ -91,12 +89,13 @@ def calcTrans(top, mdl, para, setup):
     # Update Frequency
     # ==============================================================================
     iterPWM = Nel * Npwm
-    iterCon = Nel * Ncon
+    updRate = np.ceil(Npwm / Ncon)
 
     # ==============================================================================
     # Outputs
     # ==============================================================================
     out = top.initData()
+    [_, timeElec, timeLoss, _, _, _, _, _, _] = top.initOut()
 
     ###################################################################################################################
     # Pre-Processing
@@ -112,7 +111,7 @@ def calcTrans(top, mdl, para, setup):
     # ------------------------------------------
     # Reference
     # ------------------------------------------
-    [v_ref, e_ref] = top.calcRef(E, phiE, phiV, setup)
+    [v_ref, e_ref, _] = top.calcRef(E, phiE, phiV, setup)
 
     ###################################################################################################################
     # Calculation
@@ -125,13 +124,23 @@ def calcTrans(top, mdl, para, setup):
     # ==============================================================================
     # Time Domain PWM Waveform (fundamental cycle)
     # ==============================================================================
-    [timeAc, timeDc] = top.calcTime(s, e_ref, t_ref, Mi, mdl, Nsim * (K - 1), (K * Nsim + 1), setup)
+    [timeAc, timeDc, _] = top.calcTime(s, e_ref, t_ref, Mi, mdl, Nsim * (K - 1), (K * Nsim + 1), [], 1, setup)
 
     # ==============================================================================
     # Controller Init
     # ==============================================================================
-    v_ref_i = 1
-    M_i = 1
+    # ------------------------------------------
+    # Output
+    # ------------------------------------------
+    tempInit = 0
+
+    # ------------------------------------------
+    # Variables
+    # ------------------------------------------
+    t_con = np.linspace(0, Tel, Nsim + 1)
+    outAc = pd.DataFrame(columns=timeAc.columns)
+    outDc = pd.DataFrame(columns=timeDc.columns)
+    outSw = pd.DataFrame(columns='s')
 
     # ==============================================================================
     # Step Response
@@ -140,42 +149,68 @@ def calcTrans(top, mdl, para, setup):
         # ------------------------------------------
         # Controller
         # ------------------------------------------
-        if upd == 1:
+        if i == 0 or i % updRate == 0:
             # New Reference
             # TODO: Generate a new reference function based on the controller difference
-            v_ref_i = 1
-            M_i = 1
+            v_con = 1
+            Mi_con = 1
 
         # ------------------------------------------
         # PWM Generation
         # ------------------------------------------
         # New Switching
-        [_, _, s_i, _, _, _] = top.calcPWM(v_ref_i, t_ref, M_i, setup)
+        [_, _, s_i, _, _, _] = top.calcPWM(v_con, t_con, Mi_con, setup)
 
         # New Back EMF
+        e_con = 0
 
         # ------------------------------------------
         # Calculate Output
         # ------------------------------------------
-        # TODO: Add initial conditions to time series solution of lsim solver
-        [tempTimeAc, tempTimeDc] = top.calcTime(s_i, e_ref, t_ref, M_i, mdl, 0, Npwm, setup)
+        [tempAc, tempDc, tempInit] = top.calcTime(s_i, e_con, t_con, Mi_con, mdl, 0, Npwm, tempInit, 0, setup)
 
         # ------------------------------------------
         # Append Result
         # ------------------------------------------
+        # Switching function
+        outSw = pd.concat([outSw, s_i])
 
-        # ------------------------------------------
-        # Update Variable
-        # ------------------------------------------
+        # Load side (AC)
+        for c1 in tempAc:
+            outAc[c1] = pd.concat([outAc, tempAc[c1]])
+
+        # Source side (DC)
+        for c1 in tempDc:
+            outDc[c1] = pd.concat([outDc, tempDc[c1]])
 
     ###################################################################################################################
     # Post-Processing
     ###################################################################################################################
     # ==============================================================================
+    # Electrical Results
+    # ==============================================================================
+    # ------------------------------------------
+    # Switching Devices
+    # ------------------------------------------
+    for j in range(0, len(top.id2)):
+        timeElec['sw'][top.id2[j]] = calcElecSwi(Vdc, top.id9[j] * outAc[top.id4[j]], (outSw[top.id3[j]] == (-1) ** j),
+                                                 Tj, top.id5[j], para, setup)
+        timeLoss['sw'][top.id2[j]] = calcLossSwi(outSw[top.id3[j]] * (-1) ** j,
+                                                 timeElec['sw'][top.id2[j]]['i_T'], timeElec['sw'][top.id2[j]]['i_D'],
+                                                 timeElec['sw'][top.id2[j]]['v_T'], timeElec['sw'][top.id2[j]]['v_D'],
+                                                 Tj, para, setup)
+
+    # ------------------------------------------
+    # Capacitor
+    # ------------------------------------------
+    outDc['v_dc'] = calcElecCap(t_ref, outDc['i_c'], Tj, para, setup)
+    timeLoss['cap']['C1'] = calcLossCap(t_ref, outDc['i_c'], Tj, para, setup)
+
+    # ==============================================================================
     # Frequency domain
     # ==============================================================================
-    [freqSw, freqAc, freqDc] = calcFreq(s['A'][Nsim:(K * Nsim + 1)], xs['A'][Nsim:(K * Nsim + 1)], timeAc['i_a'], timeAc['v_a'],
-                                        timeAc['v_a0'], timeDc['i_dc'], timeDc['v_dc'])
+    [freqSw, freqAc, freqDc] = calcFreq(s['A'][Nsim:(K * Nsim + 1)], xs['A'][Nsim:(K * Nsim + 1)], timeAc['i_a'],
+                                        timeAc['v_a'], timeAc['v_a0'], timeDc['i_dc'], timeDc['v_dc'])
 
     # ==============================================================================
     # Output
@@ -187,7 +222,7 @@ def calcTrans(top, mdl, para, setup):
     # MSG Out
     ###################################################################################################################
     print("------------------------------------------")
-    print("END: Transient class", top.name)
+    print("END: Closed loop class", top.name)
     print("------------------------------------------")
 
     ###################################################################################################################
