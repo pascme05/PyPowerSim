@@ -656,7 +656,7 @@ class classB2:
     ###################################################################################################################
     # Closed Loop Control
     ###################################################################################################################
-    def calcCON(self, i_ref, i_act, s_act, setup):
+    def calcCON(self, i_ref, i_act, s_act, t_con, setup):
         # ==============================================================================
         # Description
         # ==============================================================================
@@ -669,7 +669,8 @@ class classB2:
         1) i_ref:   Reference current (A)
         2) i_act:   Actual current (A)
         3) s_act:   Actual switching states
-        4) setup:   variable including all parameters
+        4) t_con:   time instance of the control action (sample)
+        5) setup:   variable including all parameters
 
         Output:
         1) s:       switching instances (sec)
@@ -681,12 +682,13 @@ class classB2:
         # Init
         # ==============================================================================
         s_out = {}
-        tol = np.max(abs(i_ref)) * setup['Par']['Cont']['hys'] / 100
-        tol = 0.5
+        tol = np.max(abs(i_ref['A'])) * setup['Par']['Cont']['hys'] / 100
 
         # ==============================================================================
         # Calculation
         # ==============================================================================
+        i_act = i_act['A'][t_con]
+        i_ref = i_ref['A'][t_con]
 
         # ==============================================================================
         # Calculation

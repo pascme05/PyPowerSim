@@ -86,8 +86,7 @@ def calcClose(top, mdl, para, setup):
     # ==============================================================================
     # Update Frequency
     # ==============================================================================
-    iterPWM = Nel * Npwm
-    updRate = int(np.ceil(Npwm / Ncon))
+    iterCon = Nel * Ncon
 
     # ==============================================================================
     # Outputs
@@ -129,30 +128,25 @@ def calcClose(top, mdl, para, setup):
     # ==============================================================================
     # Controller Init
     # ==============================================================================
-    s_i = {'A': np.ones(Ncon + 1)}
-    i_act = np.zeros(Ncon + 1)
-    Mi_con = 1
+    s_i = {'A': np.ones(Ncon)}
+    i_act = {'A': np.zeros(Ncon)}
+    err_tot = []
     outSw = {'A': []}
 
     # ==============================================================================
     # Step Response
     # ==============================================================================
-    for i in tqdm(range(iterPWM), desc='Step-Response', position=0):
-        # ------------------------------------------
-        # New References
-        # ------------------------------------------
-        i_ref = i_tot['A'][i * Ncon:(i + 1) * Ncon + 1]
-
+    for i in tqdm(range(iterCon), desc='Control-Periods', position=0):
         # ------------------------------------------
         # Controller
         # ------------------------------------------
-        if i == 0 or i % updRate == 0:
-            [s_i, Mi_con, _] = top.calcCON(i_ref, i_act, s_i, setup)
+        [s_i, Mi_con, err] = top.calcCON(i_tot, i_act, s_i, i*Ncon-1, setup)
 
         # ------------------------------------------
         # Append Result
         # ------------------------------------------
         outSw['A'] = np.append(outSw['A'], s_i['A'])
+        err_tot = np.append(err_tot, err)
         e_con = {'A': np.zeros(len(outSw['A']))}
         t_con = np.linspace(0, (i+1) / fs, len(outSw['A']))
 
@@ -160,10 +154,7 @@ def calcClose(top, mdl, para, setup):
         # Calculate Output
         # ------------------------------------------
         [tempAc, _, _] = top.calcTime(outSw, e_con, t_con, Mi_con, mdl, 0, len(outSw['A']), [], 0, setup)
-        if i == 0:
-            i_act = tempAc['i_a']
-        else:
-            i_act = tempAc['i_a'][-2-Ncon:-1]
+        i_act['A'] = tempAc['i_a']
 
     ###################################################################################################################
     # Post-Processing
@@ -174,6 +165,7 @@ def calcClose(top, mdl, para, setup):
     # ------------------------------------------
     # Phase and Source
     # ------------------------------------------
+    outSw['A'] = np.append(outSw['A'], s_i['A'])
     outSw['A'] = outSw['A'][0:len(t_tot)]
     [outAc, outDc, _] = top.calcTime(outSw, e_tot, t_tot, Mi, mdl, 0, len(t_tot), [], 0, setup)
 
