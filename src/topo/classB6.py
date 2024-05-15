@@ -49,6 +49,7 @@ import numpy as np
 import pandas as pd
 from scipy import signal
 from scipy.fft import fft
+import cmath
 
 
 #######################################################################################################################
@@ -1269,7 +1270,7 @@ class classB6:
         # DC Side
         # ------------------------------------------
         # Voltages
-        V_dc_thd = np.sqrt(Mi ** 2 * (np.sqrt(3) / (4 * np.pi) + np.cos(phi) ** 2 * (np.sqrt(3) / np.pi - 6 / 16 * Mi))) * np.sqrt(I_a_v1_eff)
+        # V_dc_thd = np.sqrt(Mi ** 2 * (np.sqrt(3) / (4 * np.pi) + np.cos(phi) ** 2 * (np.sqrt(3) / np.pi - 6 / 16 * Mi))) * np.sqrt(I_a_v1_eff)
 
         # Currents
         I_dc_eff = I_a_v1_eff * np.sqrt(2 * np.sqrt(3) / np.pi * Mi * (1 / 4 + np.cos(phi) ** 2))
@@ -1313,19 +1314,20 @@ class classB6:
     ###################################################################################################################
     # Calculations frequency domain
     ###################################################################################################################
-    def calcRef(self, E, phiE, phiV, setup):
+    def calcRef(self, E, phiE, phiV, t, setup):
         # ==============================================================================
         # Description
         # ==============================================================================
         """
-        This function calculates the reference voltage and back EMF functions based on the
-        B4 topology and the given parameters.
+        This function calculates the reference voltage, the reference current and back EMF
+        functions based on the B6 topology and the given parameters.
 
         Input:
         1) E:       amplitude of the back emf (V)
         2) phiE:    angle of the back emf (rad)
         3) v_a:     load angle of the output (rad)
-        4) setup:   file including all setup parameters
+        4) t:       given time vector (sec)
+        5) setup:   file including all setup parameters
 
         Output:
         1) v_ref:   reference voltage for given load scenario (V)
@@ -1339,6 +1341,7 @@ class classB6:
         v_ref = {}
         e_ref = {}
         i_ref = {}
+        Io = cmath.polar(setup['Dat']['stat']['Io'])[0]
 
         # ==============================================================================
         # Calculation
@@ -1346,7 +1349,8 @@ class classB6:
         # ------------------------------------------
         # Time
         # ------------------------------------------
-        t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
+        if not t:
+            t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
 
         # ------------------------------------------
         # Reference
@@ -1354,7 +1358,7 @@ class classB6:
         for i in range(0, len(self.id1)):
             v_ref[self.id1[i]] = (self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV - i * 2 / 3 * np.pi, setup)
             e_ref[self.id1[i]] = E * genWave(t, self.fel, phiE - i * 2 / 3 * np.pi, setup)
-            i_ref[self.id1[i]] = setup['Dat']['stat']['Io'] * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'] - i * 2 / 3 * np.pi, setup)
+            i_ref[self.id1[i]] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'] - i * 2 / 3 * np.pi, setup)
 
         # ==============================================================================
         # Return

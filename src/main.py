@@ -32,6 +32,7 @@ from src.data.loadSetup import loadSetup
 from src.calcSweep import calcSweep
 from src.calcSteady import calcSteady
 from src.calcTrans import calcTrans
+from src.calcClose import calcClose
 from src.topo.initTopo import initTopo
 from src.plot.plot import plot
 from src.plot.plotResults import plotResults
@@ -175,6 +176,12 @@ def main(setup, path):
     # ------------------------------------------
     elif setup['Exp']['type'] == 2:
         [time, freq] = calcTrans(top, mdl, para, setup)
+
+    # ------------------------------------------
+    # Closed Loop
+    # ------------------------------------------
+    elif setup['Exp']['type'] == 3:
+        [time, freq] = calcClose(top, mdl, para, setup)
 
     # ------------------------------------------
     # Default

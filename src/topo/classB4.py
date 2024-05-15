@@ -46,6 +46,7 @@ from src.pwm.genWaveform import genWave
 import numpy as np
 import pandas as pd
 from scipy import signal
+import cmath
 
 
 #######################################################################################################################
@@ -815,10 +816,13 @@ class classB4:
             _, i_a, _, = signal.lsim(mdl['SS']['Load'], v_L, t, X0=init['load'])
             i_a = i_a[t0:t1]
         else:
-            _, i_a, _, = signal.lsim(mdl['SS']['Load'], (v_L - np.mean(v_L)), t, X0=init['load'])
-            i_a = i_a[t0:t1]
             if avg == 1:
+                _, i_a, _, = signal.lsim(mdl['SS']['Load'], (v_L - np.mean(v_L)), t, X0=init['load'])
+                i_a = i_a[t0:t1]
                 i_a = i_a - np.mean(i_a)
+            else:
+                _, i_a, _, = signal.lsim(mdl['SS']['Load'], v_L, t, X0=init['load'])
+                i_a = i_a[t0:t1]
 
         # ------------------------------------------
         # DC Side
@@ -947,19 +951,20 @@ class classB4:
     ###################################################################################################################
     # Calculations frequency domain
     ###################################################################################################################
-    def calcRef(self, E, phiE, phiV, setup):
+    def calcRef(self, E, phiE, phiV, t, setup):
         # ==============================================================================
         # Description
         # ==============================================================================
         """
-        This function calculates the reference voltage and back EMF functions based on the
-        B4 topology and the given parameters.
+        This function calculates the reference voltage, the reference current and back EMF
+        functions based on the B4 topology and the given parameters.
 
         Input:
         1) E:       amplitude of the back emf (V)
         2) phiE:    angle of the back emf (rad)
         3) v_a:     load angle of the output (rad)
-        4) setup:   file including all setup parameters
+        4) t:       given time vector (sec)
+        5) setup:   file including all setup parameters
 
         Output:
         1) v_ref:   reference voltage for given load scenario (V)
@@ -973,6 +978,7 @@ class classB4:
         v_ref = {}
         e_ref = {}
         i_ref = {}
+        Io = cmath.polar(setup['Dat']['stat']['Io'])[0]
 
         # ==============================================================================
         # Calculation
@@ -980,7 +986,8 @@ class classB4:
         # ------------------------------------------
         # Time
         # ------------------------------------------
-        t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
+        if not t:
+            t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
 
         # ------------------------------------------
         # Reference
@@ -989,8 +996,8 @@ class classB4:
         v_ref['B'] = -(self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
         e_ref['A'] = E * genWave(t, self.fel, phiE, setup)
         e_ref['B'] = E * genWave(t, self.fel, phiE, setup)
-        i_ref['A'] = setup['Dat']['stat']['Io'] * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
-        i_ref['B'] = setup['Dat']['stat']['Io'] * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
+        i_ref['A'] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
+        i_ref['B'] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
 
         # ==============================================================================
         # Return

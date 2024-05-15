@@ -125,7 +125,7 @@ def calcTrans(top, mdl, para, setup):
     # ------------------------------------------
     # Reference
     # ------------------------------------------
-    [v_ref, e_ref, _] = top.calcRef(E, phiE, phiV, setup)
+    [v_ref, e_ref, _] = top.calcRef(E, phiE, phiV, [], setup)
 
     # ==============================================================================
     # Thermal ROM

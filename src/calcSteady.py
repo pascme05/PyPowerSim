@@ -116,7 +116,7 @@ def calcSteady(top, mdl, para, setup):
     # Generate Reference Waveform
     # ==============================================================================
     t_ref = np.linspace(0, K / fel, K * N + 1)
-    [v_ref, e_ref, _] = top.calcRef(E, phiE, phiV, setup)
+    [v_ref, e_ref, _] = top.calcRef(E, phiE, phiV, [], setup)
 
     # ==============================================================================
     # Thermal ROM

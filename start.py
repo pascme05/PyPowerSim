@@ -56,7 +56,7 @@ setup['Exp']['debug'] = 0                                                       
 # Operating Mode
 # ------------------------------------------
 setup['Exp']['output'] = 'Mi'                                                                                            # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled
-setup['Exp']['type'] = 0                                                                                                 # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
+setup['Exp']['type'] = 3                                                                                                 # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
 
 # ==============================================================================
 # Input Files

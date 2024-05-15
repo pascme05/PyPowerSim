@@ -39,6 +39,7 @@ Inputs:     1) fel:     electrical frequency at the output (Hz)
 from src.general.helpFnc import cbInter, con2dis, deadTime
 from src.pwm.oppPWM import oppPWM
 from src.pwm.genWaveform import genWave
+from src.cont.conHys import conHys
 
 # ==============================================================================
 # External
@@ -46,6 +47,7 @@ from src.pwm.genWaveform import genWave
 import numpy as np
 import pandas as pd
 from scipy import signal
+import cmath
 
 
 #######################################################################################################################
@@ -652,6 +654,57 @@ class classB2:
         return [xs_out, xsh_out, s_out, c_out, x_out, xN0_out]
 
     ###################################################################################################################
+    # Closed Loop Control
+    ###################################################################################################################
+    def calcCON(self, i_ref, i_act, s_act, setup):
+        # ==============================================================================
+        # Description
+        # ==============================================================================
+        """
+        This function calculates the switching times assuming closed loop control. It
+        compares the reference current and the actual current and updates the switching
+        state accordingly using an arbitrary control algorithm.
+
+        Input:
+        1) i_ref:   Reference current (A)
+        2) i_act:   Actual current (A)
+        3) s_act:   Actual switching states
+        4) setup:   variable including all parameters
+
+        Output:
+        1) s:       switching instances (sec)
+        2) Mi:      updated modulation index
+        3) err:     error between reference and actual signal
+        """
+
+        # ==============================================================================
+        # Init
+        # ==============================================================================
+        s_out = {}
+        tol = np.max(abs(i_ref)) * setup['Par']['Cont']['hys'] / 100
+
+        # ==============================================================================
+        # Calculation
+        # ==============================================================================
+        if setup['Par']['Cont']['type'] == "HY":
+            [s, err] = conHys(i_act, i_ref, s_act['A'], tol)
+        elif setup['Par']['Cont']['type'] == "PI":
+            [s, err] = conHys(i_act, i_ref, s_act['A'], tol)
+        else:
+            [s, err] = conHys(i_act, i_ref, s_act['A'], tol)
+
+        # ==============================================================================
+        # Post-Processing
+        # ==============================================================================
+        s_out['A'] = s
+        Mi = 4 / np.pi * abs(np.mean(s))
+
+        # ==============================================================================
+        # Return
+        # ==============================================================================
+        return [s_out, Mi, err]
+
+    ###################################################################################################################
     # Temporal Output
     ###################################################################################################################
     def calcTime(self, s, e, t, Mi, mdl, t0, t1, init, avg, setup):
@@ -718,10 +771,13 @@ class classB2:
             _, i_a, _, = signal.lsim(mdl['SS']['Load'], v_a, t, X0=init['load'])
             i_a = i_a[t0:t1]
         else:
-            _, i_a, _, = signal.lsim(mdl['SS']['Load'], (v_a - np.mean(v_a)), t, X0=init['load'])
-            i_a = i_a[t0:t1]
             if avg == 1:
+                _, i_a, _, = signal.lsim(mdl['SS']['Load'], (v_a - np.mean(v_a)), t, X0=init['load'])
+                i_a = i_a[t0:t1]
                 i_a = i_a - np.mean(i_a)
+            else:
+                _, i_a, _, = signal.lsim(mdl['SS']['Load'], v_a, t, X0=init['load'])
+                i_a = i_a[t0:t1]
 
         # ------------------------------------------
         # DC Side
@@ -855,19 +911,20 @@ class classB2:
     ###################################################################################################################
     # Calculations frequency domain
     ###################################################################################################################
-    def calcRef(self, E, phiE, phiV, setup):
+    def calcRef(self, E, phiE, phiV, t, setup):
         # ==============================================================================
         # Description
         # ==============================================================================
         """
-        This function calculates the reference voltage and back EMF functions based on the
-        B2 topology and the given parameters.
+        This function calculates the reference voltage, the reference current and back EMF
+        functions based on the B2 topology and the given parameters.
 
         Input:
         1) E:       amplitude of the back emf (V)
         2) phiE:    angle of the back emf (rad)
         3) v_a:     load angle of the output (rad)
-        4) setup:   file including all setup parameters
+        4) t:       given time vector (sec)
+        5) setup:   file including all setup parameters
 
         Output:
         1) v_ref:   reference voltage for given load scenario (V)
@@ -881,6 +938,7 @@ class classB2:
         v_ref = {}
         i_ref = {}
         e_ref = {}
+        Io = cmath.polar(setup['Dat']['stat']['Io'])[0]
 
         # ==============================================================================
         # Calculation
@@ -888,14 +946,18 @@ class classB2:
         # ------------------------------------------
         # Time
         # ------------------------------------------
-        t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
+        try:
+            if not t:
+                t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
+        except:
+            test = 1
 
         # ------------------------------------------
         # Reference
         # ------------------------------------------
         v_ref['A'] = (self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
         e_ref['A'] = E * genWave(t, self.fel, phiE, setup)
-        i_ref['A'] = setup['Dat']['stat']['Io'] * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
+        i_ref['A'] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
 
         # ==============================================================================
         # Return

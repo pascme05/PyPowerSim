@@ -35,7 +35,6 @@ from src.elec.calcLossSwi import calcLossSwi
 from src.elec.calcLossCap import calcLossCap
 from src.general.calcAvg import calcAvg
 from src.elec.calcElecCap import calcElecCap
-from src.cont.conHys import conHys
 
 # ==============================================================================
 # External
@@ -49,7 +48,7 @@ from tqdm import tqdm
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcTrans(top, mdl, para, setup):
+def calcClose(top, mdl, para, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -70,7 +69,7 @@ def calcTrans(top, mdl, para, setup):
     Tel = 1 / fel
     Nsim = int(np.ceil(fsim / fel))
     Npwm = int(np.ceil(fs / fel))
-    Ncon = int(np.ceil(fc / fel))
+    Ncon = int(Nsim/Npwm)
     K = int(setup['Dat']['stat']['cyc'])
     Nel = int(np.ceil(setup['Dat']['trans']['tmax'] * fel))
     Mi = setup['Dat']['stat']['Mi']
@@ -81,7 +80,6 @@ def calcTrans(top, mdl, para, setup):
     E = setup['Top']['E']
     Vdc = setup['Dat']['stat']['Vdc']
     Tj = setup['Dat']['stat']['Tj']
-    Iref = setup['Dat']['stat']['Io']
     phiE = math.radians(setup['Top']['phiE'])
     phiV = math.radians(setup['Dat']['stat']['phi'])
 
@@ -89,7 +87,7 @@ def calcTrans(top, mdl, para, setup):
     # Update Frequency
     # ==============================================================================
     iterPWM = Nel * Npwm
-    updRate = np.ceil(Npwm / Ncon)
+    updRate = int(np.ceil(Npwm / Ncon))
 
     # ==============================================================================
     # Outputs
@@ -107,11 +105,13 @@ def calcTrans(top, mdl, para, setup):
     # Time
     # ------------------------------------------
     t_ref = np.linspace(0, K / fel, K * Nsim + 1)
+    t_tot = np.linspace(0, Nel * Tel, Nel * Nsim + 1)
 
     # ------------------------------------------
     # Reference
     # ------------------------------------------
-    [v_ref, e_ref, _] = top.calcRef(E, phiE, phiV, setup)
+    [v_ref, e_ref, _] = top.calcRef(E, phiE, phiV, [], setup)
+    [_, e_tot, i_tot] = top.calcRef(E, phiE, phiV, t_tot, setup)
 
     ###################################################################################################################
     # Calculation
@@ -129,59 +129,43 @@ def calcTrans(top, mdl, para, setup):
     # ==============================================================================
     # Controller Init
     # ==============================================================================
-    # ------------------------------------------
-    # Output
-    # ------------------------------------------
-    tempInit = 0
-
-    # ------------------------------------------
-    # Variables
-    # ------------------------------------------
-    t_con = np.linspace(0, Tel, Nsim + 1)
-    outAc = pd.DataFrame(columns=timeAc.columns)
-    outDc = pd.DataFrame(columns=timeDc.columns)
-    outSw = pd.DataFrame(columns='s')
+    t_con = np.linspace(0, 1 / fs, Ncon + 1)
+    e_con = {'A': np.zeros(Ncon + 1)}
+    s_i = {'A': np.ones(Ncon + 1)}
+    i_act = np.zeros(Ncon + 1)
+    Mi_con = 1
+    tempInit = []
+    outSw = {'A': []}
 
     # ==============================================================================
     # Step Response
     # ==============================================================================
     for i in tqdm(range(iterPWM), desc='Step-Response', position=0):
         # ------------------------------------------
+        # New References
+        # ------------------------------------------
+        i_ref = i_tot['A'][i * Ncon:(i + 1) * Ncon + 1]
+
+        # ------------------------------------------
         # Controller
         # ------------------------------------------
         if i == 0 or i % updRate == 0:
-            # New Reference
-            # TODO: Generate a new reference function based on the controller difference
-            v_con = 1
-            Mi_con = 1
+            # New Switching
+            [s_i, Mi_con, _] = top.calcCON(i_ref, i_act, s_i, setup)
 
-        # ------------------------------------------
-        # PWM Generation
-        # ------------------------------------------
-        # New Switching
-        [_, _, s_i, _, _, _] = top.calcPWM(v_con, t_con, Mi_con, setup)
-
-        # New Back EMF
-        e_con = 0
+            # New Back EMF (TODO: Must be changed to a proper function only init with zero)
+            e_con = {'A': np.zeros(Ncon + 1)}
 
         # ------------------------------------------
         # Calculate Output
         # ------------------------------------------
-        [tempAc, tempDc, tempInit] = top.calcTime(s_i, e_con, t_con, Mi_con, mdl, 0, Npwm, tempInit, 0, setup)
+        [tempAc, _, tempInit] = top.calcTime(s_i, e_con, t_con, Mi_con, mdl, 0, Ncon + 1, tempInit, 0, setup)
+        i_act = tempAc['i_a']
 
         # ------------------------------------------
         # Append Result
         # ------------------------------------------
-        # Switching function
-        outSw = pd.concat([outSw, s_i])
-
-        # Load side (AC)
-        for c1 in tempAc:
-            outAc[c1] = pd.concat([outAc, tempAc[c1]])
-
-        # Source side (DC)
-        for c1 in tempDc:
-            outDc[c1] = pd.concat([outDc, tempDc[c1]])
+        outSw['A'] = np.append(outSw['A'], s_i['A'])
 
     ###################################################################################################################
     # Post-Processing
@@ -189,6 +173,12 @@ def calcTrans(top, mdl, para, setup):
     # ==============================================================================
     # Electrical Results
     # ==============================================================================
+    # ------------------------------------------
+    # Phase and Source
+    # ------------------------------------------
+    outSw['A'] = outSw['A'][0:len(t_tot)]
+    [outAc, outDc, _] = top.calcTime(outSw, e_tot, t_tot, Mi, mdl, 0, len(t_tot), [], 0, setup)
+
     # ------------------------------------------
     # Switching Devices
     # ------------------------------------------
