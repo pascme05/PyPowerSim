@@ -34,12 +34,14 @@ from src.general.helpFnc import thd
 # ==============================================================================
 # External
 # ==============================================================================
-import numpy as np
-import math
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pl
 import matplotlib.gridspec as gridspec
 from scipy.fft import fft
+import numpy as np
+import math
+import matplotlib
+matplotlib.use('TkAgg')
 
 
 #######################################################################################################################
@@ -79,7 +81,7 @@ def plotSweep(time, freq, sweep, setup):
     Vdc = setup['Dat']['stat']['Vdc']
     phiE = setup['Top']['phiE']
     down = int(setup['Dat']['stat']['cyc']) - 2
-    down2 = int(fsim/fs/200)
+    down2 = int(fsim / fs / 200)
     if down2 < 1:
         down2 = 1
 
@@ -100,7 +102,7 @@ def plotSweep(time, freq, sweep, setup):
     # Limits
     # ------------------------------------------
     K = int(np.round((t[-1] - t[0]) * fel))
-    start = int((len(t) - 1) / K) * (K-1)
+    start = int((len(t) - 1) / K) * (K - 1)
     ende = len(t)
 
     # ------------------------------------------
@@ -265,7 +267,8 @@ def plotSweep(time, freq, sweep, setup):
     # ------------------------------------------
     # Time
     plt.subplot(2, 3, 4)
-    plt.plot(t[::down2], timeDc['i_dc'][::down2], t[::down2], np.mean(timeDc['i_dc']) * np.ones(np.size(timeDc['i_dc'][::down2])), '--')
+    plt.plot(t[::down2], timeDc['i_dc'][::down2], t[::down2],
+             np.mean(timeDc['i_dc']) * np.ones(np.size(timeDc['i_dc'][::down2])), '--')
     plt.ylabel("$i_{dc}(t)$ (A)")
     plt.title('Time-domain Currents DC-Side')
     plt.xlabel('time in (sec)')
@@ -312,7 +315,8 @@ def plotSweep(time, freq, sweep, setup):
     # ------------------------------------------
     # Time
     plt.subplot(2, 3, 1)
-    plt.plot(t[::down2], timeAc['v_a'][::down2], t[::down2], timeAc['v_a0'][::down2], t[::down2], timeAc['v_a_out'][::down2], t[::down2], timeSw['e_a'][::down2])
+    plt.plot(t[::down2], timeAc['v_a'][::down2], t[::down2], timeAc['v_a0'][::down2], t[::down2],
+             timeAc['v_a_out'][::down2], t[::down2], timeSw['e_a'][::down2])
     plt.ylabel("$v_{a}(t)$ (V)")
     plt.title('Time-domain Voltages AC-Side')
     plt.xlabel('time in (sec)')
@@ -348,7 +352,8 @@ def plotSweep(time, freq, sweep, setup):
     # ------------------------------------------
     # Time
     plt.subplot(2, 3, 4)
-    plt.plot(t[::down2], timeDc['v_in'][::down2], t[::down2], timeDc['v_dc'][::down2], t[::down2], np.mean(timeDc['v_dc']) * np.ones(np.size(timeDc['v_dc'][::down2])), '--')
+    plt.plot(t[::down2], timeDc['v_in'][::down2], t[::down2], timeDc['v_dc'][::down2], t[::down2],
+             np.mean(timeDc['v_dc']) * np.ones(np.size(timeDc['v_dc'][::down2])), '--')
     plt.ylabel("$v_{dc}(t)$ (V)")
     plt.title('Time-domain Voltages DC-Side')
     plt.xlabel('time in (sec)')

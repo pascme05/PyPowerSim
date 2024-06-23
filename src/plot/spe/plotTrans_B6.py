@@ -26,6 +26,8 @@ import matplotlib.pyplot as plt
 import matplotlib.pylab as pl
 import matplotlib.gridspec as gridspec
 from scipy.fft import fft
+import matplotlib
+matplotlib.use('TkAgg')
 
 
 #######################################################################################################################

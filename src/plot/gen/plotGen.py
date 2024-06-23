@@ -25,7 +25,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.pylab as pl
-
+import matplotlib
+matplotlib.use('TkAgg')
 
 #######################################################################################################################
 # Function

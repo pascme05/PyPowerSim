@@ -3,12 +3,20 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         defaultSteady
-# Date:         01.05.2024
+# Date:         08.05.2024
 # Author:       Dr. Pascal A. Schirmer
 # Version:      V.1.0
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
+
+#######################################################################################################################
+# Function Description
+#######################################################################################################################
+"""
+This function start a simulation based on the provided configuration under \config as well as the parameters defined in
+the start script.
+"""
 
 #######################################################################################################################
 # Import external libs
@@ -48,7 +56,7 @@ setup = initSetup()
 # ------------------------------------------
 # General
 # ------------------------------------------
-setup['Exp']['Name'] = "defaultSteady"                                                                                         # name of the simulation (str)
+setup['Exp']['Name'] = "defaultSteady"                                                                                   # name of the simulation (str)
 setup['Exp']['Author'] = "Pascal Schirmer"                                                                               # name of the responsible person (str)
 setup['Exp']['debug'] = 0                                                                                                # (0): debug mode de-activated, (1): debug mode activated level-1, (2): debug mode activated level-2
 
@@ -56,7 +64,7 @@ setup['Exp']['debug'] = 0                                                       
 # Operating Mode
 # ------------------------------------------
 setup['Exp']['output'] = 'Mi'                                                                                            # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled
-setup['Exp']['type'] = 1                                                                                                 # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis
+setup['Exp']['type'] = 1                                                                                                 # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis, (3): closed loop analysis, (3): closed loop analysis
 
 # ==============================================================================
 # Input Files

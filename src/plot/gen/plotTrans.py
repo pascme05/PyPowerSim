@@ -26,7 +26,8 @@ import matplotlib.pyplot as plt
 import matplotlib.pylab as pl
 import matplotlib.gridspec as gridspec
 from scipy.fft import fft
-
+import matplotlib
+matplotlib.use('TkAgg')
 
 #######################################################################################################################
 # Function
@@ -267,7 +268,7 @@ def plotTrans(time, freq, setup):
              timeElec['sw']['S1']['v_D'][::down2], 'b--', tel[::down2], timeElec['sw']['S2']['v_D'][::down2], 'r--')
     plt.title('Voltages Transistors and Diodes (A)')
     plt.ylabel('Voltage in (V)')
-    plt.xticks([], [])
+    plt.xlabel("")
     plt.legend(['T1', 'T2', 'D1', 'D2'])
     plt.grid('on')
 
@@ -276,7 +277,7 @@ def plotTrans(time, freq, setup):
              timeElec['sw']['S1']['i_D'][::down2], 'b--', tel[::down2], timeElec['sw']['S2']['i_D'][::down2], 'r--')
     plt.title('Currents Transistors and Diodes (A)')
     plt.ylabel('Current in (A)')
-    plt.xticks([], [])
+    plt.xlabel("")
     plt.legend(['T1', 'T2', 'D1', 'D2'])
     plt.grid('on')
 
@@ -285,7 +286,7 @@ def plotTrans(time, freq, setup):
              timeLoss['sw']['S1']['p_D_c'][::down2], 'b--', tel[::down2], timeLoss['sw']['S2']['p_D_c'][::down2], 'r--')
     plt.title('Conduction Losses Transistors and Diodes (A)')
     plt.ylabel('Power in (W)')
-    plt.xticks([], [])
+    plt.xlabel("")
     plt.legend(['T1', 'T2', 'D1', 'D2'])
     plt.grid('on')
 
@@ -294,7 +295,7 @@ def plotTrans(time, freq, setup):
              timeLoss['sw']['S1']['p_D_s'][::down2], 'b--', tel[::down2], timeLoss['sw']['S2']['p_D_s'][::down2], 'r--')
     plt.title('Switching Losses Transistors and Diodes (A)')
     plt.ylabel('Power in (W)')
-    plt.xticks([], [])
+    plt.xlabel('time in (sec)')
     plt.legend(['T1', 'T2', 'D1', 'D2'])
     plt.grid('on')
 
@@ -306,21 +307,21 @@ def plotTrans(time, freq, setup):
     plt.plot(tel[::down2], timeElec['cap']['C1']['v_c'][::down2])
     plt.title('Voltage Capacitor')
     plt.ylabel('Voltage in (V)')
-    plt.xticks([], [])
+    plt.xlabel("")
     plt.grid('on')
 
     plt.subplot(4, 1, 2)
     plt.plot(tel[::down2], timeElec['cap']['C1']['i_c'][::down2])
     plt.title('Current Capacitor')
     plt.ylabel('Current in (A)')
-    plt.xticks([], [])
+    plt.xlabel("")
     plt.grid('on')
 
     plt.subplot(4, 1, 3)
     plt.plot(tel[::down2], timeLoss['cap']['C1']['p_L'][::down2])
     plt.title('Losses Capacitor')
     plt.ylabel('Power in (W)')
-    plt.xlabel('time in (sec)')
+    plt.xlabel("")
     plt.grid('on')
 
     plt.subplot(4, 1, 4)
@@ -338,7 +339,7 @@ def plotTrans(time, freq, setup):
     plt.plot(tel[::down2], timeLoss['sw']['S1']['p_L'][::down2], 'r', tel[::down2], timeLoss['sw']['S2']['p_L'][::down2], 'b')
     plt.title('Losses Switches (A)')
     plt.ylabel('Power in (W)')
-    plt.xticks([], [])
+    plt.xlabel("")
     plt.legend(['S1', 'S2'])
     plt.grid('on')
 
@@ -352,7 +353,7 @@ def plotTrans(time, freq, setup):
     plt.plot(tel[::down2], Ta * np.ones(np.size(tel[::down2])), color='k', linestyle='-')
     plt.title('Thermal Switches (A)')
     plt.ylabel('Temperature in (°C)')
-    plt.xticks([], [])
+    plt.xlabel('time in (sec)')
     plt.legend(['T1_j', 'T1_d', 'T1_c', 'T2_j', 'T2_d', 'T2_c', 'Ta'])
     plt.grid('on')
     plt.show()
