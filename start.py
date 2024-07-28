@@ -72,7 +72,7 @@ setup['Exp']['type'] = 0                                                        
 # ------------------------------------------
 # Mission Profile and Config
 # ------------------------------------------
-setup['Exp']['conf'] = "test"                                                                                            # name of the configuration file
+setup['Exp']['conf'] = "default"                                                                                         # name of the configuration file
 
 # ------------------------------------------
 # Devices
