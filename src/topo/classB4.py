@@ -604,7 +604,7 @@ class classB4:
         # Parameters
         # ------------------------------------------
         kmax = 10 * self.q
-        ang = np.linspace(0, np.pi * 2 * self.N, np.size(t_ref))
+        ang = np.linspace(0, np.pi * 2 * self.K, np.size(t_ref))
         s['A'] = (-1) * np.ones(np.size(t_ref))
         c['A'] = np.zeros(np.size(t_ref))
         ss = np.zeros(np.size(t_ref))
@@ -619,8 +619,8 @@ class classB4:
         # ------------------------------------------
         x['A'] = Mi * v_ref['A'] / np.max(np.abs(v_ref['A']))
         x['B'] = Mi * v_ref['B'] / np.max(np.abs(v_ref['B']))
-        xN0['A'] = np.zero(np.size(x['A']))
-        xN0['B'] = np.zero(np.size(x['B']))
+        xN0['A'] = np.zeros(np.size(x['A']))
+        xN0['B'] = np.zeros(np.size(x['B']))
 
         # ------------------------------------------
         # Optimal Angles
@@ -629,7 +629,7 @@ class classB4:
         [ang_fun, val_fun, _] = oppPWM(kmax, self.q*2, Mi / 4 * np.pi, 4, setup)
 
         # Complete angle
-        for i in range(0, self.N):
+        for i in range(0, self.K):
             if i == 0:
                 ang_total = ang_fun
                 val_total = val_fun
@@ -676,8 +676,8 @@ class classB4:
                 s['A'][i] = -1
 
         # Interleaved
-        s['B'] = np.roll(s['A'], -int(np.floor(180 / 360 / self.N * len(ss))))
-        c['B'] = np.roll(c['A'], -int(np.floor(180 / 360 / self.N * len(ss))))
+        s['B'] = np.roll(s['A'], -int(np.floor(180 / 360 / self.K * len(ss))))
+        c['B'] = np.roll(c['A'], -int(np.floor(180 / 360 / self.K * len(ss))))
 
         # Non-Interleaved
         if setup['Par']['PWM']['int'] == 0:

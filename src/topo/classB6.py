@@ -863,7 +863,7 @@ class classB6:
         # Parameters
         # ------------------------------------------
         kmax = 10 * self.q
-        ang = np.linspace(0, np.pi * 2 * self.N, np.size(t_ref))
+        ang = np.linspace(0, np.pi * 2 * self.K, np.size(t_ref))
         if setup['Par']['PWM']['upd'] == "SE":
             Ns = self.q
         else:
@@ -889,7 +889,7 @@ class classB6:
         [ang_fun, val_fun, _] = oppPWM(kmax, self.q, Mi / 4 * np.pi, 4, setup)
 
         # Complete angle
-        for i in range(0, self.N):
+        for i in range(0, self.K):
             if i == 0:
                 ang_total = ang_fun
                 val_total = val_fun
@@ -924,7 +924,7 @@ class classB6:
         # Three phase
         # ------------------------------------------
         for i in range(0, len(self.id1)):
-            s[self.id1[i]] = np.roll(ss, int(np.floor(i * 120 / 360 / self.N * len(ss))))
+            s[self.id1[i]] = np.roll(ss, int(np.floor(i * 120 / 360 / self.K * len(ss))))
 
         # ------------------------------------------
         # Dead time
@@ -937,7 +937,7 @@ class classB6:
         # ------------------------------------------
         for i in range(0, len(self.id1)):
             for ii in range(0, len(x[self.id1[i]])):
-                if (ii % int(len(t_ref) / (Ns * self.N))) == 0:
+                if (ii % int(len(t_ref) / (Ns * self.K))) == 0:
                     xs[self.id1[i]][ii] = x[self.id1[i]][ii]
                 else:
                     xs[self.id1[i]][ii] = xs[self.id1[i]][ii - 1]

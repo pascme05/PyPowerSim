@@ -520,7 +520,7 @@ class classB2:
         # Initialisation
         # ==============================================================================
         kmax = 10 * self.q
-        ang = np.linspace(0, np.pi * 2 * self.N, np.size(t_ref))
+        ang = np.linspace(0, np.pi * 2 * self.K, np.size(t_ref))
         s = (-1) * np.ones(np.size(t_ref))
         c = np.zeros(np.size(t_ref))
         ang_total = []
@@ -542,7 +542,7 @@ class classB2:
         [ang_fun, val_fun, _] = oppPWM(kmax, self.q, Mi / 4 * np.pi, 4, setup)
 
         # Complete angle
-        for i in range(0, self.N):
+        for i in range(0, self.K):
             if i == 0:
                 ang_total = ang_fun
                 val_total = val_fun
