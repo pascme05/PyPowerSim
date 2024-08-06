@@ -28,6 +28,7 @@ import matplotlib.pylab as pl
 import matplotlib
 matplotlib.use('TkAgg')
 
+
 #######################################################################################################################
 # Function
 #######################################################################################################################
@@ -78,7 +79,7 @@ def plotGenTF(mdl, setupPara, setupTopo):
     # ------------------------------------------
     # Calc
     # ------------------------------------------
-    mag, phase, omega = control.bode(G_inp, w, Hz=True, dB=True, Plot=False)
+    mag, phase, omega = control.bode(G_inp, w, Hz=True, dB=True, plot=False)
     wc = np.interp(-np.pi/2, np.flipud(phase), np.flipud(omega))
     Kcu = np.interp(wc, omega, mag)
 
@@ -117,7 +118,7 @@ def plotGenTF(mdl, setupPara, setupTopo):
     # ------------------------------------------
     # Calc
     # ------------------------------------------
-    mag, phase, omega = control.bode(G_out, w, Hz=True, dB=True, Plot=False)
+    mag, phase, omega = control.bode(G_out, w, Hz=True, dB=True, plot=False)
     wc = np.interp(-np.pi/2, np.flipud(phase), np.flipud(omega))
     Kcu = np.interp(wc, omega, mag)
 
@@ -154,7 +155,7 @@ def plotGenTF(mdl, setupPara, setupTopo):
     # ------------------------------------------
     # Calc
     # ------------------------------------------
-    mag, phase, omega = control.bode(G_dc, w, Hz=True, dB=True, Plot=False)
+    mag, phase, omega = control.bode(G_dc, w, Hz=True, dB=True, plot=False)
     wc = np.interp(-np.pi/2, np.flipud(phase), np.flipud(omega))
     Kcu = np.interp(wc, omega, mag)
 
@@ -191,7 +192,7 @@ def plotGenTF(mdl, setupPara, setupTopo):
     # ------------------------------------------
     # Calc
     # ------------------------------------------
-    mag, phase, omega = control.bode(G_load, w, Hz=True, dB=True, Plot=False)
+    mag, phase, omega = control.bode(G_load, w, Hz=True, dB=True, plot=False)
     wc = np.interp(-np.pi/2, np.flipud(phase), np.flipud(omega))
     Kcu = np.interp(wc, omega, mag)
 
