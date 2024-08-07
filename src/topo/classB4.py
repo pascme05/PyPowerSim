@@ -986,20 +986,23 @@ class classB4:
         # Calculation
         # ==============================================================================
         # ------------------------------------------
-        # Time
-        # ------------------------------------------
-        if not t != []:
-            t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
-
-        # ------------------------------------------
         # Reference
         # ------------------------------------------
-        v_ref['A'] = +(self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
-        v_ref['B'] = -(self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
-        e_ref['A'] = E * genWave(t, self.fel, phiE, setup)
-        e_ref['B'] = E * genWave(t, self.fel, phiE, setup)
-        i_ref['A'] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
-        i_ref['B'] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
+        try:
+            v_ref['A'] = +(self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
+            v_ref['B'] = -(self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
+            e_ref['A'] = E * genWave(t, self.fel, phiE, setup)
+            e_ref['B'] = E * genWave(t, self.fel, phiE, setup)
+            i_ref['A'] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
+            i_ref['B'] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
+        except:
+            t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
+            v_ref['A'] = +(self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
+            v_ref['B'] = -(self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
+            e_ref['A'] = E * genWave(t, self.fel, phiE, setup)
+            e_ref['B'] = E * genWave(t, self.fel, phiE, setup)
+            i_ref['A'] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
+            i_ref['B'] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
 
         # ==============================================================================
         # Return

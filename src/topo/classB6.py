@@ -1349,18 +1349,19 @@ class classB6:
         # Calculation
         # ==============================================================================
         # ------------------------------------------
-        # Time
-        # ------------------------------------------
-        if not t != []:
-            t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
-
-        # ------------------------------------------
         # Reference
         # ------------------------------------------
-        for i in range(0, len(self.id1)):
-            v_ref[self.id1[i]] = (self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV - i * 2 / 3 * np.pi, setup)
-            e_ref[self.id1[i]] = E * genWave(t, self.fel, phiE - i * 2 / 3 * np.pi, setup)
-            i_ref[self.id1[i]] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'] - i * 2 / 3 * np.pi, setup)
+        try:
+            for i in range(0, len(self.id1)):
+                v_ref[self.id1[i]] = (self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV - i * 2 / 3 * np.pi, setup)
+                e_ref[self.id1[i]] = E * genWave(t, self.fel, phiE - i * 2 / 3 * np.pi, setup)
+                i_ref[self.id1[i]] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'] - i * 2 / 3 * np.pi, setup)
+        except:
+            t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
+            for i in range(0, len(self.id1)):
+                v_ref[self.id1[i]] = (self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV - i * 2 / 3 * np.pi, setup)
+                e_ref[self.id1[i]] = E * genWave(t, self.fel, phiE - i * 2 / 3 * np.pi, setup)
+                i_ref[self.id1[i]] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'] - i * 2 / 3 * np.pi, setup)
 
         # ==============================================================================
         # Return

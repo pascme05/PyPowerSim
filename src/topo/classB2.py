@@ -1024,17 +1024,17 @@ class classB2:
         # Calculation
         # ==============================================================================
         # ------------------------------------------
-        # Time
-        # ------------------------------------------
-        if not t != []:
-            t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
-
-        # ------------------------------------------
         # Reference
         # ------------------------------------------
-        v_ref['A'] = (self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
-        e_ref['A'] = E * genWave(t, self.fel, phiE, setup)
-        i_ref['A'] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
+        try:
+            v_ref['A'] = (self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
+            e_ref['A'] = E * genWave(t, self.fel, phiE, setup)
+            i_ref['A'] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
+        except:
+            t = np.linspace(0, self.K / self.fel, self.K * self.N + 1)
+            v_ref['A'] = (self.Vdc / 2) * self.Mi * genWave(t, self.fel, phiV, setup)
+            e_ref['A'] = E * genWave(t, self.fel, phiE, setup)
+            i_ref['A'] = Io * np.sqrt(2) * genWave(t, self.fel, setup['Dat']['stat']['PhiVI'], setup)
 
         # ==============================================================================
         # Return

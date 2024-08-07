@@ -29,6 +29,7 @@ from src.plot.gen.plotGen import plotGenTF, plotGenLoss, plotGenTher
 from src.plot.gen.plotSweep import plotSweep
 from src.plot.gen.plotStat import plotStat
 from src.plot.gen.plotTrans import plotTrans
+from src.plot.gen.plotClose import plotClose
 
 
 # ==============================================================================
@@ -106,6 +107,12 @@ def plot(mdl, para, time, freq, sweep, setup):
         # ------------------------------------------
         elif setup['Exp']['type'] == 2:
             plotTrans(time, freq, setup)
+
+        # ------------------------------------------
+        # Closed Loop
+        # ------------------------------------------
+        elif setup['Exp']['type'] == 3:
+            plotClose(time, freq, setup)
 
     # ==============================================================================
     # Specific

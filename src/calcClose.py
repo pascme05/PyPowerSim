@@ -114,7 +114,7 @@ def calcClose(top, mdl, para, setup):
     # ==============================================================================
     # Switching Function
     # ==============================================================================
-    [xs, xsh, s, c, x, xN0] = top.calcPWM(v_ref, t_ref, Mi, setup)
+    [xs, xsh, _, c, x, xN0] = top.calcPWM(v_ref, t_ref, Mi, setup)
 
     # ==============================================================================
     # Controller Init
@@ -174,8 +174,10 @@ def calcClose(top, mdl, para, setup):
     # ------------------------------------------
     # Capacitor
     # ------------------------------------------
-    outDc['v_dc'] = calcElecCap(t_ref, outDc['i_c'], Tj, para, setup)
-    timeLoss['cap']['C1'] = calcLossCap(t_ref, outDc['i_c'], Tj, para, setup)
+    outDc['v_dc'] = calcElecCap(t_tot, outDc['i_c'], Tj, para, setup)
+    timeLoss['cap']['C1'] = calcLossCap(t_tot, outDc['i_c'], Tj, para, setup)
+    timeElec['cap']['C1']['v_c'] = outDc['v_dc']
+    timeElec['cap']['C1']['i_c'] = outDc['i_c']
 
     # ==============================================================================
     # Frequency domain
