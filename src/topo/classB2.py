@@ -30,7 +30,6 @@ Inputs:     1) fel:     electrical frequency at the output (Hz)
             13) Tc_tr:  case temperature for transient analysis
             14) Tj_tr:  core temperature for transient analysis
 """
-import copy
 
 #######################################################################################################################
 # Import libs
@@ -50,6 +49,7 @@ import numpy as np
 import pandas as pd
 from scipy import signal
 import cmath
+import copy
 
 
 #######################################################################################################################

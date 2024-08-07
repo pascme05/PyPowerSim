@@ -40,6 +40,7 @@ Inputs:     1) fel:     electrical frequency at the output (Hz)
 from src.general.helpFnc import cbInter, con2dis, deadTime
 from src.pwm.oppPWM import oppPWM
 from src.pwm.genWaveform import genWave
+from src.cont.conHys import conHys
 
 # ==============================================================================
 # External
@@ -48,6 +49,7 @@ import numpy as np
 import pandas as pd
 from scipy import signal
 import cmath
+import copy
 
 
 #######################################################################################################################
@@ -748,6 +750,139 @@ class classB4:
         # Return
         # ==============================================================================
         return [xs, xsh, s, c, x, xN0]
+
+        ###################################################################################################################
+        # Closed Loop Control
+        ###################################################################################################################
+
+    def calcCON(self, i_ref, i_act, s_act, t_con, scale, setup):
+        # ==============================================================================
+        # Description
+        # ==============================================================================
+        """
+        This function calculates the switching times assuming closed loop control. It
+        compares the reference current and the actual current and updates the switching
+        state accordingly using an arbitrary control algorithm.
+
+        Input:
+        1) i_ref:   Reference current (A)
+        2) i_act:   Actual current (A)
+        3) s_act:   Actual switching states
+        4) t_con:   time instance of the control action (sample)
+        5) scale:   scaling value to create step response
+        5) setup:   variable including all parameters
+
+        Output:
+        1) s:       switching instances (sec)
+        2) Mi:      updated modulation index
+        3) err:     error between reference and actual signal
+        """
+
+        # ==============================================================================
+        # Init
+        # ==============================================================================
+        s_out = {}
+        tol = np.max(abs(i_ref['A'])) * setup['Par']['Cont']['hys'] / 100 * scale
+
+        # ==============================================================================
+        # Calculation
+        # ==============================================================================
+        i_act = i_act['i_a'][t_con]
+        i_ref = copy.deepcopy(i_ref['A'][t_con]) * scale
+
+        # ==============================================================================
+        # Calculation
+        # ==============================================================================
+        if setup['Par']['Cont']['type'] == "HY":
+            [s, err] = conHys(i_act, i_ref, s_act['A'], tol)
+        elif setup['Par']['Cont']['type'] == "PI":
+            [s, err] = conHys(i_act, i_ref, s_act['A'], tol)
+        else:
+            [s, err] = conHys(i_act, i_ref, s_act['A'], tol)
+
+        # ==============================================================================
+        # Post-Processing
+        # ==============================================================================
+        s_out['A'] = s
+        s_out['B'] = -s_out['A']
+        Mi = 4 / np.pi * abs(np.mean(s))
+
+        # ==============================================================================
+        # Return
+        # ==============================================================================
+        return [s_out, Mi, err]
+
+        ###################################################################################################################
+        # Init controller variables
+        ###################################################################################################################
+
+    def initCON(self):
+        # ==============================================================================
+        # Description
+        # ==============================================================================
+        """
+        This function initialises the relevant variables for calculating closed loop
+        control outputs.
+
+        Input:
+
+        Output:
+        1) s:       switching instances (sec)
+        2) i_act:   actual current vector (A)
+        3) swOut:   switching function output
+        """
+
+        # ==============================================================================
+        # Init
+        # ==============================================================================
+        Ncon = int(self.fsim / self.fc)
+
+        # ==============================================================================
+        # Calculation
+        # ==============================================================================
+        s = {'A': np.ones(Ncon), 'B': np.ones(Ncon)}
+        i_act = {'i_a': np.zeros(Ncon)}
+        outSw = {'A': [], 'B': []}
+
+        # ==============================================================================
+        # Return
+        # ==============================================================================
+        return [s, i_act, outSw]
+
+        ###################################################################################################################
+        # Init controller variables
+        ###################################################################################################################
+
+    def appCON(self, s_i, outSw, iterC):
+        # ==============================================================================
+        # Description
+        # ==============================================================================
+        """
+        This function append the calculated controller outputs.
+
+        Input:
+        1) s_i:     switching instances (sec)
+        2) outSw:   switching sequence output (sec)
+        3) iterC:   controller iteration
+
+        Output:
+        1) t_con:   time vector for one control iteration (sec)
+        2) e_con:   back emf of the controller (V)
+        3) outSw:   switching function output
+        """
+
+        # ==============================================================================
+        # Calculation
+        # ==============================================================================
+        outSw['A'] = np.append(outSw['A'], s_i['A'])
+        outSw['B'] = np.append(outSw['B'], s_i['B'])
+        e_con = {'A': np.zeros(len(outSw['A']))}
+        t_con = np.linspace(0, (iterC + 1) / self.fc, len(outSw['A']))
+
+        # ==============================================================================
+        # Return
+        # ==============================================================================
+        return [outSw, e_con, t_con]
 
     ###################################################################################################################
     # Temporal Output
