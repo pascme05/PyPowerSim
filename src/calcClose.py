@@ -85,7 +85,7 @@ def calcClose(top, mdl, para, setup):
     # ==============================================================================
     iterCon = int(np.ceil(setup['Dat']['trans']['tmax'] * fc))
     t_scale = np.ones(iterCon * Ncon)
-    th = 0.2
+    th = 0.5
 
     # ==============================================================================
     # Outputs
