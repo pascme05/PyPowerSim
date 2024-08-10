@@ -1207,9 +1207,14 @@ class classB6:
         # AC Side
         # ------------------------------------------
         # Inverter Output
-        for j in range(0, len(self.id1)):
-            v0[self.id1[j]] = 0.5 * (s[self.id1[j]] - np.mean(s[self.id1[j]])) * self.Vdc
-        v_n0 = 1 / 3 * (v0['A'] + v0['B'] + v0['C'])
+        if setup['Exp']['type'] == 3:
+            for j in range(0, len(self.id1)):
+                v0[self.id1[j]] = 0.5 * s[self.id1[j]] * self.Vdc
+            v_n0 = np.zeros(len(v0[self.id1[0]]))
+        else:
+            for j in range(0, len(self.id1)):
+                v0[self.id1[j]] = 0.5 * (s[self.id1[j]] - np.mean(s[self.id1[j]])) * self.Vdc
+            v_n0 = 1 / 3 * (v0['A'] + v0['B'] + v0['C'])
 
         # Phase Voltages
         for j in range(0, len(self.id1)):

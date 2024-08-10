@@ -23,7 +23,6 @@
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-import matplotlib.pylab as pl
 from scipy.fft import fft
 import matplotlib
 matplotlib.use('TkAgg')
@@ -103,16 +102,21 @@ def plotClose(time, freq, setup):
     fig.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
     # Current
-    ax1.plot(tel[::down2], timeAc['i_a'][::down2])
-    ax1.plot(tel[::down2], timeAc['i_ref']['A'][::down2])
+    scale = setup['Par']['Cont']['hys'] / 100
+    ax1.plot(tel[::down2], timeAc['i_ref']['A'][::down2], color='#1f77b4')
+    ax1.plot(tel[::down2], timeAc['i_ref']['A'][::down2] * (scale + 1), color='#1f77b4', linestyle='--')
+    ax1.plot(tel[::down2], timeAc['i_ref']['A'][::down2] * (1 - scale), color='#1f77b4', linestyle='--')
+    ax1.plot(tel[::down2], timeAc['i_a'][::down2], color='#ff7f0e')
     ax1.set_ylabel("$i_{a}(t)$ (A)")
     ax1.set_title('Time-domain Currents AC-Side')
-    ax1.legend(["$i_{a}^{act}$", "$i_{a}^{ref}$"], loc='upper right')
+    ax1.legend(["$i_{a}^{ref}$", "$i_{a}^{ref,max}$", "$i_{a}^{ref,min}$", "$i_{a}^{act}$"], loc='upper right')
     ax1.grid(True)
 
     # Current Error
     err = timeAc['i_a'][::down2] - timeAc['i_ref']['A'][::down2]
-    ax2.plot(tel[::down2], err)
+    ax2.plot(tel[::down2], np.max(timeAc['i_ref']['A'][::down2]) * scale * np.ones(len(err)), color='#1f77b4', linestyle='--')
+    ax2.plot(tel[::down2], np.min(timeAc['i_ref']['A'][::down2]) * scale * np.ones(len(err)), color='#1f77b4', linestyle='--')
+    ax2.plot(tel[::down2], err, color='#ff7f0e')
     ax2.set_ylabel("$i_{err}(t)$ (A)")
     ax2.set_title('Time-domain Error Current AC-Side')
     ax2.legend(["$i_{a}^{err}$"], loc='upper right')
