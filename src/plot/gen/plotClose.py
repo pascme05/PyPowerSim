@@ -95,111 +95,112 @@ def plotClose(time, freq, setup):
     # ==============================================================================
     # Phase
     # ==============================================================================
-    plt.figure()
-    txt = "Currents and Voltages for PWM control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
-        Mi) + "$ ,Q$=" + str(Q) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(
-        int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
-    plt.suptitle(txt, size=18)
-    plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+    txt = ("Currents and Voltages for PWM control with: $V_{dc}$=" + str(Vdc) + "V, $M_{i}$=" + str(Mi) +
+           "$ ,Q$=" + str(Q) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg, $\phi_{E}=$" +
+           str(int(phiE)) + "deg, $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg")
+    fig.suptitle(txt, size=18)
+    fig.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
-    # ------------------------------------------
-    # Phase
-    # ------------------------------------------
     # Current
-    plt.subplot(2, 1, 1)
-    plt.plot(tel[::down2], timeAc['i_a'][::down2])
-    plt.ylabel("$i_{a}(t)$ (A)")
-    plt.title('Time-domain Currents AC-Side')
-    plt.xlabel('time in (sec)')
-    pl.legend(["$i_{a}$"], loc='upper right')
-    plt.grid('on')
+    ax1.plot(tel[::down2], timeAc['i_a'][::down2])
+    ax1.set_ylabel("$i_{a}(t)$ (A)")
+    ax1.set_title('Time-domain Currents AC-Side')
+    ax1.legend(["$i_{a}$"], loc='upper right')
+    ax1.grid(True)
 
     # Voltage
-    plt.subplot(2, 1, 2)
-    plt.plot(tel[::down2], timeAc['v_a'][::down2], tel[::down2], timeAc['v_a0'][::down2], tel[::down2], timeAc['v_a_out'][::down2])
-    plt.ylabel("$v_{a}(t)$ (V)")
-    plt.title('Time-domain Voltages AC-Side')
-    plt.xlabel('time in (sec)')
-    plt.legend(["$v_{a}(t)$", "$v_{a0}(t)$", "$v_{a,out}(t)$"], loc='upper right')
-    plt.grid('on')
+    ax2.plot(tel[::down2], timeAc['v_a'][::down2], label="$v_{a}(t)$")
+    ax2.plot(tel[::down2], timeAc['v_a0'][::down2], label="$v_{a0}(t)$")
+    ax2.plot(tel[::down2], timeAc['v_a_out'][::down2], label="$v_{a,out}(t)$")
+    ax2.set_ylabel("$v_{a}(t)$ (V)")
+    ax2.set_title('Time-domain Voltages AC-Side')
+    ax2.set_xlabel('Time (sec)')
+    ax2.legend(loc='upper right')
+    ax2.grid(True)
 
     # ==============================================================================
     # Time-domain Transient
     # ==============================================================================
-    plt.figure()
-    txt = "Time domain switches for PWM control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(Mi) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
+    fig, axs = plt.subplots(4, 1, sharex=True)
+    txt = "Time domain switches for PWM control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+        Mi) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(
+        int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
     plt.suptitle(txt, size=18)
     plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
     # ------------------------------------------
     # Switches Leg 1
     # ------------------------------------------
-    plt.subplot(411)
-    plt.plot(tel[::down2], timeElec['sw']['S1']['v_T'][::down2], 'b', tel[::down2], timeElec['sw']['S2']['v_T'][::down2], 'r', tel[::down2],
-             timeElec['sw']['S1']['v_D'][::down2], 'b--', tel[::down2], timeElec['sw']['S2']['v_D'][::down2], 'r--')
-    plt.title('Voltages Transistors and Diodes (A)')
-    plt.ylabel('Voltage in (V)')
-    plt.xlabel("")
-    plt.legend(['T1', 'T2', 'D1', 'D2'])
-    plt.grid('on')
+    # Voltages Transistors and Diodes (A)
+    axs[0].plot(tel[::down2], timeElec['sw']['S1']['v_T'][::down2], 'b', tel[::down2],
+                timeElec['sw']['S2']['v_T'][::down2], 'r',
+                tel[::down2], timeElec['sw']['S1']['v_D'][::down2], 'b--', tel[::down2],
+                timeElec['sw']['S2']['v_D'][::down2], 'r--')
+    axs[0].set_title('Voltages Transistors and Diodes (A)')
+    axs[0].set_ylabel('Voltage (V)')
+    axs[0].legend(['T1', 'T2', 'D1', 'D2'])
+    axs[0].grid(True)
 
-    plt.subplot(412)
-    plt.plot(tel[::down2], timeElec['sw']['S1']['i_T'][::down2], 'b', tel[::down2], timeElec['sw']['S2']['i_T'][::down2], 'r', tel[::down2],
-             timeElec['sw']['S1']['i_D'][::down2], 'b--', tel[::down2], timeElec['sw']['S2']['i_D'][::down2], 'r--')
-    plt.title('Currents Transistors and Diodes (A)')
-    plt.ylabel('Current in (A)')
-    plt.xlabel("")
-    plt.legend(['T1', 'T2', 'D1', 'D2'])
-    plt.grid('on')
+    # Currents Transistors and Diodes (A)
+    axs[1].plot(tel[::down2], timeElec['sw']['S1']['i_T'][::down2], 'b', tel[::down2],
+                timeElec['sw']['S2']['i_T'][::down2], 'r',
+                tel[::down2], timeElec['sw']['S1']['i_D'][::down2], 'b--', tel[::down2],
+                timeElec['sw']['S2']['i_D'][::down2], 'r--')
+    axs[1].set_title('Currents Transistors and Diodes (A)')
+    axs[1].set_ylabel('Current (A)')
+    axs[1].legend(['T1', 'T2', 'D1', 'D2'])
+    axs[1].grid(True)
 
-    plt.subplot(413)
-    plt.plot(tel[::down2], timeLoss['sw']['S1']['p_T_c'][::down2], 'b', tel[::down2], timeLoss['sw']['S2']['p_T_c'][::down2], 'r', tel[::down2],
-             timeLoss['sw']['S1']['p_D_c'][::down2], 'b--', tel[::down2], timeLoss['sw']['S2']['p_D_c'][::down2], 'r--')
-    plt.title('Conduction Losses Transistors and Diodes (A)')
-    plt.ylabel('Power in (W)')
-    plt.xlabel("")
-    plt.legend(['T1', 'T2', 'D1', 'D2'])
-    plt.grid('on')
+    # Conduction Losses Transistors and Diodes (A)
+    axs[2].plot(tel[::down2], timeLoss['sw']['S1']['p_T_c'][::down2], 'b', tel[::down2],
+                timeLoss['sw']['S2']['p_T_c'][::down2], 'r',
+                tel[::down2], timeLoss['sw']['S1']['p_D_c'][::down2], 'b--', tel[::down2],
+                timeLoss['sw']['S2']['p_D_c'][::down2], 'r--')
+    axs[2].set_title('Conduction Losses Transistors and Diodes (A)')
+    axs[2].set_ylabel('Power (W)')
+    axs[2].legend(['T1', 'T2', 'D1', 'D2'])
+    axs[2].grid(True)
 
-    plt.subplot(414)
-    plt.plot(tel[::down2], timeLoss['sw']['S1']['p_T_s'][::down2], 'b', tel[::down2], timeLoss['sw']['S2']['p_T_s'][::down2], 'r', tel[::down2],
-             timeLoss['sw']['S1']['p_D_s'][::down2], 'b--', tel[::down2], timeLoss['sw']['S2']['p_D_s'][::down2], 'r--')
-    plt.title('Switching Losses Transistors and Diodes (A)')
-    plt.ylabel('Power in (W)')
-    plt.xlabel('time in (sec)')
-    plt.legend(['T1', 'T2', 'D1', 'D2'])
-    plt.grid('on')
+    # Switching Losses Transistors and Diodes (A)
+    axs[3].plot(tel[::down2], timeLoss['sw']['S1']['p_T_s'][::down2], 'b', tel[::down2],
+                timeLoss['sw']['S2']['p_T_s'][::down2], 'r',
+                tel[::down2], timeLoss['sw']['S1']['p_D_s'][::down2], 'b--', tel[::down2],
+                timeLoss['sw']['S2']['p_D_s'][::down2], 'r--')
+    axs[3].set_title('Switching Losses Transistors and Diodes (A)')
+    axs[3].set_ylabel('Power (W)')
+    axs[3].set_xlabel('Time (sec)')
+    axs[3].legend(['T1', 'T2', 'D1', 'D2'])
+    axs[3].grid(True)
 
     # ------------------------------------------
     # Capacitor
     # ------------------------------------------
-    plt.figure()
-    txt = "Time domain capacitor for PWM control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
-        Mi) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(
-        int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
+    fig, axs = plt.subplots(3, 1, sharex=True)
+    txt = ("Time domain capacitor for PWM control with: $V_{dc}$=" + str(Vdc) + "V, $M_{i}$=" + str(Mi) +
+           ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg, $\phi_{E}=$" + str(int(phiE)) +
+           "deg, $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg")
     plt.suptitle(txt, size=18)
     plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
-    plt.subplot(3, 1, 1)
-    plt.plot(tel[::down2], timeElec['cap']['C1']['v_c'][::down2])
-    plt.title('Voltage Capacitor')
-    plt.ylabel('Voltage in (V)')
-    plt.xlabel("")
-    plt.grid('on')
+    # Voltage Capacitor
+    axs[0].plot(tel[::down2], timeElec['cap']['C1']['v_c'][::down2])
+    axs[0].set_title('Voltage Capacitor')
+    axs[0].set_ylabel('Voltage (V)')
+    axs[0].grid(True)
 
-    plt.subplot(3, 1, 2)
-    plt.plot(tel[::down2], timeElec['cap']['C1']['i_c'][::down2])
-    plt.title('Current Capacitor')
-    plt.ylabel('Current in (A)')
-    plt.xlabel("")
-    plt.grid('on')
+    # Current Capacitor
+    axs[1].plot(tel[::down2], timeElec['cap']['C1']['i_c'][::down2])
+    axs[1].set_title('Current Capacitor')
+    axs[1].set_ylabel('Current (A)')
+    axs[1].grid(True)
 
-    plt.subplot(3, 1, 3)
-    plt.plot(tel[::down2], timeLoss['cap']['C1']['p_L'][::down2])
-    plt.title('Losses Capacitor')
-    plt.ylabel('Power in (W)')
-    plt.xlabel("")
-    plt.grid('on')
+    # Losses Capacitor
+    axs[2].plot(tel[::down2], timeLoss['cap']['C1']['p_L'][::down2])
+    axs[2].set_title('Losses Capacitor')
+    axs[2].set_ylabel('Power (W)')
+    axs[2].set_xlabel('Time (sec)')
+    axs[2].grid(True)
     plt.show()
 
     ###################################################################################################################
