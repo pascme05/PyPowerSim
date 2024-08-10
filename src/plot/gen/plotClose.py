@@ -95,7 +95,7 @@ def plotClose(time, freq, setup):
     # ==============================================================================
     # Phase
     # ==============================================================================
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True)
     txt = ("Currents and Voltages for PWM control with: $V_{dc}$=" + str(Vdc) + "V, $M_{i}$=" + str(Mi) +
            "$ ,Q$=" + str(Q) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg, $\phi_{E}=$" +
            str(int(phiE)) + "deg, $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg")
@@ -104,20 +104,29 @@ def plotClose(time, freq, setup):
 
     # Current
     ax1.plot(tel[::down2], timeAc['i_a'][::down2])
+    ax1.plot(tel[::down2], timeAc['i_ref']['A'][::down2])
     ax1.set_ylabel("$i_{a}(t)$ (A)")
     ax1.set_title('Time-domain Currents AC-Side')
-    ax1.legend(["$i_{a}$"], loc='upper right')
+    ax1.legend(["$i_{a}^{act}$", "$i_{a}^{ref}$"], loc='upper right')
     ax1.grid(True)
 
-    # Voltage
-    ax2.plot(tel[::down2], timeAc['v_a'][::down2], label="$v_{a}(t)$")
-    ax2.plot(tel[::down2], timeAc['v_a0'][::down2], label="$v_{a0}(t)$")
-    ax2.plot(tel[::down2], timeAc['v_a_out'][::down2], label="$v_{a,out}(t)$")
-    ax2.set_ylabel("$v_{a}(t)$ (V)")
-    ax2.set_title('Time-domain Voltages AC-Side')
-    ax2.set_xlabel('Time (sec)')
-    ax2.legend(loc='upper right')
+    # Current Error
+    err = timeAc['i_a'][::down2] - timeAc['i_ref']['A'][::down2]
+    ax2.plot(tel[::down2], err)
+    ax2.set_ylabel("$i_{err}(t)$ (A)")
+    ax2.set_title('Time-domain Error Current AC-Side')
+    ax2.legend(["$i_{a}^{err}$"], loc='upper right')
     ax2.grid(True)
+
+    # Voltage
+    ax3.plot(tel[::down2], timeAc['v_a'][::down2], label="$v_{a}(t)$")
+    ax3.plot(tel[::down2], timeAc['v_a0'][::down2], label="$v_{a0}(t)$")
+    ax3.plot(tel[::down2], timeAc['v_a_out'][::down2], label="$v_{a,out}(t)$")
+    ax3.set_ylabel("$v_{a}(t)$ (V)")
+    ax3.set_title('Time-domain Voltages AC-Side')
+    ax3.set_xlabel('Time (sec)')
+    ax3.legend(loc='upper right')
+    ax3.grid(True)
 
     # ==============================================================================
     # Time-domain Transient

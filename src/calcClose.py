@@ -84,6 +84,8 @@ def calcClose(top, mdl, para, setup):
     # Update Frequency
     # ==============================================================================
     iterCon = int(np.ceil(setup['Dat']['trans']['tmax'] * fc))
+    t_scale = np.ones(iterCon * Ncon)
+    th = 0.2
 
     # ==============================================================================
     # Outputs
@@ -128,10 +130,11 @@ def calcClose(top, mdl, para, setup):
         # ------------------------------------------
         # Controller
         # ------------------------------------------
-        if i/iterCon < 0.2:
+        if i/iterCon < th:
             scale = 0.50
         else:
             scale = 1.00
+        t_scale[i * Ncon:(i + 1) * Ncon] = scale
 
         # ------------------------------------------
         # Controller
@@ -159,6 +162,7 @@ def calcClose(top, mdl, para, setup):
     # Phase and Source
     # ------------------------------------------
     [outAc, outDc, _] = top.calcTime(outSw, e_tot, t_tot, Mi, mdl, 0, len(t_tot), [], 0, setup)
+    outAc['i_ref'] = {key: value * t_scale for key, value in i_tot.items()}
 
     # ------------------------------------------
     # Switching Devices
