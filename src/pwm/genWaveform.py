@@ -77,6 +77,26 @@ def genWave(t, fel, phi, setup):
         print("INFO: Rectangular waveform generated")
 
     # ==============================================================================
+    # Trapezoidal
+    # ==============================================================================
+    elif setup['Top']['wave'] == "tra":
+        # Init
+        Tel = 1 / fel / 2
+        rise = 1/6 / fel / 2
+        fall = 5/6 / fel / 2
+        t = t - (phi * Tel / (2 * np.pi))
+
+        # Generate
+        wave = np.piecewise(t % Tel, [t % Tel < rise, (t % Tel >= rise) & (t % Tel <= fall), t % Tel > fall],
+                            [lambda t: 1 * (t / rise), 1,
+                             lambda t: 1 * ((Tel - t) / (Tel - fall))])
+
+        # Apply alternating sign to each period
+        wave = wave * (-1) ** (np.floor(t / Tel) % 2)
+
+        print("INFO: Trapezoidal waveform generated")
+
+    # ==============================================================================
     # Default
     # ==============================================================================
     else:
