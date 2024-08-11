@@ -43,6 +43,7 @@ from src.pwm.genWaveform import genWave
 from src.pwm.genSwSeq import genSwSeq
 from src.pwm.svPWM import svPWM
 from src.cont.conHys import conHys
+from src.pwm.optSwTimes import optSwTimes
 
 # ==============================================================================
 # External
@@ -632,7 +633,7 @@ class classB6:
         return [xs, xsh, s, c, x, xN0]
 
     ###################################################################################################################
-    # Optimal Pulse Patterns
+    # Space Vector Modulation
     ###################################################################################################################
     def calcSeqSV(self, v_ref, t_ref, Mi, setup):
         # ==============================================================================
@@ -773,6 +774,215 @@ class classB6:
                 else:
                     j = j + 1
                     ss[ii + N1 * i] = ss[ii + N1 * i - 1]
+
+        # ------------------------------------------
+        # Sampling
+        # ------------------------------------------
+        for i in range(0, len(self.id1)):
+            for ii in range(0, len(x[self.id1[i]])):
+                if (ii % int(len(t_ref) / (Ns * self.K))) == 0:
+                    xs[self.id1[i]][ii] = x[self.id1[i]][ii]
+                else:
+                    xs[self.id1[i]][ii] = xs[self.id1[i]][ii - 1]
+
+        # ------------------------------------------
+        # Shifting
+        # ------------------------------------------
+        for i in range(0, len(self.id1)):
+            if setup['Par']['PWM']['upd'] == "SE":
+                xsh[self.id1[i]] = np.roll(x0[self.id1[i]], int(len(xs[self.id1[i]]) * self.fel / self.fs))
+            else:
+                xsh[self.id1[i]] = np.roll(x0[self.id1[i]], int(len(xs[self.id1[i]]) * self.fel / self.fs / 2))
+
+        # ------------------------------------------
+        # Mapping
+        # ------------------------------------------
+        for i in range(0, len(self.id1)):
+            for ii in range(0, len(ss)):
+                if Mi != 0:
+                    s[self.id1[i]][ii] = mS[self.id1[i]][int(ss[ii])]
+
+        # ------------------------------------------
+        # Dead time
+        # ------------------------------------------
+        for i in range(0, len(self.id1)):
+            s[self.id1[i]] = self.calcDead(s[self.id1[i]], t_ref, Mi)
+
+        # ==============================================================================
+        # Return
+        # ==============================================================================
+        return [xs, xsh, s, c, x, xN0]
+
+    ###################################################################################################################
+    # Optimal Subcycle Modulation
+    ###################################################################################################################
+    def calcSeqOSM(self, v_ref, t_ref, Mi, setup):
+        # ==============================================================================
+        # Description
+        # ==============================================================================
+        """
+        This function calculates the switching time assuming optimal subcycle modulation.
+
+        Input:
+        1) v_ref:   Reference voltage (V)
+        2) t_ref:   Reference time (sec)
+        3) Mi:      Modulation index (0 ... 4/pi)
+
+        Output:
+        1) xs:      sampled reference signal
+        2) xsh:     sampled reference signal including zero order hold
+        3) s:       switching instances
+        4) c:       carrier signal
+        5) x:       reference signal
+        6) xN0:     zero sequence reference signal
+        """
+
+        # ==============================================================================
+        # Initialisation
+        # ==============================================================================
+        # ------------------------------------------
+        # Parameters
+        # ------------------------------------------
+        N1 = int(len(t_ref) / (self.q * self.K))
+        if setup['Par']['PWM']['upd'] == "SE":
+            Ns = self.q
+            Terr = -N1 / 2
+        else:
+            Ns = 2 * self.q
+            Terr = -N1 / 4
+
+        # ------------------------------------------
+        # Variables
+        # ------------------------------------------
+        # Empty
+        x = {}
+        s = {}
+        xs = {}
+        xsh = {}
+        x0 = {}
+        mS = {}
+
+        # Zeros
+        s['A'] = np.zeros(np.size(t_ref))
+        s['B'] = np.zeros(np.size(t_ref))
+        s['C'] = np.zeros(np.size(t_ref))
+        xs['A'] = np.zeros(np.size(t_ref))
+        xs['B'] = np.zeros(np.size(t_ref))
+        xs['C'] = np.zeros(np.size(t_ref))
+        ss = np.zeros(np.size(t_ref))
+        c = np.zeros(np.size(t_ref))
+        xN0 = np.zeros(np.size(t_ref))
+        d1 = np.zeros(len(t_ref))
+        d2 = np.zeros(len(t_ref))
+        d0 = np.zeros(len(t_ref))
+        d7 = np.zeros(len(t_ref))
+
+        # Mapping
+        mS['A'] = [-1, +1, +1, -1, -1, -1, +1, +1]
+        mS['B'] = [-1, -1, +1, +1, +1, -1, -1, +1]
+        mS['C'] = [-1, -1, -1, -1, +1, +1, +1, +1]
+
+        # OSM Variables
+        err = np.inf
+        err_min = 1e-3
+        iter1 = 0
+        Topt = []
+        K_old = 0
+        Terr = Terr * np.ones(len(t_ref))
+
+        # ==============================================================================
+        # Calculation
+        # ==============================================================================
+        # ------------------------------------------
+        # Reference
+        # ------------------------------------------
+        x0['A'] = Mi * v_ref['A'] / np.max(v_ref['A'])
+        x0['B'] = Mi * v_ref['B'] / np.max(v_ref['B'])
+        x0['C'] = Mi * v_ref['C'] / np.max(v_ref['C'])
+
+        # ------------------------------------------
+        # Clark Transform
+        # ------------------------------------------
+        v_ref['alpha'] = 2 / 3 * (v_ref['A'] - 0.5 * v_ref['B'] - 0.5 * v_ref['C'])
+        v_ref['beta'] = 2 / 3 * (np.sqrt(3) / 2 * v_ref['B'] - np.sqrt(3) / 2 * v_ref['C'])
+        phi = np.arctan2(v_ref['beta'], v_ref['alpha'])
+
+        # ------------------------------------------
+        # Define Switching Sequence
+        # ------------------------------------------
+        [seq, k] = genSwSeq(setup)
+
+        # ==============================================================================
+        # OSM Optimization
+        # ==============================================================================
+        # ------------------------------------------
+        # Find optimal Periods
+        # ------------------------------------------
+        while err > err_min:
+            # Switching Times
+            for i in range(0, len(t_ref)):
+                alpha = i * self.K / len(t_ref) * 2 * np.pi + phi[0] + 2 * np.pi
+                alpha = alpha + Terr[i] / len(t_ref) * self.K * (2 * np.pi)
+                [d0[i], d1[i], d2[i], d7[i], _] = svPWM(k, alpha, Mi)
+                xN0[i] = (-d0[i] - d1[i] / 3 + d2[i] / 3 + d7[i])
+
+            # Optimal Sub-cycle Duration
+            [Tsk_c, Topt, _] = optSwTimes(Mi, self.fs, N1, self.q, self.K, d0, d1, d2, d7)
+
+            # Error
+            err = np.sum(abs(Terr - Tsk_c * N1 / 2)) / len(t_ref)
+            Terr = Tsk_c * N1 / 2
+            iter1 = iter1 + 1
+            print(str(err))
+
+            # Force Termination
+            if iter1 == 20:
+                break
+
+        # ------------------------------------------
+        # Find optimal Sequence
+        # ------------------------------------------
+        for i in range(0, self.q * self.K):
+            # Init
+            idx = 0
+            K_dyn = int(N1 * Topt[i])
+            Terr_s = Topt[i] / 2
+            ts = np.linspace(0, 2, K_dyn)
+
+            # Switching Times
+            alpha_1 = (i + Terr_s) / self.q * 2 * np.pi + phi[0] + 2 * np.pi
+            alpha_2 = alpha_1 + 0.5 / self.q * 2 * np.pi
+            [t0_1, t1_1, t2_1, t7_1, rr_1] = svPWM(k, alpha_1, Mi)
+            [t0_2, _, t2_2, t7_2, rr_2] = svPWM(k, alpha_2, Mi)
+
+            # Switching Sequence
+            if setup['Par']['PWM']['upd'] == "SE":
+                st = np.hstack((t0_1, t0_1 + t1_1, 1 - t7_1, 1, 1 + t7_1, 1 + t7_1 + t2_1, 2 - t0_1, 2))
+                rr = np.hstack((rr_1, rr_1, rr_1, rr_1, rr_1, rr_1, rr_1, rr_1))
+            else:
+                st = np.hstack((t0_1, t0_1 + t1_1, 1 - t7_1, 1, 1 + t7_2, 1 + t7_2 + t2_2, 2 - t0_2, 2))
+                rr = np.hstack((rr_1, rr_1, rr_1, rr_1, rr_2, rr_2, rr_2, rr_2))
+
+            # Switching Sequence
+            for ii in range(0, K_dyn):
+                if st[idx] > ts[ii]:
+                    ss[ii + K_old] = seq[int(rr[idx] - 1)][idx]
+                else:
+                    idx = idx + 1
+                    ss[ii + K_old] = ss[ii + K_old - 1]
+
+            # Update
+            K_old = K_old + K_dyn
+
+        # ==============================================================================
+        # Calculation
+        # ==============================================================================
+        # ------------------------------------------
+        # Line-to-Line References
+        # ------------------------------------------
+        x['A'] = x0['A'] + xN0
+        x['B'] = x0['B'] + xN0
+        x['C'] = x0['C'] + xN0
 
         # ------------------------------------------
         # Sampling
@@ -995,6 +1205,8 @@ class classB6:
             [xs, xsh, s, c, x, xN0] = self.calcSeqSV(v_ref, t_ref, Mi, setup)
         elif setup['Par']['PWM']['type'] == "OPP":
             [xs, xsh, s, c, x, xN0] = self.calcSeqOPP(v_ref, t_ref, Mi, setup)
+        elif setup['Par']['PWM']['type'] == "OSM":
+            [xs, xsh, s, c, x, xN0] = self.calcSeqOSM(v_ref, t_ref, Mi, setup)
         else:
             [xs, xsh, s, c, x, xN0] = self.calcSeqCB(v_ref, t_ref, Mi, setup)
 
