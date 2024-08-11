@@ -255,11 +255,12 @@ The software framework is provided under the Creative Commons Attribution-NonCom
     - Fixing bug in switching losses
     - Adding direct comparison with semiconductor datasheets
     - General housekeeping
-6) v.1.0: (01.05.2024) First complete version of PyPowerSim
+6) v.1.0: (01.08.2024) First complete version of PyPowerSim
     - Introducing classes per topology and simplifying the topology definition
-    - Closed loop simulation including hysteresis and PI control
+    - Closed loop simulation including hysteresis
+    - Optimal subcyle modulation for 3-phase converters
     - General housekeeping including function description for each file and update to Python 3.11
-    - Introducing GUI for user-friendliness including an extensive tutorial as ppt
+    - Including an extensive tutorial as PowerPoint
    
 # References
 [1] Holmes, D. Grahame, and Thomas A. Lipo. Pulse width modulation for power converters: principles and practice. 
