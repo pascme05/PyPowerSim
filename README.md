@@ -25,7 +25,7 @@ selection for DC-link loss minimization in PWM-VSI drives." Electrical Engineeri
 # Dependencies
 The requirements of the PyPowerSim toolkit are summarized in the requirements.txt data file.
 In detail, the PyPowerSim Toolkit was implemented using the following dependencies:
-- Python 3.8
+- Python 3.11
 - Numpy 
 - Pandas
 - Scipy
