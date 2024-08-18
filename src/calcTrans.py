@@ -139,7 +139,7 @@ def calcTrans(top, mdl, para, setup):
     # Init
     # ------------------------------------------
     Tinit_T = np.zeros((len(Rth_JA), len(top.id2)))
-    Tinit_C = np.zeros((len(Rth_JA), len(top.id2)))
+    Tinit_C = np.zeros((len(Rth_CA), len(top.id2)))
     Tinit_Cap = np.zeros(np.size(Rth_JA_cap))
 
     ###################################################################################################################

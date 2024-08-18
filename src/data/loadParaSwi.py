@@ -239,7 +239,7 @@ def loadParaSwi(name, path, setup):
         yi = np.linspace(np.min(y), np.max(y), nInt)
         xg, yg = np.meshgrid(yi, xi)
         zi = griddata((y, x), z, (xg, yg), method='linear')
-        para['Elec']['tab']['Vce_2d'] = RegularGridInterpolator((xi, yi), zi)
+        para['Elec']['tab']['Vce_2d'] = RegularGridInterpolator((xi, yi), zi, bounds_error=False, fill_value=None)
 
         # Diode
         x = (para['Elec']['vec']['Tj'].to_numpy() * np.ones((len(para['Elec']['vec']['Ifd'].to_numpy()), len(para['Elec']['vec']['Tj'].to_numpy())))).flatten(order='F')
@@ -249,7 +249,7 @@ def loadParaSwi(name, path, setup):
         yi = np.linspace(np.min(y), np.max(y), nInt)
         xg, yg = np.meshgrid(yi, xi)
         zi = griddata((y, x), z, (xg, yg), method='linear')
-        para['Elec']['tab']['Vfd_2d'] = RegularGridInterpolator((xi, yi), zi)
+        para['Elec']['tab']['Vfd_2d'] = RegularGridInterpolator((xi, yi), zi, bounds_error=False, fill_value=None)
 
         # ------------------------------------------
         # Losses
@@ -263,15 +263,15 @@ def loadParaSwi(name, path, setup):
             yi = np.linspace(np.min(y), np.max(y), nInt)
             xg, yg = np.meshgrid(yi, xi)
             zi = griddata((y, x), z, (xg, yg), method='linear')
-            para['Elec']['tab']['Eon_2d'] = RegularGridInterpolator((xi, yi), zi)
+            para['Elec']['tab']['Eon_2d'] = RegularGridInterpolator((xi, yi), zi, bounds_error=False, fill_value=None)
 
             z = para['Elec']['tab']['Eoff'].to_numpy('float').flatten(order='F')
             zi = griddata((y, x), z, (xg, yg), method='linear')
-            para['Elec']['tab']['Eoff_2d'] = RegularGridInterpolator((xi, yi), zi)
+            para['Elec']['tab']['Eoff_2d'] = RegularGridInterpolator((xi, yi), zi, bounds_error=False, fill_value=None)
 
             z = para['Elec']['tab']['Erec'].to_numpy('float').flatten(order='F')
             zi = griddata((y, x), z, (xg, yg), method='linear')
-            para['Elec']['tab']['Erec_2d'] = RegularGridInterpolator((xi, yi), zi)
+            para['Elec']['tab']['Erec_2d'] = RegularGridInterpolator((xi, yi), zi, bounds_error=False, fill_value=None)
 
         # MOSFET
         if setup['Par']['Elec']['SwiType'] == "MOSFET" and setup['Par']['PWM']['swloss'] == 1:
@@ -282,11 +282,11 @@ def loadParaSwi(name, path, setup):
             yi = np.linspace(np.min(y), np.max(y), nInt)
             xg, yg = np.meshgrid(yi, xi)
             zi = griddata((y, x), z, (xg, yg), method='linear')
-            para['Elec']['tab']['Coss_2d'] = RegularGridInterpolator((xi, yi), zi)
+            para['Elec']['tab']['Coss_2d'] = RegularGridInterpolator((xi, yi), zi, bounds_error=False, fill_value=None)
 
             z = para['Elec']['tab']['Crss'].to_numpy('float').flatten(order='F')
             zi = griddata((y, x), z, (xg, yg), method='linear')
-            para['Elec']['tab']['Crss_2d'] = RegularGridInterpolator((xi, yi), zi)
+            para['Elec']['tab']['Crss_2d'] = RegularGridInterpolator((xi, yi), zi, bounds_error=False, fill_value=None)
 
             for i in range(0, len(para['Elec']['vec']['Tj'])):
                 for ii in range(0, len(V_int)):
@@ -304,15 +304,15 @@ def loadParaSwi(name, path, setup):
             yi = np.linspace(np.min(y), np.max(y), nInt)
             xg, yg = np.meshgrid(yi, xi)
             zi = griddata((y, x), z, (xg, yg), method='linear')
-            para['Elec']['tab']['Eon_2d'] = RegularGridInterpolator((xi, yi), zi)
+            para['Elec']['tab']['Eon_2d'] = RegularGridInterpolator((xi, yi), zi, bounds_error=False, fill_value=None)
 
             z = np.transpose(Eoss_2d).flatten(order='F')
             zi = griddata((y, x), z, (xg, yg), method='linear')
-            para['Elec']['tab']['Eoff_2d'] = RegularGridInterpolator((xi, yi), zi)
+            para['Elec']['tab']['Eoff_2d'] = RegularGridInterpolator((xi, yi), zi, bounds_error=False, fill_value=None)
 
             z = np.transpose(Erss_2d).flatten(order='F')
             zi = griddata((y, x), z, (xg, yg), method='linear')
-            para['Elec']['tab']['Erec_2d'] = RegularGridInterpolator((xi, yi), zi)
+            para['Elec']['tab']['Erec_2d'] = RegularGridInterpolator((xi, yi), zi, bounds_error=False, fill_value=None)
     except:
         print("WARN: Two dimensional loss data could not be extracted")
 
