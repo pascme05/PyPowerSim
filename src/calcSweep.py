@@ -91,8 +91,8 @@ def calcSweep(top, mdl, _, setup):
     # Maximum Modulation Index
     # ==============================================================================
     if Mi > Mi_max:
-        Mi_max = Mi
-    M_i = np.linspace(1e-3, Mi_max - 1e-3, W)
+        Mi = Mi_max
+    M_i = np.linspace(1e-3, Mi - 1e-3, W)
 
     # ==============================================================================
     # Start and End
