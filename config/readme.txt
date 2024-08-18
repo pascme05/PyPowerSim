@@ -1,0 +1,1 @@
+To make a config file accessible it must always be placed directly under \config. The folder structure is only used to organize the different configuration files.

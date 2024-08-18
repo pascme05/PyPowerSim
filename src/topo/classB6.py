@@ -84,7 +84,7 @@ class classB6:
         self.N = int(fsim / fel)
         self.Ts = 1 / fs
         self.Tel = 1 / fel
-        self.Mi_max = 2 / np.sqrt(3)
+        self.Mi_max = 4 / np.pi # 2 / np.sqrt(3)
         self.id1 = ['A', 'B', 'C']
         self.id2 = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
         self.id3 = ['A', 'A', 'B', 'B', 'C', 'C']

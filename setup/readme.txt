@@ -1,0 +1,1 @@
+To make a setup file accessible it must always be placed directly under the head node \PyPowerSim. The folder structure is only used to organize the different setup files.

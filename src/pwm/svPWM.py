@@ -82,16 +82,15 @@ def svPWM(k, alpha, Mi):
     # ==============================================================================
     # Under-Modulation
     # ==============================================================================
-    if Mi <= 2/np.sqrt(3):
-        if (R % 2) == 0:
-            t2 = np.sqrt(3)/2*Mi*np.sin(np.pi/3 - alpha)
-            t1 = np.sqrt(3)/2*Mi*np.sin(alpha)
-        else:
-            t1 = np.sqrt(3)/2*Mi*np.sin(np.pi/3 - alpha)
-            t2 = np.sqrt(3)/2*Mi*np.sin(alpha)
-        Tz = 1 - t1 - t2
-        t0 = Tz * k[idx][R-1]
-        t7 = Tz * (1-k[idx][R-1])
+    if (R % 2) == 0:
+        t2 = np.sqrt(3)/2*Mi*np.sin(np.pi/3 - alpha)
+        t1 = np.sqrt(3)/2*Mi*np.sin(alpha)
+    else:
+        t1 = np.sqrt(3)/2*Mi*np.sin(np.pi/3 - alpha)
+        t2 = np.sqrt(3)/2*Mi*np.sin(alpha)
+    Tz = 1 - t1 - t2
+    t0 = Tz * k[idx][R-1]
+    t7 = Tz * (1-k[idx][R-1])
     
     # ==============================================================================
     # Over-Modulation (tbi)
@@ -99,7 +98,7 @@ def svPWM(k, alpha, Mi):
     # ------------------------------------------
     # First Region
     # ------------------------------------------
-    if 2/np.sqrt(3) < Mi <= 0.9517/np.pi*4:
+    if (2/np.sqrt(3) < Mi <= 0.9517/np.pi*4) and Tz < 0:
         if (R % 2) == 0:
             t2 = (np.sqrt(3)*np.cos(alpha) - np.sin(alpha))/(np.sqrt(3)*np.cos(alpha) + np.sin(alpha))
             t1 = 1 - t2
@@ -112,7 +111,7 @@ def svPWM(k, alpha, Mi):
     # ------------------------------------------
     # Second Region
     # ------------------------------------------
-    if 0.9517/np.pi*4 < Mi < 4/np.pi:
+    if (0.9517/np.pi*4 < Mi < 4/np.pi) and Tz < 0:
         # Holding angle
         if 0.9517/np.pi*4 <= Mi < 0.9800/np.pi*4:
             alpha_h = 6.40*Mi/4*np.pi - 6.09
