@@ -20,6 +20,7 @@ Inputs:     1) k:           zero sequence
             3) Mi:          modulation index
 Outputs:    1) tx:          switching times (sec)
             2) rr:          hexagon sector for the three-phase converter
+            3) kf:          switching frequency multiplication
 """
 
 #######################################################################################################################
@@ -43,11 +44,7 @@ def svPWM(k, alpha, Mi):
     # Initialisation
     ###################################################################################################################
     R = 1
-    t0 = 0
-    t1 = 0
-    t2 = 0
-    t7 = 0
-    
+
     ###################################################################################################################
     # Pre-processing
     ###################################################################################################################
@@ -57,24 +54,23 @@ def svPWM(k, alpha, Mi):
     # ------------------------------------------
     # Reduce to 2pi
     # ------------------------------------------
-    while alpha >= 2*np.pi:
-        alpha = alpha - 2*np.pi
-    
+    while alpha >= 2 * np.pi:
+        alpha = alpha - 2 * np.pi
+
     # ------------------------------------------
     # Determine Sector
     # ------------------------------------------
-    while alpha > np.pi/3:
-        alpha = alpha - np.pi/3
-        R = R + 1
+    R = int(np.floor(alpha / (np.pi / 3)))
+    alpha = alpha - R * (np.pi / 3)
 
     # ------------------------------------------
     # Get sector part
     # ------------------------------------------
-    if alpha > np.pi/6:
+    if alpha > np.pi / 6:
         idx = 1
     else:
         idx = 0
-    rr = R
+    rr = R + 1
 
     ###################################################################################################################
     # Calculation
@@ -82,36 +78,51 @@ def svPWM(k, alpha, Mi):
     # ==============================================================================
     # Under-Modulation
     # ==============================================================================
-    if (R % 2) == 0:
-        t2 = np.sqrt(3)/2*Mi*np.sin(np.pi/3 - alpha)
-        t1 = np.sqrt(3)/2*Mi*np.sin(alpha)
-    else:
-        t1 = np.sqrt(3)/2*Mi*np.sin(np.pi/3 - alpha)
-        t2 = np.sqrt(3)/2*Mi*np.sin(alpha)
+    t1 = np.sqrt(3) / 2 * Mi * np.sin(np.pi / 3 - alpha)
+    t2 = np.sqrt(3) / 2 * Mi * np.sin(alpha)
     Tz = 1 - t1 - t2
-    t0 = Tz * k[idx][R-1]
-    t7 = Tz * (1-k[idx][R-1])
-    
+    t0 = Tz * k[idx][R - 1]
+    t7 = Tz * (1 - k[idx][R - 1])
+    kf = 1
+
     # ==============================================================================
     # Over-Modulation (tbi)
     # ==============================================================================
     # ------------------------------------------
     # First Region
     # ------------------------------------------
-    if (2/np.sqrt(3) < Mi <= 0.9517/np.pi*4) and Tz < 0:
-        if (R % 2) == 0:
-            t2 = (np.sqrt(3)*np.cos(alpha) - np.sin(alpha))/(np.sqrt(3)*np.cos(alpha) + np.sin(alpha))
-            t1 = 1 - t2
+    if 2 / np.sqrt(3) < Mi <= 0.9517 / np.pi * 4:
+        # Angle Intersection
+        if 0.9068/np.pi*4 <= Mi < 0.9095/np.pi*4:
+            alpha_r = -30.23*Mi/4*np.pi + 27.94
+        elif 0.9095/np.pi*4 < Mi < 0.9485/np.pi*4:
+            alpha_r = -8.58*Mi/4*np.pi + 8.23
         else:
-            t1 = (np.sqrt(3)*np.cos(alpha) - np.sin(alpha))/(np.sqrt(3)*np.cos(alpha) + np.sin(alpha))
+            alpha_r = -26.43*Mi/4*np.pi + 25.15
+
+        # Amplitude Correction
+        Mi_om = 2 / (np.sqrt(3) * np.cos(np.pi/6 - alpha_r))
+
+        # Switching Times
+        t1 = np.sqrt(3) / 2 * Mi_om * np.sin(np.pi / 3 - alpha)
+        t2 = np.sqrt(3) / 2 * Mi_om * np.sin(alpha)
+        Tz = 1 - t1 - t2
+        t0 = Tz * k[idx][R - 1]
+        t7 = Tz * (1 - k[idx][R - 1])
+        kf = 1
+
+        # Negative Zero Vectors
+        if Tz < 0:
+            t1 = (np.sqrt(3) * np.cos(alpha) - np.sin(alpha)) / (np.sqrt(3) * np.cos(alpha) + np.sin(alpha))
             t2 = 1 - t1
-        t0 = 0
-        t7 = 0
+            t0 = 0
+            t7 = 0
+            kf = 2
 
     # ------------------------------------------
     # Second Region
     # ------------------------------------------
-    if (0.9517/np.pi*4 < Mi < 4/np.pi) and Tz < 0:
+    if 0.9517 / np.pi * 4 < Mi < 4 / np.pi:
         # Holding angle
         if 0.9517/np.pi*4 <= Mi < 0.9800/np.pi*4:
             alpha_h = 6.40*Mi/4*np.pi - 6.09
@@ -122,44 +133,45 @@ def svPWM(k, alpha, Mi):
 
         # Comparison
         if 0 <= alpha < alpha_h:
-            alpha_o = 0
-        elif alpha_h <= alpha < np.pi/3 - alpha_h:
-            alpha_o = (np.pi/6)*(alpha - alpha_h)/(np.pi/6 - alpha_h)
+            t1 = 1
+            t2 = 0
+            kf = 1
+        elif alpha_h <= alpha < np.pi / 3 - alpha_h:
+            alpha_o = alpha_h + (np.pi / 6) * (alpha - alpha_h) / (np.pi / 6 - alpha_h)
+            t1 = (np.sqrt(3) * np.cos(alpha_o) - np.sin(alpha_o)) / (np.sqrt(3) * np.cos(alpha_o) + np.sin(alpha_o))
+            t2 = 1 - t1
+            kf = 2
         else:
-            alpha_o = np.pi/3
+            t1 = 0
+            t2 = 1
+            kf = 1
 
         # Times
-        if (R % 2) == 0:
-            t2 = (np.sqrt(3)*np.cos(alpha_o) - np.sin(alpha_o))/(np.sqrt(3)*np.cos(alpha_o) + np.sin(alpha_o))
-            t1 = 1 - t2
-        else:
-            t1 = (np.sqrt(3)*np.cos(alpha_o) - np.sin(alpha_o))/(np.sqrt(3)*np.cos(alpha_o) + np.sin(alpha_o))
-            t2 = 1 - t1
         t0 = 0
         t7 = 0
 
     # ------------------------------------------
     # Third Region (Six-Step)
     # ------------------------------------------
-    if Mi == 4/np.pi:
-        if alpha < np.pi/6:
-            if (R % 2) == 0:
-                t2 = 1
-                t1 = 0
-            else:
-                t1 = 1
-                t2 = 0
+    if Mi >= 1.273:
+        if alpha < np.pi / 6:
+            t1 = 1
+            t2 = 0
         else:
-            if (R % 2) == 0:
-                t1 = 1
-                t2 = 0
-            else:
-                t2 = 1
-                t1 = 0
+            t2 = 1
+            t1 = 0
         t0 = 0
         t7 = 0
+        kf = 1
+
+    # ==============================================================================
+    # Post-Processing
+    # ==============================================================================
+    # Flip alpha for sectors 0-1, 2-3, 4-5 (which correspond to angles 0-60, 120-180, 240-300 degrees)
+    if R in [1, 3, 5]:
+        t1, t2 = t2, t1
 
     ###################################################################################################################
     # Return
     ###################################################################################################################
-    return [t0, t1, t2, t7, rr]
+    return [t0, t1, t2, t7, rr, kf]

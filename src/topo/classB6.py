@@ -663,6 +663,7 @@ class classB6:
         # Parameters
         # ------------------------------------------
         N1 = int(len(t_ref) / (self.q * self.K))
+        K_old = 0
         if setup['Par']['PWM']['upd'] == "SE":
             Ns = self.q
             Terr = -N1 / 2
@@ -693,6 +694,7 @@ class classB6:
         c = np.zeros(np.size(t_ref))
         xN0 = np.zeros(np.size(t_ref))
         rr = np.zeros((Ns * self.K, 1))
+        kf = np.zeros((Ns * self.K, 1))
         t1 = np.zeros((Ns * self.K, 1))
         t2 = np.zeros((Ns * self.K, 1))
         t0 = np.zeros((Ns * self.K, 1))
@@ -730,7 +732,7 @@ class classB6:
         # ------------------------------------------
         for i in range(0, len(t_ref)):
             alpha = i * self.K / len(t_ref) * 2 * np.pi + phi[0] + 2 * np.pi
-            [d0, d1, d2, d7, _] = svPWM(k, alpha, Mi)
+            [d0, d1, d2, d7, _, _] = svPWM(k, alpha, Mi)
             xN0[i] = (-d0 - d1 / 3 + d2 / 3 + d7)
 
         # ------------------------------------------
@@ -749,13 +751,14 @@ class classB6:
         for i in range(0, Ns * self.K):
             alpha = i / Ns * 2 * np.pi + phi[0] + 2 * np.pi
             alpha = alpha + Terr / len(t_ref) * self.K * (2 * np.pi)
-            [t0[i], t1[i], t2[i], t7[i], rr[i]] = svPWM(k, alpha, Mi)
+            [t0[i], t1[i], t2[i], t7[i], rr[i], kf[i]] = svPWM(k, alpha, Mi)
 
         # ------------------------------------------
         # Switching times
         # ------------------------------------------
         if setup['Par']['PWM']['upd'] == "SE":
-            st = np.hstack((t0, t0 + t1, 1 - t7, np.ones((Ns * self.K, 1)), 1 + t7, 1 + t7 + t2, 2 - t0, 2 * np.ones((Ns * self.K, 1))))
+            st = np.hstack((t0, t0 + t1, 1 - t7, np.ones((Ns * self.K, 1)), 1 + t7, 1 + t7 + t2, 2 - t0,
+                            2 * np.ones((Ns * self.K, 1))))
         else:
             st1 = np.hstack((t0, t0 + t1, 1 - t7, np.ones((Ns * self.K, 1))))
             st2 = np.roll(np.hstack((1 + t7, 1 + t7 + t2, 2 - t0, 2 * np.ones((Ns * self.K, 1)))), -1, axis=0)
@@ -766,14 +769,51 @@ class classB6:
         # ------------------------------------------
         # Switching states
         # ------------------------------------------
-        for i in range(0, self.q * self.K):
-            j = 0
-            for ii in range(0, N1):
-                if st[i, j] > ts[ii]:
-                    ss[ii + N1 * i] = seq[int(rr[i] - 1)][j]
-                else:
-                    j = j + 1
-                    ss[ii + N1 * i] = ss[ii + N1 * i - 1]
+        # Under-Modulation
+        if Mi <= 2 / np.sqrt(3):
+            for i in range(0, self.q * self.K):
+                j = 0
+                for ii in range(0, N1):
+                    if st[i, j] > ts[ii]:
+                        ss[ii + N1 * i] = seq[int(rr[i] - 1)][j]
+                    else:
+                        j = j + 1
+                        ss[ii + N1 * i] = ss[ii + N1 * i - 1]
+
+        # Over-Modulation
+        else:
+            for i in range(0, self.q * self.K):
+                for ii in range(0, int(kf[i])):
+                    # Init
+                    idx = 0
+                    K_dyn = int(N1 / kf[i])
+                    ts = np.linspace(0, 2, K_dyn)
+                    d_alpha = ii / kf[i]
+
+                    # Switching Times
+                    alpha_1 = (i + d_alpha) / self.q * 2 * np.pi + phi[0] + 2 * np.pi
+                    alpha_2 = alpha_1 + 0.5 / self.q * 2 * np.pi
+                    [t0_1, t1_1, t2_1, t7_1, rr_1, _] = svPWM(k, alpha_1, Mi)
+                    [t0_2, _, t2_2, t7_2, rr_2, _] = svPWM(k, alpha_2, Mi)
+
+                    # Switching Sequence
+                    if setup['Par']['PWM']['upd'] == "SE":
+                        st = np.hstack((t0_1, t0_1 + t1_1, 1 - t7_1, 1, 1 + t7_1, 1 + t7_1 + t2_1, 2 - t0_1, 2))
+                        rr = np.hstack((rr_1, rr_1, rr_1, rr_1, rr_1, rr_1, rr_1, rr_1))
+                    else:
+                        st = np.hstack((t0_1, t0_1 + t1_1, 1 - t7_1, 1, 1 + t7_2, 1 + t7_2 + t2_2, 2 - t0_2, 2))
+                        rr = np.hstack((rr_1, rr_1, rr_1, rr_1, rr_2, rr_2, rr_2, rr_2))
+
+                    # Switching Sequence
+                    for iii in range(0, K_dyn):
+                        if st[idx] > ts[iii]:
+                            ss[iii + K_old] = seq[int(rr[idx] - 1)][idx]
+                        else:
+                            idx = idx + 1
+                            ss[iii + K_old] = ss[iii + K_old - 1]
+
+                    # Update
+                    K_old = K_old + K_dyn
 
         # ------------------------------------------
         # Sampling
@@ -952,8 +992,8 @@ class classB6:
             # Switching Times
             alpha_1 = (i + Terr_s) / self.q * 2 * np.pi + phi[0] + 2 * np.pi
             alpha_2 = alpha_1 + 0.5 / self.q * 2 * np.pi
-            [t0_1, t1_1, t2_1, t7_1, rr_1] = svPWM(k, alpha_1, Mi)
-            [t0_2, _, t2_2, t7_2, rr_2] = svPWM(k, alpha_2, Mi)
+            [t0_1, t1_1, t2_1, t7_1, rr_1, _] = svPWM(k, alpha_1, Mi)
+            [t0_2, _, t2_2, t7_2, rr_2, _] = svPWM(k, alpha_2, Mi)
 
             # Switching Sequence
             if setup['Par']['PWM']['upd'] == "SE":
