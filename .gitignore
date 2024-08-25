@@ -1,4 +1,3 @@
-
 docu/DOC_230423_Docu_PyPowerSim.docx
 docu/datasheets/Infineon-F4-75R07W1H3_B11A-DataSheet-v03_00-EN.pdf
 docu/datasheets/Infineon-IAUT300N10S5N015-DS-v01_00-EN.pdf
@@ -15,7 +14,6 @@ docu/literature/New_Physical_Insights_on_Power_MOSFET_Switching_Losses.pdf
 docu/literature/PED4_1042_Report.pdf
 __pycache__
 /docu/datasheets/
-/setup/journal/
 /results/calcJournal_Trans/
 /results/calcJournal_Sweep/
 /results/calcJournal_Steady/
