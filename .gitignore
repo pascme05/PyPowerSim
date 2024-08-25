@@ -14,9 +14,6 @@ docu/literature/New_Physical_Insights_on_Power_MOSFET_Switching_Losses.pdf
 docu/literature/PED4_1042_Report.pdf
 __pycache__
 /docu/datasheets/
-/results/calcJournal_Trans/
-/results/calcJournal_Sweep/
-/results/calcJournal_Steady/
 /docu/literature/Advanced_PWM_and_Predictive_ControlAn_Overview.pdf
 /docu/literature/Optimal_Control_of_Medium-Voltage_DrivesAn_Overview.pdf
 .idea
