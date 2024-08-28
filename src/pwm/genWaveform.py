@@ -66,7 +66,7 @@ def genWave(t, fel, phi, setup):
     # Triangular
     # ==============================================================================
     elif setup['Top']['wave'] == "tri":
-        wave = signal.sawtooth(2 * np.pi * fel * t + phi, 0.5)
+        wave = -signal.sawtooth(2 * np.pi * fel * t - np.pi / 2 + phi, 0.5)
         print("INFO: Triangular waveform generated")
 
     # ==============================================================================
