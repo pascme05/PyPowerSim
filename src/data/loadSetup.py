@@ -71,12 +71,14 @@ def loadSetup(setup, path):
         setupDatRaw = pd.read_excel(filename, sheet_name='Dat')
         setupTopRaw = pd.read_excel(filename, sheet_name='Top')
         setupParRaw = pd.read_excel(filename, sheet_name='Par')
+        setupMagRaw = pd.read_excel(filename, sheet_name='Mag')
         print("INFO: Setup file loaded")
     except:
         setupExpRaw = []
         setupDatRaw = []
         setupTopRaw = []
         setupParRaw = []
+        setupMagRaw = []
         print("ERROR: Setup file could not be loaded")
 
     ###################################################################################################################
@@ -121,6 +123,16 @@ def loadSetup(setup, path):
     try:
         for i in range(0, setupParRaw.shape[0]):
             setup['Par'][setupParRaw['Category'][i]][setupParRaw['Variable'][i]] = setupParRaw[column][i]
+        print("INFO: Parameter setup file loaded")
+    except:
+        print("ERROR: Parameter setup file could not be loaded")
+
+    # ==============================================================================
+    # Magnetics topology (short circuit/open circuit/load): Add to Topology struct
+    # ==============================================================================
+    try:
+        for i in range(0, setupMagRaw.shape[0]):
+            setup['Top'][setupMagRaw['Variable'][i]] = setupMagRaw[column][i]
         print("INFO: Parameter setup file loaded")
     except:
         print("ERROR: Parameter setup file could not be loaded")

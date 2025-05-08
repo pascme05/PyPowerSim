@@ -33,6 +33,7 @@ from src.calcSweep import calcSweep
 from src.calcSteady import calcSteady
 from src.calcTrans import calcTrans
 from src.calcClose import calcClose
+from src.calcMag import calcMag
 from src.topo.initTopo import initTopo
 from src.plot.plot import plot
 from src.plot.plotResults import plotResults
@@ -182,6 +183,12 @@ def main(setup, path):
     # ------------------------------------------
     elif setup['Exp']['type'] == 3:
         [time, freq] = calcClose(top, mdl, para, setup)
+
+    # ------------------------------------------
+    # Magnetics
+    # ------------------------------------------
+    elif setup['Exp']['type'] == 4:
+        [time, freq] = calcMag(top, mdl, para, setup)
 
     # ------------------------------------------
     # Default

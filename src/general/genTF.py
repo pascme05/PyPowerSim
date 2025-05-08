@@ -20,7 +20,7 @@ Inputs:     1) para:    all parameters used in the simulation
             2) setup:   includes all simulation variables
 Outputs:    1) out:     the output file includes the transfer functions of the architecture
 """
-
+import numpy as np
 #######################################################################################################################
 # Import libs
 #######################################################################################################################
@@ -62,7 +62,23 @@ def genTF(para, setup):
     # ------------------------------------------
     C = para['Cap']['Elec']['con']['C']
     ESR = para['Cap']['Elec']['con']['ESR']
-    
+
+    # ------------------------------------------
+    # Transformer
+    # ------------------------------------------
+    n1 = para['Tra']['Elec']['con']['n1']
+    n2 = para['Tra']['Elec']['con']['n2']
+    r1 = para['Tra']['Elec']['con']['r1']
+    r2 = para['Tra']['Elec']['con']['r2']
+    Rc1 = para['Tra']['Elec']['con']['Rc1']
+    Rc2 = para['Tra']['Elec']['con']['Rc2']
+    Ll1 = para['Tra']['Elec']['con']['Ll1']
+    Ll2 = para['Tra']['Elec']['con']['Ll2']
+    LM = para['Tra']['Elec']['con']['LM']
+    M = (n2 / n1) * LM  # Iyer p. 423
+    Lm1 = (n1 / n2) * M
+    Lm2 = (n2 / n1) * M
+
     # ------------------------------------------
     # Output Filter
     # ------------------------------------------
@@ -106,8 +122,21 @@ def genTF(para, setup):
     # ==============================================================================
     # Load
     # ==============================================================================
-    print("INFO: Load")
-    out['TF']['Load'] = signal.TransferFunction([1], [L, R])
+
+    # Distinction between the settings for the transformer:
+    # Transfer functions for the transformer are based on the simplified equivalent circuit from Iyer, p. 119
+    if setup['Top']['LD_tra'] == 'NT':
+        # No Transformer
+        print("INFO: Load")
+        out['TF']['Load'] = signal.TransferFunction([1], [L, R])
+    elif setup['Top']['LD_tra'] == 'OC':
+        # Transformer with open circuit at secondary, no RL load!
+        print("INFO: Load is a transformer with open-circuit at secondary")
+        out['TF']['Load'] = signal.TransferFunction(np.polymul([-M, 0],[(Ll2 + Lm2), r2+Rc2]), np.polymul([(Ll1 * Lm2 + Ll1 * Ll2 + Lm1 * Ll2 + Lm1 * Lm2 - M * M), (r1 * Ll2 + r1 * Lm2 + Ll1 * r2 + Lm1 * r2 + Ll1*Rc2 + Lm1*Rc2), r1 * r2 + r1*Rc2],[-M, 0]))
+    elif setup['Top']['LD_tra'] == 'SC':
+        # Transformer with short circuit at secondary, no RL load!
+        print("INFO: Load is a transformer with short-circuit at secondary")
+        out['TF']['Load'] = signal.TransferFunction(np.polymul([-M, 0],[(Ll2 + Lm2), +r2]), np.polymul([(Ll1 * Lm2 + Ll1 * Ll2 + Lm1 * Ll2 + Lm1 * Lm2 - M * M), (r1 * Ll2 + r1 * Lm2 + Ll1 * r2 + Lm1 * r2), r1 * r2],[-M, 0]))
 
     ###################################################################################################################
     # Post-Processing
