@@ -30,6 +30,7 @@ from src.plot.gen.plotSweep import plotSweep
 from src.plot.gen.plotStat import plotStat
 from src.plot.gen.plotTrans import plotTrans
 from src.plot.gen.plotClose import plotClose
+from src.plot.gen.plotMag import plotMag
 
 
 # ==============================================================================
@@ -83,6 +84,8 @@ def plot(mdl, para, time, freq, sweep, setup):
         except:
             print("WARN: Thermal plots could not been created")
 
+
+
     ###################################################################################################################
     # Topology
     ###################################################################################################################
@@ -113,6 +116,12 @@ def plot(mdl, para, time, freq, sweep, setup):
         # ------------------------------------------
         elif setup['Exp']['type'] == 3:
             plotClose(time, freq, setup)
+
+    # ==============================================================================
+    # Magnetics
+    # ==============================================================================
+    if setup['Top']['LD_tra'] != 'NT' and setup['Top']['sourceType'] != "B6":
+        plotMag(time, freq, setup)
 
     # ==============================================================================
     # Specific

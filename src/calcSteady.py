@@ -163,7 +163,7 @@ def calcSteady(top, mdl, para, setup):
         # Switches
         for i in range(0, len(top.id2)):
             timeElec['sw'][top.id2[i]] = calcElecSwi(Vdc, top.id9[i] * timeAc[top.id4[i]], (s[top.id3[i]][start:ende] == (-1) ** i),
-                                                     T_sw[i], top.id5[i], para, setup)
+                                                     T_sw[i], top.id5[i], para, setup)  # Calculates the voltages and currents at the switches and diodes
 
         # Capacitor
         timeDc['v_dc'] = calcElecCap(t_ref, timeDc['i_c'], T_ca, para, setup)

@@ -50,7 +50,8 @@ import pandas as pd
 from scipy import signal
 import cmath
 import copy
-
+import control as ct
+import slycot
 
 #######################################################################################################################
 # Class
@@ -946,20 +947,95 @@ class classB4:
             _, v_out, _, = signal.lsim(mdl['SS']['Out'], v_ab, t, X0=init['out'])
 
         # Load
-        v_L = v_out - Mi * e['A']
+        # Different handling for transformer case due to extra currents (i_w1 and i_a)
+        if setup['Top']['LD_tra'] == 'NT':
+            # No transformer case
+            v_L = v_out - Mi * e['A']
 
-        # Current
-        if setup['Top']['wave'] == "con":
-            _, i_a, _, = signal.lsim(mdl['SS']['Load'], v_L, t, X0=init['load'])
-            i_a = i_a[t0:t1]
-        else:
-            if avg == 1:
-                _, i_a, _, = signal.lsim(mdl['SS']['Load'], (v_L - np.mean(v_L)), t, X0=init['load'])
-                i_a = i_a[t0:t1]
-                i_a = i_a - np.mean(i_a)
-            else:
+            # Current
+            if setup['Top']['wave'] == "con":
                 _, i_a, _, = signal.lsim(mdl['SS']['Load'], v_L, t, X0=init['load'])
                 i_a = i_a[t0:t1]
+            else:
+                if avg == 1:
+                    _, i_a, _, = signal.lsim(mdl['SS']['Load'], (v_L - np.mean(v_L)), t, X0=init['load'])
+                    i_a = i_a[t0:t1]
+                    i_a = i_a - np.mean(i_a)
+                else:
+                    _, i_a, _, = signal.lsim(mdl['SS']['Load'], v_L, t, X0=init['load'])
+                    i_a = i_a[t0:t1]
+        else:
+            # Transformer case
+            Rc1 = setup['Top']['Rc1']   # parallel resistance at transformer primary side, representing core losses, needed to calculate i_a from winding current i_w1
+            Rc2 = setup['Top']['Rc2']
+            if setup['Top']['LD_tra'] == 'OC' or setup['Top']['LD_tra'] == 'SC':
+                # Open circuit or Short circuit transformer case
+                v_L = v_out
+                # Current
+                if setup['Top']['wave'] == "con":
+                    _, i_w1, _, = signal.lsim(mdl['SS']['Load'], v_L, t, X0=init['load'])
+                    _, i_w2, _, = signal.lsim(mdl['TF']['i_w2'], v_L, t, X0=init['load'])
+                    i_a = v_L/Rc1 + i_w1    # parallel resistance at transformer primary side, representing core losses, needed to calculate i_a from winding current i_w1
+                    i_a = i_a[t0:t1]
+                    i_w1 = i_w2[t0:t1]
+                    i_w2 = i_w2[t0:t1]
+                else:
+                    if avg == 1:
+                        _, i_w1, _, = signal.lsim(mdl['SS']['Load'], (v_L - np.mean(v_L)), t, X0=init['load'])
+                        _, i_w2, _, = signal.lsim(mdl['TF']['i_w2'], (v_L - np.mean(v_L)), t, X0=init['load'])
+                        i_a = v_L / Rc1 + i_w1  # parallel resistance at transformer primary side, representing core losses, needed to calculate i_a from winding current i_w1
+                        i_a = i_a[t0:t1]
+                        i_a = i_a - np.mean(i_a)
+                        i_w1 = i_w1[t0:t1]
+                        i_w1 = i_w1 - np.mean(i_w1)
+                        i_w2 = i_w2[t0:t1]
+                        i_w2 = i_w2 - np.mean(i_w2)
+                    else:
+                        _, i_w1, _, = signal.lsim(mdl['SS']['Load'], v_L, t, X0=init['load'])
+                        _, i_w2, _, = signal.lsim(mdl['TF']['i_w2'], v_L, t, X0=init['load'])
+                        i_a = v_L / Rc1 + i_w1  # parallel resistance at transformer primary side, representing core losses, needed to calculate i_a from winding current i_w1
+                        i_a = i_a[t0:t1]
+                        i_w1 = i_w1[t0:t1]
+                        i_w2 = i_w2[t0:t1]
+                # Calculation of the missing transformer port waveforms:
+                if setup['Top']['LD_tra'] == 'OC':
+                    i_2 = np.zeros(np.shape(i_a))   # open circuit case
+                    v_2 = -Rc2 * i_w2
+                elif setup['Top']['LD_tra'] == 'SC':
+                    v_2 = np.zeros(np.shape(i_a))   # short circuit case
+                    i_2 = i_w2
+
+            else:
+                # RL+e load transformer case
+                v_L = v_out
+                v1 = v_L.reshape(1, -1)
+                e_in = e['A'].reshape(1, -1)
+                (_, i_w1) = ct.forced_response(mdl['TF']['Load'], t, np.concatenate((v1, e_in), axis=0))
+                (_, i_w2) = ct.forced_response(mdl['TF']['i_w2'], t, np.concatenate((v1, e_in), axis=0))
+                (_, v_2) = ct.forced_response(mdl['TF']['v_2'], t, np.concatenate((i_w2, e_in), axis=0))
+                (_, i_2) = ct.forced_response(mdl['TF']['i_2'], t, np.concatenate((v_2, e_in), axis=0))
+                i_a = v1 / Rc1 + i_w1   # parallel resistance at transformer primary side, representing core losses, needed to calculate i_a from winding current i_w1
+                i_a = i_a.reshape(-1)
+                i_a = i_a[t0:t1]
+                i_w1 = i_w1.reshape(-1)
+                i_w1 = i_w1[t0:t1]
+                i_w2 = i_w2.reshape(-1)
+                i_w2 = i_w2[t0:t1]
+                v_2 = v_2.reshape(-1)
+                v_2 = v_2[t0:t1]
+                i_2 = i_2.reshape(-1)
+                i_2 = i_2[t0:t1]
+                if avg == 1:
+                    i_a = i_a - np.mean(i_a)
+                    i_w1 = i_w1 - np.mean(i_w1)
+                    i_w2 = i_w2 - np.mean(i_w2)
+                    v_2 = v_2 - np.mean(v_2)
+                    i_2 = i_2 - np.mean(i_2)
+
+            # Define additional transformer waveforms for plotting
+            v_1 = v_L
+            i_1 = i_a
+
 
         # ------------------------------------------
         # DC Side
@@ -990,6 +1066,16 @@ class classB4:
         outAc['v_a_out'] = v_out[t0:t1]
         outAc['v_a'] = v_ab[t0:t1]
         outAc['i_a'] = i_a
+
+
+        # Transformer
+        if setup['Top']['LD_tra'] != 'NT':
+            outAc['i_1'] = i_1
+            outAc['i_w1'] = i_w1
+            outAc['i_2'] = i_2
+            outAc['i_w2'] = i_w2
+            outAc['v_1'] = v_1
+            outAc['v_2'] = v_2
 
         # ------------------------------------------
         # DC Side
