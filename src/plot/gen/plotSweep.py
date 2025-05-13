@@ -383,7 +383,9 @@ def plotSweep(time, freq, sweep, setup):
     plt.ylabel("$V_{dc,rms}^{THD}$ (V)")
     plt.xlabel("$M_{i}$ in (p.u)")
     plt.grid('on')
-    plt.show()
+
+    if setup['Top']['LD_tra'] == 'NT':
+        plt.show()
 
     ###################################################################################################################
     # MSG OUT

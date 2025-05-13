@@ -46,7 +46,7 @@ matplotlib.use('TkAgg')
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def plotMag(time, freq, setup):
+def plotMag(time, freq, setup, para):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -118,6 +118,10 @@ def plotMag(time, freq, setup):
     # Transformer currents and voltages
     # ------------------------------------------
     plt.figure()
+    txt = "Transformer terminal voltages and (winding-) currents for turns ratio of " + "$n_1/n_2$=" + str(para['Tra']['Elec']['con']['n1']/para['Tra']['Elec']['con']['n2'])
+    plt.suptitle(txt, size=18)
+    plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
+
     # Voltages
     plt.subplot(1, 2, 1)
     plt.plot(t[::down2], timeAc['v_1'][::down2], 'b')

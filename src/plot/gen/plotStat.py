@@ -486,7 +486,9 @@ def plotStat(time, freq, setup):
     plt.title('Time-domain Thermal DC-Link Capacitor')
     plt.xlabel('time in (sec)')
     plt.grid('on')
-    plt.show()
+
+    if setup['Top']['LD_tra'] == 'NT':
+        plt.show()
 
     ###################################################################################################################
     # MSG OUT

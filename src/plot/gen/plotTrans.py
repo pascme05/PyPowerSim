@@ -373,7 +373,9 @@ def plotTrans(time, freq, setup):
     axs[1].set_xlabel('Time (sec)')
     axs[1].legend(['T1_j', 'T1_d', 'T1_c', 'T2_j', 'T2_d', 'T2_c', 'Ta'])
     axs[1].grid(True)
-    plt.show()
+
+    if setup['Top']['LD_tra'] == 'NT':
+        plt.show()
 
     ###################################################################################################################
     # MSG OUT

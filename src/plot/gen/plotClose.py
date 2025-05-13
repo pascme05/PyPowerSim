@@ -213,7 +213,9 @@ def plotClose(time, freq, setup):
     axs[2].set_ylabel('Power (W)')
     axs[2].set_xlabel('Time (sec)')
     axs[2].grid(True)
-    plt.show()
+
+    if setup['Top']['LD_tra'] == 'NT':
+        plt.show()
 
     ###################################################################################################################
     # MSG OUT

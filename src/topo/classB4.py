@@ -1067,7 +1067,6 @@ class classB4:
         outAc['v_a'] = v_ab[t0:t1]
         outAc['i_a'] = i_a
 
-
         # Transformer
         if setup['Top']['LD_tra'] != 'NT':
             outAc['i_1'] = i_1
