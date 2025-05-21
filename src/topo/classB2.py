@@ -48,6 +48,7 @@ from src.cont.conHys import conHys
 import numpy as np
 import pandas as pd
 from scipy import signal
+from scipy import integrate
 import cmath
 import copy
 import control as ct
@@ -158,6 +159,16 @@ class classB2:
         data['ther']['cap'] = pd.DataFrame(columns=['C1'])
 
         # ==============================================================================
+        # Transformer
+        # ==============================================================================
+
+        # ------------------------------------------
+        # Losses
+        # ------------------------------------------
+        data['loss']['tra'] = {}
+        data['loss']['tra']['T1'] = pd.DataFrame(columns=['p_cL', 'p_wL_1', 'p_wL_2'])
+
+        # ==============================================================================
         # Return
         # ==============================================================================
         return data
@@ -191,9 +202,9 @@ class classB2:
         # ==============================================================================
         distAc = {}
         distDc = {}
-        timeElec = {'sw': {}, 'cap': {}}
-        timeLoss = {'sw': {}, 'cap': {}}
-        timeTher = {'sw': {}, 'cap': {}}
+        timeElec = {'sw': {}, 'cap': {}, 'tra': {}}
+        timeLoss = {'sw': {}, 'cap': {}, 'tra': {}}
+        timeTher = {'sw': {}, 'cap': {}, 'tra': {}}
 
         # ==============================================================================
         # Calculation
@@ -930,8 +941,23 @@ class classB2:
                     i_2 = i_2 - np.mean(i_2)
 
             # Define additional transformer waveforms for plotting
-            v_1 = v_L
+            v_1 = v_L[t0:t1]
             i_1 = i_a
+
+            # Calculate winding voltages
+            r1 = setup['Top']['r1']
+            r2 = setup['Top']['r2']
+            Ll1 = setup['Top']['Ll1']
+            Ll2 = setup['Top']['Ll2']
+            v_w1 = v_1 - r1 * i_w1 - Ll1 * np.gradient(i_w1)
+            v_w2 = v_2 - r2 * i_w2 - Ll1 * np.gradient(i_w2)
+
+            # Calculate flux density B
+            n1 = setup['Top']['n1']
+            Ae = setup['Top']['Ae']
+            dB = v_w1 / (n1 * Ae)
+            B = integrate.cumulative_trapezoid(dB, x=t[t0:t1], initial=0)
+            B = B - np.mean(B)
 
         # ------------------------------------------
         # DC Side
@@ -972,6 +998,10 @@ class classB2:
             outAc['i_w2'] = i_w2
             outAc['v_1'] = v_1
             outAc['v_2'] = v_2
+            outAc['v_w1'] = v_w1
+            outAc['v_w2'] = v_w2
+            outAc['B'] = B
+            outAc['dB'] = dB
 
         # ------------------------------------------
         # DC Side

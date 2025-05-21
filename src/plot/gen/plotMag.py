@@ -118,30 +118,51 @@ def plotMag(time, freq, setup, para):
     # Transformer currents and voltages
     # ------------------------------------------
     plt.figure()
-    txt = "Transformer terminal voltages and (winding-) currents for turns ratio of " + "$n_1/n_2$=" + str(para['Tra']['Elec']['con']['n1']/para['Tra']['Elec']['con']['n2'])
+    txt = "Transformer waveforms for turns ratio of " + "$n_1/n_2$=" + str(para['Tra']['Elec']['con']['n1']/para['Tra']['Elec']['con']['n2'])
     plt.suptitle(txt, size=18)
     plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
     # Voltages
-    plt.subplot(1, 2, 1)
+    plt.subplot(2, 2, 1)
     plt.plot(t[::down2], timeAc['v_1'][::down2], 'b')
+    plt.plot(t[::down2], timeAc['v_w1'][::down2], 'b--')
     plt.plot(t[::down2], timeAc['v_2'][::down2], 'r')
+    plt.plot(t[::down2], timeAc['v_w2'][::down2], 'r--')
     plt.ylabel("$v(t)$ (V)")
     plt.title('Transformer terminal voltages')
     plt.xlabel('time in (sec)')
-    plt.legend(["$v_{1}(t)$", "$v_{2}(t)$"], loc='upper right')
+    plt.legend(["$v_{1}(t)$", "$v_{w1}(t)$", "$v_{2}(t)$", "$v_{w2}(t)$"], loc='upper right')
     plt.grid('on')
 
     # Currents
-    ax = plt.subplot(1, 2, 2)
+    ax = plt.subplot(2, 2, 2)
     plt.plot(t[::down2], timeAc['i_1'][::down2], 'b')
     plt.plot(t[::down2], timeAc['i_w1'][::down2], 'b--')
     plt.plot(t[::down2], timeAc['i_2'][::down2], 'r')
     plt.plot(t[::down2], timeAc['i_w2'][::down2], 'r--')
     plt.ylabel("$i(t)$ (A)")
-    plt.title('Transformer currents')
+    plt.title('Transformer (winding-) currents')
     plt.xlabel('time in (sec)')
     plt.legend(["$i_{1}(t)$", "$i_{w1}(t)$", "$i_{2}(t)$", "$i_{w2}(t)$"], loc='upper right')
+    plt.grid('on')
+
+    # Flux density
+    ax = plt.subplot(2, 2, 3)
+    plt.plot(t[::down2], timeAc['B'][::down2], 'r')
+    plt.ylabel("$B(t)$ (T)")
+    plt.title('Transformer core flux density')
+    plt.xlabel('time in (sec)')
+    plt.legend(["$B(t)$"], loc='upper right')
+    plt.grid('on')
+
+    ax = plt.subplot(2, 2, 4)
+    plt.plot(t[::down2], time['Ther']['tra']['core'][::down2], 'g')
+    plt.plot(t[::down2], time['Ther']['tra']['pri'][::down2], 'b')
+    plt.plot(t[::down2], time['Ther']['tra']['sec'][::down2], 'r')
+    plt.ylabel("$Temperature$ (°C)")
+    plt.title('Transformer temperatures')
+    plt.xlabel('time in (sec)')
+    plt.legend(["Core temperature", "Primary winding temperature", "Secondary winding temperature"], loc='upper right')
     plt.grid('on')
 
     plt.show()

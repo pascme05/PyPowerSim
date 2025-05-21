@@ -68,8 +68,8 @@ def loadParaTra(name, path, setup):
            'Value-10']
     tab = ['Description', 'Model', 'Symbol', 'Typical', 'Value-1', 'Value-2', 'Value-3', 'Value-4', 'Value-5',
            'Value-6']
-    lenElec = 9
-    lenTher = 4
+    lenElec = 22
+    lenTher = 6
 
     ###################################################################################################################
     # Loading Data
@@ -116,16 +116,13 @@ def loadParaTra(name, path, setup):
         para['Elec']['con'][varElecNamesCon[i]] = varElecValueCon[i]
         para['Elec']['vec'][varElecNamesCon[i]] = varElecValueTab.iloc[i]
 
-    # Needs to be adjusted for transformer later
-    """
     # ------------------------------------------
     # Tabular values
     # ------------------------------------------
-    para['Elec']['tab']['C'] = dataElec[tab][31:41]
-    para['Elec']['tab']['tan'] = dataElec[tab][51:61]
-    para['Elec']['tab']['Kr'] = dataElec[tab][71:81]
-    para['Elec']['tab']['ESR'] = dataElec[tab][91:101]
-    """
+    para['Elec']['tab']['alpha'] = dataElec[tab][31:41]
+    para['Elec']['tab']['beta'] = dataElec[tab][51:61]
+    para['Elec']['tab']['Pvsin'] = dataElec[tab][71:81]
+    #para['Elec']['tab']['tbd'] = dataElec[tab][91:101]
 
     # ==============================================================================
     # Thermal
@@ -151,21 +148,18 @@ def loadParaTra(name, path, setup):
     for i in range(0, len(varTherNamesCon)):
         para['Ther']['vec'][varTherNamesCon[i]] = para['Ther']['vec'][varTherNamesCon[i]].dropna(axis=0, how='all')
 
-    # Needs to be adjusted for transformer later
-    """
     # ------------------------------------------
     # Matrix
     # ------------------------------------------
-    para['Elec']['tab']['C'] = para['Elec']['tab']['C'].dropna(axis=0, how='all')
-    para['Elec']['tab']['C'] = para['Elec']['tab']['C'].dropna(axis=1, how='all')
-    para['Elec']['tab']['tan'] = para['Elec']['tab']['tan'].dropna(axis=0, how='all')
-    para['Elec']['tab']['tan'] = para['Elec']['tab']['tan'].dropna(axis=1, how='all')
-    para['Elec']['tab']['Kr'] = para['Elec']['tab']['Kr'].dropna(axis=0, how='all')
-    para['Elec']['tab']['Kr'] = para['Elec']['tab']['Kr'].dropna(axis=1, how='all')
-    para['Elec']['tab']['ESR'] = para['Elec']['tab']['ESR'].dropna(axis=0, how='all')
-    para['Elec']['tab']['ESR'] = para['Elec']['tab']['ESR'].dropna(axis=1, how='all')
+    para['Elec']['tab']['alpha'] = para['Elec']['tab']['alpha'].dropna(axis=0, how='all')
+    para['Elec']['tab']['alpha'] = para['Elec']['tab']['alpha'].dropna(axis=1, how='all')
+    para['Elec']['tab']['beta'] = para['Elec']['tab']['beta'].dropna(axis=0, how='all')
+    para['Elec']['tab']['beta'] = para['Elec']['tab']['beta'].dropna(axis=1, how='all')
+    para['Elec']['tab']['Pvsin'] = para['Elec']['tab']['Pvsin'].dropna(axis=0, how='all')
+    para['Elec']['tab']['Pvsin'] = para['Elec']['tab']['Pvsin'].dropna(axis=1, how='all')
 
-    
+    """ 
+    ToDo
     # ==============================================================================
     # Losses
     # ==============================================================================

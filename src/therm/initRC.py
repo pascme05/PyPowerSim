@@ -91,6 +91,34 @@ def initRC(para, setup):
         Cth_JA_cap = Cth_JC_cap
 
     ###################################################################################################################
+    # Transformer
+    ###################################################################################################################
+
+    if setup['Top']['LD_tra'] != 'NT':
+        # Loading Data
+        Rth_CA_tra = para['Tra']['Ther']['vec']['Rth_CA'].values
+        Cth_CA_tra = para['Tra']['Ther']['vec']['Cth_CA'].values
+        Rth_PA_tra = para['Tra']['Ther']['vec']['Rth_PA'].values
+        Cth_PA_tra = para['Tra']['Ther']['vec']['Cth_PA'].values
+        Rth_SA_tra = para['Tra']['Ther']['vec']['Rth_SA'].values
+        Cth_SA_tra = para['Tra']['Ther']['vec']['Cth_SA'].values
+
+        # Pre-Processing
+        Rth_CA_tra = Rth_CA_tra[np.logical_not(pd.isna(Rth_CA_tra))]
+        Cth_CA_tra = Cth_CA_tra[np.logical_not(pd.isna(Cth_CA_tra))]
+        Rth_PA_tra = Rth_PA_tra[np.logical_not(pd.isna(Rth_PA_tra))]
+        Cth_PA_tra = Cth_PA_tra[np.logical_not(pd.isna(Cth_PA_tra))]
+        Rth_SA_tra = Rth_SA_tra[np.logical_not(pd.isna(Rth_SA_tra))]
+        Cth_SA_tra = Cth_SA_tra[np.logical_not(pd.isna(Cth_SA_tra))]
+    else:
+        Rth_CA_tra = 0
+        Cth_CA_tra = 0
+        Rth_PA_tra = 0
+        Cth_PA_tra = 0
+        Rth_SA_tra = 0
+        Cth_SA_tra = 0
+
+    ###################################################################################################################
     # Return
     ###################################################################################################################
-    return [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap]
+    return [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap, Rth_CA_tra, Cth_CA_tra, Rth_PA_tra, Cth_PA_tra, Rth_SA_tra, Cth_SA_tra]

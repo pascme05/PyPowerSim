@@ -68,19 +68,25 @@ def genTF(para, setup):
     # Transformer
     # ------------------------------------------
     n1 = para['Tra']['Elec']['con']['n1']
+    setup['Top']['n1'] = n1
     n2 = para['Tra']['Elec']['con']['n2']
     r1 = para['Tra']['Elec']['con']['r1']
+    setup['Top']['r1'] = r1
     r2 = para['Tra']['Elec']['con']['r2']
+    setup['Top']['r2'] = r2
     Rc1 = para['Tra']['Elec']['con']['Rc1']
     setup['Top']['Rc1'] = Rc1
     Rc2 = para['Tra']['Elec']['con']['Rc2']
     setup['Top']['Rc2'] = Rc2
     Ll1 = para['Tra']['Elec']['con']['Ll1']
+    setup['Top']['Ll1'] = Ll1
     Ll2 = para['Tra']['Elec']['con']['Ll2']
+    setup['Top']['Ll2'] = Ll2
     LM = para['Tra']['Elec']['con']['LM']
     M = (n2 / n1) * LM  # Iyer p. 423
     Lm1 = (n1 / n2) * M
     Lm2 = (n2 / n1) * M
+    setup['Top']['Ae'] = para['Tra']['Elec']['con']['Ae']
 
     # ------------------------------------------
     # Output Filter

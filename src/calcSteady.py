@@ -34,6 +34,7 @@ from src.general.calcFreq import calcFreq
 from src.elec.calcElecSwi import calcElecSwi
 from src.elec.calcLossSwi import calcLossSwi
 from src.elec.calcLossCap import calcLossCap
+from src.elec.calcLossTra import calcLossTra
 from src.therm.calcTherRC import calcTherRC
 from src.therm.initRC import initRC
 from src.elec.calcElecCap import calcElecCap
@@ -101,6 +102,7 @@ def calcSteady(top, mdl, para, setup):
     err = np.inf
     T_sw = np.ones((7, 1)) * setup['Dat']['stat']['Tj']
     T_ca = setup['Dat']['stat']['Tj']
+    T_tra = setup['Dat']['stat']['Tj']
     T_old = setup['Dat']['stat']['Tj']
     iter1 = 0
 
@@ -124,7 +126,7 @@ def calcSteady(top, mdl, para, setup):
     # ------------------------------------------
     # Load
     # ------------------------------------------
-    [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap] = initRC(para, setup)
+    [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap, Rth_CA_tra, Cth_CA_tra, Rth_PA_tra, Cth_PA_tra, Rth_SA_tra, Cth_SA_tra] = initRC(para, setup)
 
     # ------------------------------------------
     # Variables
@@ -133,6 +135,12 @@ def calcSteady(top, mdl, para, setup):
     Tinit_D = np.zeros((len(Rth_DA), len(top.id2)))
     Tinit_K = np.zeros((len(Rth_CA), len(top.id2)))
     Tinit_C = np.zeros(np.size(Rth_JA_cap))
+
+    if setup['Top']['LD_tra'] != 'NT':
+        # Transformer
+        Tinit_Tra_C = np.zeros(np.size(Rth_CA_tra))     # Core
+        Tinit_Tra_P = np.zeros(np.size(Rth_PA_tra))     # Primary
+        Tinit_Tra_S = np.zeros(np.size(Rth_SA_tra))     # Secondary
 
     ###################################################################################################################
     # Calculation
@@ -185,6 +193,10 @@ def calcSteady(top, mdl, para, setup):
         # Capacitor
         timeLoss['cap']['C1'] = calcLossCap(t_ref, timeDc['i_c'], T_ca, para, setup)
 
+        # Transformer
+        if setup['Top']['LD_tra'] != 'NT':
+            timeLoss['tra']['T1'] = calcLossTra(t_ref, timeAc, T_tra, para, setup)
+
         # ------------------------------------------
         # Init Thermal
         # ------------------------------------------
@@ -198,6 +210,12 @@ def calcSteady(top, mdl, para, setup):
 
             # Capacitor
             Tinit_C = np.mean(timeLoss['cap']['C1']['p_L']) * Rth_JA_cap
+
+            # Transformer
+            if setup['Top']['LD_tra'] != 'NT':
+                Tinit_Tra_C = np.mean(timeLoss['tra']['T1']['p_cL']) * Rth_CA_tra
+                Tinit_Tra_P = np.mean(timeLoss['tra']['T1']['p_wL_1']) * Rth_PA_tra
+                Tinit_Tra_S = np.mean(timeLoss['tra']['T1']['p_wL_2']) * Rth_SA_tra
 
         # ------------------------------------------
         # Thermal
@@ -231,6 +249,15 @@ def calcSteady(top, mdl, para, setup):
         # Capacitor
         [timeTher['cap']['C1'], Tinit_C] = calcTherRC(Tinit_C, Tc, timeLoss['cap']['C1']['p_L'], t_ref[start:ende],
                                                       Rth_JA_cap, Cth_JA_cap)
+
+        # Transformer
+        if setup['Top']['LD_tra'] != 'NT':
+            [timeTher['tra']['core'], Tinit_Tra_C] = calcTherRC(Tinit_Tra_C, Tc, timeLoss['tra']['T1']['p_cL'], t_ref[start:ende],
+                                                        Rth_CA_tra, Cth_CA_tra)
+            [timeTher['tra']['pri'], Tinit_Tra_P] = calcTherRC(Tinit_Tra_P, Tc, timeLoss['tra']['T1']['p_wL_1'], t_ref[start:ende],
+                                                                Rth_PA_tra, Cth_PA_tra)
+            [timeTher['tra']['sec'], Tinit_Tra_S] = calcTherRC(Tinit_Tra_S, Tc, timeLoss['tra']['T1']['p_wL_2'], t_ref[start:ende],
+                                                               Rth_SA_tra, Cth_SA_tra)
 
         # ------------------------------------------
         # Error
@@ -343,6 +370,17 @@ def calcSteady(top, mdl, para, setup):
     # ------------------------------------------
     [timeTher['cap']['C1'], _] = calcTherRC(Tinit_C, Tc, timeLoss['cap']['C1']['p_L'], t_ref[start:ende], Rth_JA_cap,
                                             Cth_JA_cap)
+
+    # Transformer
+    if setup['Top']['LD_tra'] != 'NT':
+        [timeTher['tra']['core'], Tinit_Tra_C] = calcTherRC(Tinit_Tra_C, Tc, timeLoss['tra']['T1']['p_cL'], t_ref[start:ende],
+                                                            Rth_CA_tra, Cth_CA_tra)
+        [timeTher['tra']['pri'], Tinit_Tra_P] = calcTherRC(Tinit_Tra_P, Tc, timeLoss['tra']['T1']['p_wL_1'],
+                                                           t_ref[start:ende],
+                                                           Rth_PA_tra, Cth_PA_tra)
+        [timeTher['tra']['sec'], Tinit_Tra_S] = calcTherRC(Tinit_Tra_S, Tc, timeLoss['tra']['T1']['p_wL_2'],
+                                                           t_ref[start:ende],
+                                                           Rth_SA_tra, Cth_SA_tra)
 
     # ==============================================================================
     # Frequency domain
