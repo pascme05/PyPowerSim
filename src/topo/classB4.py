@@ -438,8 +438,8 @@ class classB4:
         # ------------------------------------------
         # Sequence
         # ------------------------------------------
-        s['A'] = signal.square(2 * np.pi * self.fel * t_ref + np.pi / 2 - alpha, duty=0.5)
-        s['B'] = signal.square(2 * np.pi * self.fel * t_ref + np.pi / 2 + alpha, duty=0.5)
+        s['A'] = signal.square(2 * np.pi * self.fel * t_ref, duty=0.5)
+        s['B'] = signal.square(2 * np.pi * self.fel * t_ref - (np.pi - 2*alpha), duty=0.5)
 
         # ------------------------------------------
         # Output
