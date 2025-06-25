@@ -64,7 +64,7 @@ setup['Exp']['debug'] = 0                                                       
 # Operating Mode
 # ------------------------------------------
 setup['Exp']['output'] = 'Mi'                                                                                            # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled
-setup['Exp']['type'] = 1                                                                                                 # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis, (3): closed loop analysis, (4): magnetics (transformer) analysis
+setup['Exp']['type'] = 1                                                                                                 # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis, (3): closed loop analysis
 
 # ==============================================================================
 # Input Files
@@ -79,7 +79,7 @@ setup['Exp']['conf'] = "magnetics"                                              
 # ------------------------------------------
 setup['Exp']['Swi'] = "IKQ75N120CS6"                                                                                     # filename of the parameter set for the switching devices
 setup['Exp']['Cap'] = "Elco"                                                                                             # filename of the parameter set for the DC link capacitor
-setup['Exp']['Tra'] = "TransformerExpl"                                                                                  # filename of the parameter set for the transformer
+setup['Exp']['Tra'] = "TransformerExpl_NewThMdl"                                                                                  # filename of the parameter set for the transformer
 
 # ==============================================================================
 # Plotting and Saving

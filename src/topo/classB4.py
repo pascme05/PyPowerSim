@@ -98,7 +98,7 @@ class classB4:
     ###################################################################################################################
     # Init Data
     ###################################################################################################################
-    def initData(self):
+    def initData(self, setup):
         # ==============================================================================
         # Description
         # ==============================================================================
@@ -168,13 +168,17 @@ class classB4:
         # ==============================================================================
         # Transformer
         # ==============================================================================
+        if setup['Top']['LD_tra'] != 'NT':
+            # ------------------------------------------
+            # Losses
+            # ------------------------------------------
+            data['loss']['tra'] = {}
+            data['loss']['tra']['T1'] = pd.DataFrame(columns=['p_cL', 'p_wL_1', 'p_wL_2'])
 
-        # ------------------------------------------
-        # Losses
-        # ------------------------------------------
-        data['loss']['tra'] = {}
-        data['loss']['tra']['T1'] = pd.DataFrame(columns=['p_cL', 'p_wL_1', 'p_wL_2'])
-
+            # ------------------------------------------
+            # Thermal
+            # ------------------------------------------
+            data['ther']['tra'] = pd.DataFrame(columns=['core', 'pri', 'sec'])
 
         # ==============================================================================
         # Return
@@ -452,8 +456,8 @@ class classB4:
         # ------------------------------------------
         # Sequence
         # ------------------------------------------
-        s['A'] = signal.square(2 * np.pi * self.fel * t_ref + np.pi / 2 - alpha, duty=0.5)
-        s['B'] = signal.square(2 * np.pi * self.fel * t_ref + np.pi / 2 + alpha, duty=0.5)
+        s['A'] = signal.square(2 * np.pi * self.fel * t_ref, duty=0.5)
+        s['B'] = signal.square(2 * np.pi * self.fel * t_ref - (np.pi - 2 * alpha), duty=0.5)
 
         # ------------------------------------------
         # Output
@@ -953,6 +957,21 @@ class classB4:
         v_b0 = 0.5 * s['B'] * self.Vdc
         v_ab = v_a0 - v_b0
 
+        # Rise and Fall time of output voltage
+        rise_time = np.max([setup['Top']['tf'], setup['Top']['tr']])
+        fall_time = rise_time
+        for i in range(len(v_ab)):
+            if i == 0:
+                continue
+            if v_ab[i] - v_ab[i - 1] == setup['Dat']['stat']['Vdc']:  # Rising edge
+                rise_start = i
+                rise_end = min(i + int(rise_time * setup['Exp']['fsim']), len(v_ab))
+                v_ab[rise_start:rise_end] = np.linspace(v_ab[i - 1], v_ab[i], rise_end - rise_start)
+            elif v_ab[i] - v_ab[i - 1] == -setup['Dat']['stat']['Vdc']:  # Falling edge
+                fall_start = i
+                fall_end = min(i + int(fall_time * setup['Exp']['fsim']), len(v_ab))
+                v_ab[fall_start:fall_end] = np.linspace(v_ab[i - 1], v_ab[i], fall_end - fall_start)
+
         # Filter Output
         if setup['Top']['outFilter'] == 0:
             v_out = v_ab
@@ -1018,7 +1037,7 @@ class classB4:
                     v_2 = np.zeros(np.shape(i_a))   # short circuit case
                     i_2 = i_w2
 
-            else:
+            elif setup['Top']['LD_tra'] == 'RL':
                 # RL+e load transformer case
                 v_L = v_out
                 v1 = v_L.reshape(1, -1)
@@ -1044,23 +1063,46 @@ class classB4:
                     i_w2 = i_w2 - np.mean(i_w2)
                     v_2 = v_2 - np.mean(v_2)
                     i_2 = i_2 - np.mean(i_2)
+            elif setup['Top']['LD_tra'] == 'SS':
+                # State space model
+                v_L = v_out
 
-            # Define additional transformer waveforms for plotting
-            v_1 = v_L[t0:t1]
-            i_1 = i_a
+                _, results, _, = signal.lsim(mdl['SS']['Load'], v_L, t, X0=init['load'])
+                v_2 = results[:, 0][t0:t1]
+                i_1 = results[:, 1][t0:t1]
+                i_2 = results[:, 2][t0:t1]
 
-            # Calculate winding voltages
-            r1 = setup['Top']['r1']
-            r2 = setup['Top']['r2']
-            Ll1 = setup['Top']['Ll1']
-            Ll2 = setup['Top']['Ll2']
-            v_w1 = v_1 - r1*i_w1 - Ll1*np.gradient(i_w1)
-            v_w2 = v_2 - r2*i_w2 - Ll1*np.gradient(i_w2)
+                _, resultsWDG, _, = signal.lsim(mdl['SS']['WDG'], v_L, t, X0=init['load'])
+                v_w1 = resultsWDG[:, 0][t0:t1]
+                i_w1 = resultsWDG[:, 1][t0:t1]
+                i_w2 = resultsWDG[:, 2][t0:t1]
+                v_w2 = np.zeros(np.shape(v_w1))
+                if avg == 1:
+                    i_1 = i_1 - np.mean(i_1)
+                    i_w1 = i_w1 - np.mean(i_w1)
+                    i_w2 = i_w2 - np.mean(i_w2)
+                    v_2 = v_2 - np.mean(v_2)
+                    i_2 = i_2 - np.mean(i_2)
+                i_a = i_1
+                v_1 = v_L[t0:t1]
+
+            if setup['Top']['LD_tra'] != 'SS':
+                # Define additional transformer waveforms for plotting
+                v_1 = v_L[t0:t1]
+                i_1 = i_a
+
+                # Calculate winding voltages
+                r1 = setup['Top']['r1']
+                r2 = setup['Top']['r2']
+                Ll1 = setup['Top']['Ll1']
+                Ll2 = setup['Top']['Ll2']
+                v_w1 = v_1 - r1*i_w1 - Ll1*np.gradient(i_w1)
+                v_w2 = v_2 - r2*i_w2 - Ll1*np.gradient(i_w2)
 
             # Calculate flux density B
             n1 = setup['Top']['n1']
             Ae = setup['Top']['Ae']
-            dB = v_w1 / (n1 * Ae)
+            dB = -v_w1 / (n1 * Ae)
             B = integrate.cumulative_trapezoid(dB, x=t[t0:t1], initial=0)
             B = B - np.mean(B)
 
@@ -1103,7 +1145,7 @@ class classB4:
             outAc['v_1'] = v_1
             outAc['v_2'] = v_2
             outAc['v_w1'] = v_w1
-            outAc['v_w2'] = v_w2
+            outAc['v_w2'] = v_w2 # not needed
             outAc['B'] = B
             outAc['dB'] = dB
 

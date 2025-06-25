@@ -34,6 +34,7 @@ from src.elec.calcElecSwi import calcElecSwi
 from src.elec.calcLossSwi import calcLossSwi
 from src.therm.calcTherRC import calcTherRC
 from src.elec.calcLossCap import calcLossCap
+from src.elec.calcLossTra import calcLossTra
 from src.general.calcAvg import calcAvg
 from src.therm.initRC import initRC
 from src.elec.calcElecCap import calcElecCap
@@ -92,6 +93,9 @@ def calcTrans(top, mdl, para, setup):
     Ta = setup['Dat']['stat']['Tc']
     Tj = setup['Dat']['stat']['Tj'] * np.ones((6, 1))
     Tcap = setup['Dat']['stat']['Tj']
+    T_core = setup['Dat']['stat']['Tj']
+    T_pri = setup['Dat']['stat']['Tj']
+    T_sec = setup['Dat']['stat']['Tj']
 
     # ==============================================================================
     # Update Frequency
@@ -109,7 +113,7 @@ def calcTrans(top, mdl, para, setup):
     # ==============================================================================
     # Outputs
     # ==============================================================================
-    out = top.initData()
+    out = top.initData(setup)
 
     ###################################################################################################################
     # Pre-Processing
@@ -133,7 +137,7 @@ def calcTrans(top, mdl, para, setup):
     # ------------------------------------------
     # Parameters
     # ------------------------------------------
-    [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap] = initRC(para, setup)
+    [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap, Rth_CA_tra, Cth_CA_tra, Rth_PA_tra, Cth_PA_tra, Rth_SA_tra, Cth_SA_tra] = initRC(para, setup)
 
     # ------------------------------------------
     # Init
@@ -141,6 +145,12 @@ def calcTrans(top, mdl, para, setup):
     Tinit_T = np.zeros((len(Rth_JA), len(top.id2)))
     Tinit_C = np.zeros((len(Rth_CA), len(top.id2)))
     Tinit_Cap = np.zeros(np.size(Rth_JA_cap))
+
+    if setup['Top']['LD_tra'] != 'NT':
+        # Transformer
+        Tinit_Tra_C = np.zeros(np.size(Rth_CA_tra))     # Core
+        Tinit_Tra_P = np.zeros(np.size(Rth_PA_tra))     # Primary
+        Tinit_Tra_S = np.zeros(np.size(Rth_SA_tra))     # Secondary
 
     ###################################################################################################################
     # Calculation
@@ -162,7 +172,7 @@ def calcTrans(top, mdl, para, setup):
         # ------------------------------------------
         # Init
         # ------------------------------------------
-        dataFel = top.initData()
+        dataFel = top.initData(setup)
 
         # ------------------------------------------
         # Electrical
@@ -203,6 +213,27 @@ def calcTrans(top, mdl, para, setup):
             timeLoss['cap']['C1'] = calcLossCap(t_ref, timeDc['i_c'][start:ende], Tcap, para, setup)
             [timeTher['cap']['C1'], Tinit_Cap] = calcTherRC(Tinit_Cap, Ta, timeLoss['cap']['C1']['p_L'], t_ref[start:ende], Rth_JA_cap, Cth_JA_cap)
 
+            # Transformer
+            if setup['Top']['LD_tra'] != 'NT':
+                [timeTher['tra']['core'], Tinit_Tra_C] = calcTherRC(Tinit_Tra_C, Ta
+                                                                    , timeLoss['tra']['T1']['p_cL']
+                                                                    + para['Tra']['Ther']['con']['w_pL_PC'] * timeLoss['tra']['T1']['p_wL_1']   # weighted losses in advanced thermal model
+                                                                    + para['Tra']['Ther']['con']['w_pL_SC'] * timeLoss['tra']['T1']['p_wL_2']   # weighted losses in advanced thermal model
+                                                                    , t_ref[start:ende]
+                                                                    , Rth_CA_tra, Cth_CA_tra)
+                [timeTher['tra']['pri'], Tinit_Tra_P] = calcTherRC(Tinit_Tra_P, Ta
+                                                                   , timeLoss['tra']['T1']['p_wL_1']
+                                                                   + para['Tra']['Ther']['con']['w_pL_CP'] * timeLoss['tra']['T1']['p_cL']      # weighted losses in advanced thermal model
+                                                                   + para['Tra']['Ther']['con']['w_pL_SP'] * timeLoss['tra']['T1']['p_wL_2']    # weighted losses in advanced thermal model
+                                                                   , t_ref[start:ende]
+                                                                   , Rth_PA_tra, Cth_PA_tra)
+                [timeTher['tra']['sec'], Tinit_Tra_S] = calcTherRC(Tinit_Tra_S, Ta
+                                                                   , timeLoss['tra']['T1']['p_wL_2']
+                                                                   + para['Tra']['Ther']['con']['w_pL_PS'] * timeLoss['tra']['T1']['p_wL_1']    # weighted losses in advanced thermal model
+                                                                   + para['Tra']['Ther']['con']['w_pL_CS'] * timeLoss['tra']['T1']['p_cL']      # weighted losses in advanced thermal model
+                                                                   , t_ref[start:ende]
+                                                                   , Rth_SA_tra, Cth_SA_tra)
+
             # Appending
             dataFel = app_fs(dataFel, timeElec, timeLoss, setup)
 
@@ -211,6 +242,10 @@ def calcTrans(top, mdl, para, setup):
                 for j in range(0, len(top.id2)):
                     Tj[j] = timeTher['sw'][top.id6[j]][-1]
                 Tcap = timeTher['cap']['C1'][-1]
+                if setup['Top']['LD_tra'] != 'NT':
+                    T_core = timeTher['tra']['core'][-1]
+                    T_pri = timeTher['tra']['pri'][-1]
+                    T_sec = timeTher['tra']['sec'][-1]
 
         # ------------------------------------------
         # Appending
@@ -240,6 +275,19 @@ def calcTrans(top, mdl, para, setup):
 
     # Capacitor
     [out['ther']['cap']['C1'], _] = calcTherRC(0, Ta, out['loss']['cap']['C1']['p_L'].values, t, Rth_JA_cap, Cth_JA_cap)
+
+    # Transformer
+    if setup['Top']['LD_tra'] != 'NT':
+        [out['ther']['tra']['core'], Tinit_Tra_C] = calcTherRC(0, Ta, out['loss']['tra']['T1']['p_cL'].values,
+                                                            t,
+                                                            Rth_CA_tra, Cth_CA_tra)
+        [out['ther']['tra']['pri'], Tinit_Tra_P] = calcTherRC(0, Ta, out['loss']['tra']['T1']['p_wL_1'].values,
+                                                           t,
+                                                           Rth_PA_tra, Cth_PA_tra)
+        [out['ther']['tra']['sec'], Tinit_Tra_S] = calcTherRC(0, Ta, out['loss']['tra']['T1']['p_wL_2'].values,
+                                                           t,
+                                                           Rth_SA_tra, Cth_SA_tra)
+
 
     # Coupling
     for i in range(0, len(top.id2)):

@@ -102,7 +102,9 @@ def calcSteady(top, mdl, para, setup):
     err = np.inf
     T_sw = np.ones((7, 1)) * setup['Dat']['stat']['Tj']
     T_ca = setup['Dat']['stat']['Tj']
-    T_tra = setup['Dat']['stat']['Tj']
+    T_core = setup['Dat']['stat']['Tj']
+    T_pri = setup['Dat']['stat']['Tj']
+    T_sec = setup['Dat']['stat']['Tj']
     T_old = setup['Dat']['stat']['Tj']
     iter1 = 0
 
@@ -195,7 +197,7 @@ def calcSteady(top, mdl, para, setup):
 
         # Transformer
         if setup['Top']['LD_tra'] != 'NT':
-            timeLoss['tra']['T1'] = calcLossTra(t_ref, timeAc, T_tra, para, setup)
+            timeLoss['tra']['T1'] = calcLossTra(t_ref, timeAc, T_core, T_pri, T_sec, para, setup)
 
         # ------------------------------------------
         # Init Thermal
@@ -252,12 +254,24 @@ def calcSteady(top, mdl, para, setup):
 
         # Transformer
         if setup['Top']['LD_tra'] != 'NT':
-            [timeTher['tra']['core'], Tinit_Tra_C] = calcTherRC(Tinit_Tra_C, Tc, timeLoss['tra']['T1']['p_cL'], t_ref[start:ende],
-                                                        Rth_CA_tra, Cth_CA_tra)
-            [timeTher['tra']['pri'], Tinit_Tra_P] = calcTherRC(Tinit_Tra_P, Tc, timeLoss['tra']['T1']['p_wL_1'], t_ref[start:ende],
-                                                                Rth_PA_tra, Cth_PA_tra)
-            [timeTher['tra']['sec'], Tinit_Tra_S] = calcTherRC(Tinit_Tra_S, Tc, timeLoss['tra']['T1']['p_wL_2'], t_ref[start:ende],
-                                                               Rth_SA_tra, Cth_SA_tra)
+            [timeTher['tra']['core'], Tinit_Tra_C] = calcTherRC(Tinit_Tra_C, Tc
+                                                                , timeLoss['tra']['T1']['p_cL']
+                                                                + para['Tra']['Ther']['con']['w_pL_PC'] * timeLoss['tra']['T1']['p_wL_1']       # weighted losses in advanced thermal model
+                                                                + para['Tra']['Ther']['con']['w_pL_SC'] * timeLoss['tra']['T1']['p_wL_2']       # weighted losses in advanced thermal model
+                                                                , t_ref[start:ende]
+                                                                , Rth_CA_tra, Cth_CA_tra)
+            [timeTher['tra']['pri'], Tinit_Tra_P] = calcTherRC(Tinit_Tra_P, Tc
+                                                               , timeLoss['tra']['T1']['p_wL_1']
+                                                               + para['Tra']['Ther']['con']['w_pL_CP'] * timeLoss['tra']['T1']['p_cL']          # weighted losses in advanced thermal model
+                                                               + para['Tra']['Ther']['con']['w_pL_SP'] * timeLoss['tra']['T1']['p_wL_2']        # weighted losses in advanced thermal model
+                                                               , t_ref[start:ende]
+                                                               , Rth_PA_tra, Cth_PA_tra)
+            [timeTher['tra']['sec'], Tinit_Tra_S] = calcTherRC(Tinit_Tra_S, Tc
+                                                               , timeLoss['tra']['T1']['p_wL_2']
+                                                               + para['Tra']['Ther']['con']['w_pL_PS'] * timeLoss['tra']['T1']['p_wL_1']        # weighted losses in advanced thermal model
+                                                               + para['Tra']['Ther']['con']['w_pL_CS'] * timeLoss['tra']['T1']['p_cL']          # weighted losses in advanced thermal model
+                                                               , t_ref[start:ende]
+                                                               , Rth_SA_tra, Cth_SA_tra)
 
         # ------------------------------------------
         # Error
@@ -274,6 +288,10 @@ def calcSteady(top, mdl, para, setup):
 
             # Capacitor
             T_ca = np.mean(timeTher['cap']['C1'])
+            if setup['Top']['LD_tra'] != 'NT':
+                T_core = np.mean(timeTher['tra']['core'])
+                T_pri = np.mean(timeTher['tra']['pri'])
+                T_sec = np.mean(timeTher['tra']['sec'])
 
         # Iteration
         iter1 = iter1 + 1
@@ -373,14 +391,24 @@ def calcSteady(top, mdl, para, setup):
 
     # Transformer
     if setup['Top']['LD_tra'] != 'NT':
-        [timeTher['tra']['core'], Tinit_Tra_C] = calcTherRC(Tinit_Tra_C, Tc, timeLoss['tra']['T1']['p_cL'], t_ref[start:ende],
-                                                            Rth_CA_tra, Cth_CA_tra)
-        [timeTher['tra']['pri'], Tinit_Tra_P] = calcTherRC(Tinit_Tra_P, Tc, timeLoss['tra']['T1']['p_wL_1'],
-                                                           t_ref[start:ende],
-                                                           Rth_PA_tra, Cth_PA_tra)
-        [timeTher['tra']['sec'], Tinit_Tra_S] = calcTherRC(Tinit_Tra_S, Tc, timeLoss['tra']['T1']['p_wL_2'],
-                                                           t_ref[start:ende],
-                                                           Rth_SA_tra, Cth_SA_tra)
+        [timeTher['tra']['core'], Tinit_Tra_C] = calcTherRC(Tinit_Tra_C, Tc
+                                                            , timeLoss['tra']['T1']['p_cL']
+                                                            + para['Tra']['Ther']['con']['w_pL_PC'] * timeLoss['tra']['T1']['p_wL_1']   # weighted losses in advanced thermal model
+                                                            + para['Tra']['Ther']['con']['w_pL_SC'] * timeLoss['tra']['T1']['p_wL_2']   # weighted losses in advanced thermal model
+                                                            , t_ref[start:ende]
+                                                            , Rth_CA_tra, Cth_CA_tra)
+        [timeTher['tra']['pri'], Tinit_Tra_P] = calcTherRC(Tinit_Tra_P, Tc
+                                                           , timeLoss['tra']['T1']['p_wL_1']
+                                                           + para['Tra']['Ther']['con']['w_pL_CP'] * timeLoss['tra']['T1']['p_cL']      # weighted losses in advanced thermal model
+                                                           + para['Tra']['Ther']['con']['w_pL_SP'] * timeLoss['tra']['T1']['p_wL_2']    # weighted losses in advanced thermal model
+                                                           , t_ref[start:ende]
+                                                           , Rth_PA_tra, Cth_PA_tra)
+        [timeTher['tra']['sec'], Tinit_Tra_S] = calcTherRC(Tinit_Tra_S, Tc
+                                                           , timeLoss['tra']['T1']['p_wL_2']
+                                                           + para['Tra']['Ther']['con']['w_pL_PS'] * timeLoss['tra']['T1']['p_wL_1']    # weighted losses in advanced thermal model
+                                                           + para['Tra']['Ther']['con']['w_pL_CS'] * timeLoss['tra']['T1']['p_cL']      # weighted losses in advanced thermal model
+                                                           , t_ref[start:ende]
+                                                           , Rth_SA_tra, Cth_SA_tra)
 
     # ==============================================================================
     # Frequency domain

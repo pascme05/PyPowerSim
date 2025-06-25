@@ -70,6 +70,7 @@ def genTF(para, setup):
     n1 = para['Tra']['Elec']['con']['n1']
     setup['Top']['n1'] = n1
     n2 = para['Tra']['Elec']['con']['n2']
+    setup['Top']['n2'] = n2
     r1 = para['Tra']['Elec']['con']['r1']
     setup['Top']['r1'] = r1
     r2 = para['Tra']['Elec']['con']['r2']
@@ -86,7 +87,10 @@ def genTF(para, setup):
     M = (n2 / n1) * LM  # Iyer p. 423
     Lm1 = (n1 / n2) * M
     Lm2 = (n2 / n1) * M
+    # For rise and fall time of output voltage waveform
     setup['Top']['Ae'] = para['Tra']['Elec']['con']['Ae']
+    setup['Top']['tf'] = para['Swi']['Elec']['con']['tf']
+    setup['Top']['tr'] = para['Swi']['Elec']['con']['tr']
 
     # ------------------------------------------
     # Output Filter
@@ -197,6 +201,11 @@ def genTF(para, setup):
         out['TF']['i_w2'] = Gi2
         out['TF']['v_2'] = ct.tf([[[-Rc2*L, -Rc2*R], [Rc2]]], [[[L, Rc2+R], [L, Rc2+R]]], inputs=['i_w2', 'e'], outputs=['v_2'])
         out['TF']['i_2'] = ct.tf([[[1], [-1]]], [[[-L, -R], [-L, -R]]], inputs=['v_2', 'e'], outputs=['i_2'])
+    elif setup['Top']['LD_tra'] == 'SS':
+        # Transformer defined via state space matrices in para-Excel
+        print("INFO: Load is a transformer, defined via state-space model")
+        out['SS']['Load'] = signal.StateSpace(para['Tra']['SS']['PORT']['A'], para['Tra']['SS']['PORT']['B'], para['Tra']['SS']['PORT']['C'], para['Tra']['SS']['PORT']['D'])
+        out['SS']['WDG'] = signal.StateSpace(para['Tra']['SS']['WDG']['A'], para['Tra']['SS']['WDG']['B'], para['Tra']['SS']['WDG']['C'], para['Tra']['SS']['WDG']['D'])
 
     ###################################################################################################################
     # Post-Processing
@@ -207,7 +216,7 @@ def genTF(para, setup):
     out['SS']['Inp'] = out['TF']['Inp'].to_ss()
     out['SS']['DC'] = out['TF']['DC'].to_ss()
     out['SS']['Out'] = out['TF']['Out'].to_ss()
-    if setup['Top']['LD_tra'] != 'RL':
+    if setup['Top']['LD_tra'] != 'RL' and setup['Top']['LD_tra'] != 'SS':
         out['SS']['Load'] = out['TF']['Load'].to_ss()
 
     

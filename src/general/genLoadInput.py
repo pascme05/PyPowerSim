@@ -95,6 +95,8 @@ def genLoadInput(setup):
     Z = complex(R, 2 * np.pi * fel * L)
     EMF = complex(E * np.cos(phiE), E * np.sin(phiE)) * Mi
 
+    if setup['Top']['LD_tra'] != 'NT':
+        n_tra = setup['Top']['n1']/setup['Top']['n2']
     # ==============================================================================
     # Printing Load
     # ==============================================================================
@@ -115,15 +117,27 @@ def genLoadInput(setup):
     # ==============================================================================
     elif setup['Exp']['output'] == 'V':
         print(f"INFO: Voltage controlled mode with Vo {setup['Dat']['stat']['Vo']:.2f} (V)")
-        Mi = setup['Dat']['stat']['Vo'] / setup['Dat']['stat']['Vdc'] * paraV
+        if setup['Top']['LD_tra'] == 'NT':
+            Mi = setup['Dat']['stat']['Vo'] / setup['Dat']['stat']['Vdc'] * paraV
+        else:
+            Mi = setup['Dat']['stat']['Vo'] / setup['Dat']['stat']['Vdc'] * paraV * n_tra
+            if Mi>1.273:
+                Mi = 1.273
 
     # ==============================================================================
     # Current is controlled
     # ==============================================================================
     elif setup['Exp']['output'] == 'I':
         print(f"INFO: Current controlled mode with Io {setup['Dat']['stat']['Io']:.2f} (A)")
-        Vo = abs(setup['Dat']['stat']['Io'] * Z * np.sqrt(2) + EMF)
-        Mi = Vo / setup['Dat']['stat']['Vdc'] * paraV
+        if setup['Top']['LD_tra'] == 'NT':
+            Vo = abs(setup['Dat']['stat']['Io'] * Z * np.sqrt(2) + EMF)
+            Mi = Vo / setup['Dat']['stat']['Vdc'] * paraV
+        else:
+            Vo = abs(setup['Dat']['stat']['Io'] * Z * np.sqrt(2) + EMF) * n_tra
+            Mi = Vo / setup['Dat']['stat']['Vdc'] * paraV
+            if Mi>1.273:
+                Mi = 1.273
+
 
     # ==============================================================================
     # Active power is controlled

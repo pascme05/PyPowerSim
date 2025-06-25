@@ -33,6 +33,7 @@ Outputs:    1) para:    output parameter file for the transformer
 # External
 # ==============================================================================
 import pandas as pd
+import numpy as np
 from os.path import join as pjoin
 
 
@@ -51,7 +52,7 @@ def loadParaTra(name, path, setup):
     # ==============================================================================
     # Variables
     # ==============================================================================
-    para = {'Elec': {}, 'Ther': {}, 'Life': {}}
+    para = {'Elec': {}, 'Ther': {}, 'Life': {}, 'SS':  {}}
     para['Elec']['con'] = {}
     para['Elec']['vec'] = {}
     para['Elec']['tab'] = {}
@@ -69,7 +70,7 @@ def loadParaTra(name, path, setup):
     tab = ['Description', 'Model', 'Symbol', 'Typical', 'Value-1', 'Value-2', 'Value-3', 'Value-4', 'Value-5',
            'Value-6']
     lenElec = 22
-    lenTher = 6
+    lenTher = 12
 
     ###################################################################################################################
     # Loading Data
@@ -85,6 +86,7 @@ def loadParaTra(name, path, setup):
     # ==============================================================================
     dataElec = pd.read_excel(filename, sheet_name='electrical')
     dataTher = pd.read_excel(filename, sheet_name='thermal')
+    dataSS = pd.read_excel(filename, sheet_name='statespace')
 
     ###################################################################################################################
     # Pre-Processing
@@ -131,6 +133,62 @@ def loadParaTra(name, path, setup):
         para['Ther']['con'][varTherNamesCon[i]] = varTherValueCon[i]
         para['Ther']['vec'][varTherNamesCon[i]] = varTherValueTab.iloc[i]
 
+    # ==============================================================================
+    # State Space
+    # ==============================================================================
+    # Ports:
+    para['SS']['PORT'] = {}
+
+    # Matrix A
+    A = dataSS.iloc[0:8, 1:9]
+    A = A.dropna(how='all').reset_index(drop=True)
+    A = A.dropna(axis=1, how='all')
+    para['SS']['PORT']['A'] = A.to_numpy()
+
+    # Vector B
+    B = dataSS.iloc[9:17, 1]
+    B = B.dropna(how='all').reset_index(drop=True)
+    B = B.to_numpy()
+    para['SS']['PORT']['B'] = B[:, np.newaxis]
+
+    # Matrix C
+    C = dataSS.iloc[18:21, 1:9]
+    C = C.dropna(how='all').reset_index(drop=True)
+    C = C.dropna(axis=1, how='all')
+    para['SS']['PORT']['C'] = C.to_numpy()
+
+    # Vector D
+    D = dataSS.iloc[22:25, 1]
+    D = D.dropna(how='all').reset_index(drop=True)
+    D = D.to_numpy()
+    para['SS']['PORT']['D'] = D[:, np.newaxis]
+
+    # Winding values:
+    para['SS']['WDG'] = {}
+
+    # Matrix A
+    A = dataSS.iloc[0:8, 15:23]
+    A = A.dropna(how='all').reset_index(drop=True)
+    A = A.dropna(axis=1, how='all')
+    para['SS']['WDG']['A'] = A.to_numpy()
+
+    # Vector B
+    B = dataSS.iloc[9:17, 15]
+    B = B.dropna(how='all').reset_index(drop=True)
+    B = B.to_numpy()
+    para['SS']['WDG']['B'] = B[:, np.newaxis]
+
+    # Matrix C
+    C = dataSS.iloc[18:21, 15:23]
+    C = C.dropna(how='all').reset_index(drop=True)
+    C = C.dropna(axis=1, how='all')
+    para['SS']['WDG']['C'] = C.to_numpy()
+
+    # Vector D
+    D = dataSS.iloc[22:25, 15]
+    D = D.dropna(how='all').reset_index(drop=True)
+    D = D.to_numpy()
+    para['SS']['WDG']['D'] = D[:, np.newaxis]
     ###################################################################################################################
     # Post-Processing
     ###################################################################################################################

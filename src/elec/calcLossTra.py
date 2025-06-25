@@ -14,9 +14,15 @@
 # Function Description
 #######################################################################################################################
 """
-This function calculates the losses of the transformer.
-Inputs:     ToDo
-Outputs:    ToDo
+This function calculates the winding and core losses of the transformer.
+Inputs:     1) t: time
+            2) timeAc: Ac waveforms
+            3) T_core: core temperature
+            4) T_pri: primary temperature
+            5) T_sec: secondary temperature
+            6) para:    parameters of the transformer
+            7) setup:   all setup variables
+Outputs:    1) out:     output array including transformer losses
 """
 
 #######################################################################################################################
@@ -39,9 +45,9 @@ from scipy.special import iv
 import matplotlib.pyplot as plt
 
 # Constants:
-vacuum_permeability = 1.25663706212e-6  # Vacuum permeability in henries per meter
+vacuum_permeability = 1.25663706212e-6  # Vacuum permeability in H/m
 copper_permeability = 0.999994  # Relative permeability of copper
-copper_resistivity = 0.00000001678  # Resistivity of copper in ohm-meters
+copper_resistivity = 0.00000001678  # Resistivity of copper in Ohm-m
 copper_temperature_coefficient = 0.004041  # Temperature coefficient for copper
 
 #######################################################################################################################
@@ -54,9 +60,11 @@ def modified_bessel_first_kind(order, z):
 def calculate_skin_depth(frequency, temperature):
     """
     Calculates the skin depth for a given frequency and temperature.
-    :param frequency: Frequency of the AC current.
-    :param temperature: Temperature in degrees Celsius.
-    :return: The calculated skin depth.
+    Inputs:
+    frequency: frequency of the AC current.
+    temperature: temperature in degrees Celsius.
+    Output:
+    calculated skin depth.
     """
     # Adjust resistivity based on temperature
     resistivity = copper_resistivity * (1 + copper_temperature_coefficient * (temperature - 20))
@@ -69,12 +77,14 @@ def calculate_skin_depth(frequency, temperature):
 def calculate_skin_factor_round_wire(conducting_diameter, outer_diameter, number_conductors, frequency, temperature):
     """
     Calculates the skin factor for a round wire.
-    :param conducting_diameter: Diameter of the conducting wire.
-    :param outer_diameter: Outer diameter of the wire.
-    :param number_conductors: Number of conductors in the wire.
-    :param frequency: Frequency of the AC current.
-    :param temperature: Temperature in degrees Celsius.
-    :return: The calculated skin factor.
+    Inputs:
+    conducting_diameter: diameter of the conducting wire.
+    outer_diameter: outer diameter of the wire.
+    number_conductors: number of conductors in the wire.
+    frequency: frequency of the AC current.
+    temperature: temperature in degrees Celsius.
+    Output:
+    calculated skin factor.
     """
     skin_depth = calculate_skin_depth(frequency, temperature)  # Calculate skin depth
     wire_radius = conducting_diameter / 2  # Calculate the radius of the conducting wire
@@ -131,7 +141,7 @@ def comp_ellint_1(x):
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcLossTra(t, timeAc, T_tr, para, setup):
+def calcLossTra(t, timeAc, T_core, T_pri, T_sec, para, setup):
 
     ###################################################################################################################
     # Initialisation
@@ -201,49 +211,6 @@ def calcLossTra(t, timeAc, T_tr, para, setup):
     Ae = para['Tra']['Elec']['con']['Ae']
     Ve = para['Tra']['Elec']['con']['Ve']
 
-    # ------------------------------------------
-    # Tabular
-    # ------------------------------------------
-
-    if setup['Top']['TraMdl'] == "tab":
-        # Steinmetz Parameter alpha
-        # Matrix
-        alpha_2d = interpolate.interp2d(para['Tra']['Elec']['vec']['T_c'].to_numpy(),
-                                      para['Tra']['Elec']['vec']['f'].to_numpy(),
-                                      para['Tra']['Elec']['tab']['alpha'].to_numpy(), kind='linear')
-        # Fundamental Value
-        alpha = alpha_2d(T_tr, fel)
-        # Static
-        alpha = alpha[0]
-
-        # Steinmetz Parameter beta
-        # Matrix
-        beta_2d = interpolate.interp2d(para['Tra']['Elec']['vec']['T_c'].to_numpy(),
-                                        para['Tra']['Elec']['vec']['f'].to_numpy(),
-                                        para['Tra']['Elec']['tab']['beta'].to_numpy(), kind='linear')
-        # Fundamental Value
-        beta = beta_2d(T_tr, fel)
-        # Static
-        beta = beta[0]
-
-        # Pvsin for calculation of Steinmetz k
-        # Matrix
-        Pvsin_2d = interpolate.interp2d(para['Tra']['Elec']['vec']['T_c'].to_numpy(),
-                                       para['Tra']['Elec']['vec']['f'].to_numpy(),
-                                       para['Tra']['Elec']['tab']['Pvsin'].to_numpy(), kind='linear')
-        # Fundamental Value
-        Pvsin = Pvsin_2d(T_tr, fel)
-        # Static
-        Pvsin = Pvsin[0] * 1000     # kW --> W
-    
-    # ------------------------------------------
-    # Default
-    # ------------------------------------------
-    else:
-        alpha = para['Tra']['Elec']['con']['alpha']
-        beta = para['Tra']['Elec']['con']['beta']
-        Pvsin = para['Tra']['Elec']['con']['Pvsin'] * 1000     # kW --> W
-
     ###################################################################################################################
     # Calculation
     ###################################################################################################################
@@ -252,18 +219,27 @@ def calcLossTra(t, timeAc, T_tr, para, setup):
     # Winding losses
     # ==============================================================================
 
-    # Calculation for different frequency components, as current is non-sinusoidal:
+    """
+    # Basic Losses approach:
+    p_wL = r1*I_w1_rms_sq + r2*I_w2_rms_sq
+    """
+
+    # Better approach: Calculation for different frequency components, as current is non-sinusoidal, including skin effect:
     n = len(i_w1)
     dT = 1 / setup['Exp']['fsim']
 
     frequencies = np.fft.fftfreq(n, dT)  # Frequency-vector
-    fft_iw1 = np.fft.fft(i_w1)  # FFT
-    fft_iw2 = np.fft.fft(i_w2)  # FFT
+    fft_iw1 = np.fft.fft(i_w1.astype(float))  # FFT
+    fft_iw2 = np.fft.fft(i_w2.astype(float))  # FFT
 
     half_n = n // 2
     frequencies = frequencies[:half_n]
     magnitude_iw1 = np.abs(fft_iw1[:half_n]) * (2 / n)
     magnitude_iw2 = np.abs(fft_iw2[:half_n]) * (2 / n)
+
+    # plt.figure()
+    # plt.plot(frequencies, magnitude_iw2)
+    # plt.show()
 
     p_wL1_plusSkin_fft = 0
     p_wL2_plusSkin_fft = 0
@@ -283,9 +259,10 @@ def calcLossTra(t, timeAc, T_tr, para, setup):
             if fi == 0:
                 Fi_skin = 1
             else:
-                Fi_skin = calculate_skin_factor_round_wire(conducting_diameter, outer_diameter, N_cond, fi, T_tr)  # Calculate skin factor
-            p_wL1_plusSkin_fft = p_wL1_plusSkin_fft + (r1 * Ii_w1_rms_sq) * Fi_skin
-            p_wL2_plusSkin_fft = p_wL2_plusSkin_fft + (r2 * Ii_w2_rms_sq) * Fi_skin
+                Fi_skin_pri = calculate_skin_factor_round_wire(conducting_diameter, outer_diameter, N_cond, fi, T_pri)  # Calculate skin factor
+                Fi_skin_sec = calculate_skin_factor_round_wire(conducting_diameter, outer_diameter, N_cond, fi, T_sec)  # Calculate skin factor
+            p_wL1_plusSkin_fft = p_wL1_plusSkin_fft + (r1 * Ii_w1_rms_sq) * Fi_skin_pri
+            p_wL2_plusSkin_fft = p_wL2_plusSkin_fft + (r2 * Ii_w2_rms_sq) * Fi_skin_sec
     else:
         # Rectangular wire
         # Skin effect (Zacharias, InductiveDevicesInPE, chapter 9, Kutkut's method)
@@ -297,11 +274,16 @@ def calcLossTra(t, timeAc, T_tr, para, setup):
         a_prime = min(conducting_width, conducting_height) / 2  # Half of the smaller dimension
 
         # Adjust resistivity based on temperature
-        resistivity = copper_resistivity * (1 + copper_temperature_coefficient * (T_tr - 20))
+        resistivity_pri = copper_resistivity * (1 + copper_temperature_coefficient * (T_pri - 20))
+        resistivity_sec = copper_resistivity * (1 + copper_temperature_coefficient * (T_sec - 20))
 
-        # Calculate frequency parameters
-        fl = 3.22 * resistivity / (8 * vacuum_permeability * b_prime * a_prime)  # Low frequency parameter
-        fh = (math.pi ** 2 * resistivity) / (4 * vacuum_permeability * (a_prime ** 2)) * (
+        # Calculate frequency parameters (primary)
+        fl_pri = 3.22 * resistivity_pri / (8 * vacuum_permeability * b_prime * a_prime)  # Low frequency parameter
+        fh_pri = (math.pi ** 2 * resistivity_pri) / (4 * vacuum_permeability * (a_prime ** 2)) * (
+                comp_ellint_1(math.sqrt(1 - (a_prime ** 2) / (b_prime ** 2))) ** -2)  # High frequency parameter
+        # Calculate frequency parameters (secondary)
+        fl_sec = 3.22 * resistivity_sec / (8 * vacuum_permeability * b_prime * a_prime)  # Low frequency parameter
+        fh_sec = (math.pi ** 2 * resistivity_sec) / (4 * vacuum_permeability * (a_prime ** 2)) * (
                 comp_ellint_1(math.sqrt(1 - (a_prime ** 2) / (b_prime ** 2))) ** -2)  # High frequency parameter
 
         # Constants for resistance factor calculation
@@ -309,23 +291,14 @@ def calcLossTra(t, timeAc, T_tr, para, setup):
         beta = 5.5
         alpha = 2
 
-        # Basic:
-        p_wL = r1*I_w1_rms_sq + r2*I_w2_rms_sq
-
-        # Calculate AC resistance factor for one rms value
-        F_skin = (1 + (fel / fl) ** alpha + (fel / fh) ** beta) ** (1 / gamma)
-
-        # Losses
-        p_wL_plusSkin = (r1*I_w1_rms_sq + r2*I_w2_rms_sq) + (r1*I_w1_rms_sq + r2*I_w2_rms_sq)*(F_skin - 1)                 # Zacharias p. 86
-
-
         for i in range(len(frequencies)):
             Ii_w1_rms_sq = (magnitude_iw1[i] / np.sqrt(2))**2
             Ii_w2_rms_sq = (magnitude_iw2[i] / np.sqrt(2))**2
             fi = frequencies[i]
-            Fi_skin = (1 + (fi / fl) ** alpha + (fi / fh) ** beta) ** (1 / gamma)
-            p_wL1_plusSkin_fft = p_wL1_plusSkin_fft + (r1 * Ii_w1_rms_sq) * Fi_skin
-            p_wL2_plusSkin_fft = p_wL2_plusSkin_fft + (r2 * Ii_w2_rms_sq) * Fi_skin
+            Fi_skin_pri = (1 + (fi / fl_pri) ** alpha + (fi / fh_pri) ** beta) ** (1 / gamma)
+            Fi_skin_sec = (1 + (fi / fl_sec) ** alpha + (fi / fh_sec) ** beta) ** (1 / gamma)
+            p_wL1_plusSkin_fft = p_wL1_plusSkin_fft + (r1 * Ii_w1_rms_sq) * Fi_skin_pri
+            p_wL2_plusSkin_fft = p_wL2_plusSkin_fft + (r2 * Ii_w2_rms_sq) * Fi_skin_sec
 
     # Proximity losses:
     p_w_prox = 0        # not considered so far, as strongly dependent on geometry, can be implemented via tabular ac-resistance in the future
@@ -333,16 +306,61 @@ def calcLossTra(t, timeAc, T_tr, para, setup):
     # Total winding losses
     p_wL_total_fft = p_wL1_plusSkin_fft + p_wL2_plusSkin_fft + p_w_prox
 
+
     # ==============================================================================
     # Core losses
     # ==============================================================================
+    # ------------------------------------------
+    # Tabular parameter interpolation
+    # ------------------------------------------
+
+    if setup['Top']['TraMdl'] == "tab":
+        # Steinmetz Parameter alpha
+        # Matrix
+        alpha_2d = interpolate.interp2d(para['Tra']['Elec']['vec']['T_c'].to_numpy(),
+                                        para['Tra']['Elec']['vec']['f'].to_numpy(),
+                                        para['Tra']['Elec']['tab']['alpha'].to_numpy(), kind='linear')
+        # Fundamental Value
+        alpha = alpha_2d(T_core, fel)
+        # Static
+        alpha = alpha[0]
+
+        # Steinmetz Parameter beta
+        # Matrix
+        beta_2d = interpolate.interp2d(para['Tra']['Elec']['vec']['T_c'].to_numpy(),
+                                       para['Tra']['Elec']['vec']['f'].to_numpy(),
+                                       para['Tra']['Elec']['tab']['beta'].to_numpy(), kind='linear')
+        # Fundamental Value
+        beta = beta_2d(T_core, fel)
+        # Static
+        beta = beta[0]
+
+        # Pvsin for calculation of Steinmetz k
+        # Matrix
+        Pvsin_2d = interpolate.interp2d(para['Tra']['Elec']['vec']['T_c'].to_numpy(),
+                                        para['Tra']['Elec']['vec']['f'].to_numpy(),
+                                        para['Tra']['Elec']['tab']['Pvsin'].to_numpy(), kind='linear')
+        # Fundamental Value
+        Pvsin = Pvsin_2d(T_core, fel)
+        # Static
+        Pvsin = Pvsin[0] * 1000  # kW --> W
+
+    # ------------------------------------------
+    # Default
+    # ------------------------------------------
+    else:
+        alpha = para['Tra']['Elec']['con']['alpha']
+        beta = para['Tra']['Elec']['con']['beta']
+        Pvsin = para['Tra']['Elec']['con']['Pvsin'] * 1000  # kW --> W
+
+
     # Modified Steinmetz-Equation (MSE)
     B_pk = np.max(B)
     B_pk2pk = np.max(B) - np.min(B)
-
+    B_ds = 0.2  # from Datasheet
     f_eq = (2/(B_pk2pk**2*np.pi**2)) * integrate.trapezoid(dB**2, dx=dt)
-    k = Pvsin/(f_eq**(alpha-1)*B_pk**beta*fel)
-    p_cL = (k*f_eq**(alpha-1)*B_pk**beta*fel)*Ve
+    k = Pvsin/(f_eq**(alpha-1)*(B_ds**beta)*fel)
+    p_cL = (k*f_eq**(alpha-1)*(B_pk**beta)*fel)*Ve
 
     # Create vectors of constant power loss
     p_wL1_plusSkin_fft = p_wL1_plusSkin_fft * np.ones(np.shape(i_w1))

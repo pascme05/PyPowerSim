@@ -79,7 +79,7 @@ def plotMag(time, freq, setup, para):
     phiE = setup['Top']['phiE']
     down = int(setup['Dat']['stat']['cyc']) - 2
     down2 = int(fsim / fs / 200)
-    if down2 < 1:
+    if down2 < 1 or setup['Exp']['bDS'] == 0:
         down2 = 1
 
     # ==============================================================================
@@ -148,24 +148,44 @@ def plotMag(time, freq, setup, para):
 
     # Flux density
     ax = plt.subplot(2, 2, 3)
-    plt.plot(t[::down2], timeAc['B'][::down2], 'r')
-    plt.ylabel("$B(t)$ (T)")
-    plt.title('Transformer core flux density')
+    if setup['Exp']['type'] == 2:
+        plt.plot(time['t'][::down2], time['Loss']['tra']['T1']['p_cL'][::down2], 'g')
+        plt.plot(time['t'][::down2], time['Loss']['tra']['T1']['p_wL_1'][::down2], 'b')
+        plt.plot(time['t'][::down2], time['Loss']['tra']['T1']['p_wL_2'][::down2], 'r')
+    else:
+        plt.plot(t[::down2], time['Loss']['tra']['T1']['p_cL'][::down2], 'g')
+        plt.plot(t[::down2], time['Loss']['tra']['T1']['p_wL_1'][::down2], 'b')
+        plt.plot(t[::down2], time['Loss']['tra']['T1']['p_wL_2'][::down2], 'r')
+    plt.ylabel("$Losses$ (W)")
+    plt.title('Transformer losses (averaged)')
     plt.xlabel('time in (sec)')
-    plt.legend(["$B(t)$"], loc='upper right')
     plt.grid('on')
+    plt.legend(["Core loss", "Primary winding loss", "Secondary winding loss"], loc='upper right')
 
     ax = plt.subplot(2, 2, 4)
-    plt.plot(t[::down2], time['Ther']['tra']['core'][::down2], 'g')
-    plt.plot(t[::down2], time['Ther']['tra']['pri'][::down2], 'b')
-    plt.plot(t[::down2], time['Ther']['tra']['sec'][::down2], 'r')
+    if setup['Exp']['type'] == 2:
+        plt.plot(time['t'][::down2], time['Ther']['tra']['core'][::down2], 'g')
+        plt.plot(time['t'][::down2], time['Ther']['tra']['pri'][::down2], 'b')
+        plt.plot(time['t'][::down2], time['Ther']['tra']['sec'][::down2], 'r')
+    else:
+        plt.plot(t[::down2], time['Ther']['tra']['core'][::down2], 'g')
+        plt.plot(t[::down2], time['Ther']['tra']['pri'][::down2], 'b')
+        plt.plot(t[::down2], time['Ther']['tra']['sec'][::down2], 'r')
     plt.ylabel("$Temperature$ (°C)")
     plt.title('Transformer temperatures')
     plt.xlabel('time in (sec)')
     plt.legend(["Core temperature", "Primary winding temperature", "Secondary winding temperature"], loc='upper right')
     plt.grid('on')
 
+    plt.figure()
+    plt.plot(t[::down2], timeAc['B'][::down2], 'r')
+    plt.ylabel("$B(t)$ (T)")
+    plt.title('Transformer core flux density')
+    plt.xlabel('time in (sec)')
+    plt.legend(["$B(t)$"], loc='upper right')
+    plt.grid('on')
     plt.show()
+
     ###################################################################################################################
     # MSG OUT
     ###################################################################################################################

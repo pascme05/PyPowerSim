@@ -1459,13 +1459,44 @@ class classB6:
         # AC Side
         # ------------------------------------------
         # Inverter Output
+        # including rise and fall times of voltages
+        rise_time = np.max([setup['Top']['tf'], setup['Top']['tr']])
+        fall_time = rise_time
         if setup['Exp']['type'] == 3:
             for j in range(0, len(self.id1)):
                 v0[self.id1[j]] = 0.5 * s[self.id1[j]] * self.Vdc
+                # Rise and fall times
+
+                for ii in range(len(v0[self.id1[j]])):
+                    if ii == 0:
+                        continue
+                    if v0[self.id1[j]][ii] - v0[self.id1[j]][ii - 1] == setup['Dat']['stat']['Vdc']:  # Rising edge
+                        rise_start = ii
+                        rise_end = min(ii + int(rise_time * setup['Exp']['fsim']), len(v0[self.id1[j]]))
+                        v0[self.id1[j]][rise_start:rise_end] = np.linspace(v0[self.id1[j]][ii - 1], v0[self.id1[j]][ii], rise_end - rise_start)
+                    elif v0[self.id1[j]][ii] - v0[self.id1[j]][ii - 1] == -setup['Dat']['stat']['Vdc']:  # Falling edge
+                        fall_start = ii
+                        fall_end = min(ii + int(fall_time * setup['Exp']['fsim']), len(v0[self.id1[j]]))
+                        v0[self.id1[j]][fall_start:fall_end] = np.linspace(v0[self.id1[j]][ii - 1], v0[self.id1[j]][ii], fall_end - fall_start)
+
             v_n0 = np.zeros(len(v0[self.id1[0]]))
         else:
             for j in range(0, len(self.id1)):
                 v0[self.id1[j]] = 0.5 * (s[self.id1[j]] - np.mean(s[self.id1[j]])) * self.Vdc
+                # Rise and fall times
+
+                for ii in range(len(v0[self.id1[j]])):
+                    if ii == 0:
+                        continue
+                    if v0[self.id1[j]][ii] - v0[self.id1[j]][ii - 1] == setup['Dat']['stat']['Vdc']:  # Rising edge
+                        rise_start = ii
+                        rise_end = min(ii + int(rise_time * setup['Exp']['fsim']), len(v0[self.id1[j]]))
+                        v0[self.id1[j]][rise_start:rise_end] = np.linspace(v0[self.id1[j]][ii - 1], v0[self.id1[j]][ii], rise_end - rise_start)
+                    elif v0[self.id1[j]][ii] - v0[self.id1[j]][ii - 1] == -setup['Dat']['stat']['Vdc']:  # Falling edge
+                        fall_start = ii
+                        fall_end = min(ii + int(fall_time * setup['Exp']['fsim']), len(v0[self.id1[j]]))
+                        v0[self.id1[j]][fall_start:fall_end] = np.linspace(v0[self.id1[j]][ii - 1], v0[self.id1[j]][ii], fall_end - fall_start)
+
             v_n0 = 1 / 3 * (v0['A'] + v0['B'] + v0['C'])
 
         # Phase Voltages

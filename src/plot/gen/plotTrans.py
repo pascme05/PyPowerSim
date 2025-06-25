@@ -168,7 +168,7 @@ def plotTrans(time, freq, setup):
 
     # Freq-Domain
     pl.subplot(gs[2, 0])
-    pl.stem(f[::down][0:50], freqSw['Sa'][::down][0:50])
+    pl.stem(f[0:50], freqSw['Sa'][0:50]) #TODO: Fix bug with downsampling
     pl.xlim(0, 50)
     pl.title('Frequency-domain Switching Function')
     pl.xlabel("$f/f_{1}$ (Hz/Hz)")
@@ -191,7 +191,7 @@ def plotTrans(time, freq, setup):
 
     # Freq-Domain
     pl.subplot(gs[2, 1])
-    pl.stem(f[::down][0:50], freqSw['Xas'][::down][0:50])
+    pl.stem(f[0:50], freqSw['Xas'][0:50])
     pl.xlim(0, 50)
     pl.title('Frequency-domain Sampled Reference')
     pl.xlabel("$f/f_{1}$ (Hz/Hz)")
@@ -373,6 +373,33 @@ def plotTrans(time, freq, setup):
     axs[1].set_xlabel('Time (sec)')
     axs[1].legend(['T1_j', 'T1_d', 'T1_c', 'T2_j', 'T2_d', 'T2_c', 'Ta'])
     axs[1].grid(True)
+
+    # Transformer temperatures
+    if setup['Top']['LD_tra'] != 'NT':
+        fig, axs = plt.subplots(2, 1, sharex=True)
+        txt = ("Time domain thermal for PWM control with: $V_{dc}$=" + str(Vdc) + "V, $M_{i}$=" + str(Mi) +
+               ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg, $\phi_{E}=$" + str(int(phiE)) +
+               "deg, $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg")
+        plt.suptitle(txt, size=18)
+        plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
+        # Losses
+        axs[0].plot(tel[::down2], timeLoss['tra']['T1']['p_cL'][::down2], 'g',
+                    tel[::down2], timeLoss['tra']['T1']['p_wL_1'][::down2], 'b',
+                    tel[::down2], timeLoss['tra']['T1']['p_wL_2'][::down2], 'r')
+        axs[0].set_title('Losses Transformer')
+        axs[0].set_ylabel('Power (W)')
+        axs[0].legend(['Core', 'Primary Winding', 'Secondary Winding'])
+        axs[0].grid(True)
+        # Temps
+        axs[1].plot(tel[::down2], timeTher['tra']['core'][::down2], color='g')
+        axs[1].plot(tel[::down2], timeTher['tra']['pri'][::down2], color='b')
+        axs[1].plot(tel[::down2], timeTher['tra']['sec'][::down2], color='r')
+        axs[1].plot(tel[::down2], Ta * np.ones(np.size(tel[::down2])), color='k', linestyle='-')
+        axs[1].set_title('Temperatures Transformer')
+        axs[1].set_ylabel('Temperature (°C)')
+        axs[1].set_xlabel('Time (sec)')
+        axs[1].legend(['Core', 'Primary Winding', 'Secondary Winding', 'Ta'])
+        axs[1].grid(True)
 
     if setup['Top']['LD_tra'] == 'NT':
         plt.show()

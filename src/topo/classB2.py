@@ -97,7 +97,7 @@ class classB2:
     ###################################################################################################################
     # Init Data
     ###################################################################################################################
-    def initData(self):
+    def initData(self, setup):
         # ==============================================================================
         # Description
         # ==============================================================================
@@ -161,12 +161,17 @@ class classB2:
         # ==============================================================================
         # Transformer
         # ==============================================================================
+        if setup['Top']['LD_tra'] != 'NT':
+            # ------------------------------------------
+            # Losses
+            # ------------------------------------------
+            data['loss']['tra'] = {}
+            data['loss']['tra']['T1'] = pd.DataFrame(columns=['p_cL', 'p_wL_1', 'p_wL_2'])
 
-        # ------------------------------------------
-        # Losses
-        # ------------------------------------------
-        data['loss']['tra'] = {}
-        data['loss']['tra']['T1'] = pd.DataFrame(columns=['p_cL', 'p_wL_1', 'p_wL_2'])
+            # ------------------------------------------
+            # Thermal
+            # ------------------------------------------
+            data['ther']['tra'] = pd.DataFrame(columns=['core', 'pri', 'sec'])
 
         # ==============================================================================
         # Return
@@ -848,6 +853,21 @@ class classB2:
         # ------------------------------------------
         # Inverter Output
         v_a0 = 0.5 * s['A'] * self.Vdc
+
+        # Rise and Fall time of output voltage
+        rise_time = np.max([setup['Top']['tf'], setup['Top']['tr']])
+        fall_time = rise_time
+        for i in range(len(v_a0)):
+            if i == 0:
+                continue
+            if v_a0[i] - v_a0[i - 1] == setup['Dat']['stat']['Vdc']:  # Rising edge
+                rise_start = i
+                rise_end = min(i + int(rise_time * setup['Exp']['fsim']), len(v_a0))
+                v_a0[rise_start:rise_end] = np.linspace(v_a0[i - 1], v_a0[i], rise_end - rise_start)
+            elif v_a0[i] - v_a0[i - 1] == -setup['Dat']['stat']['Vdc']:  # Falling edge
+                fall_start = i
+                fall_end = min(i + int(fall_time * setup['Exp']['fsim']), len(v_a0))
+                v_a0[fall_start:fall_end] = np.linspace(v_a0[i - 1], v_a0[i], fall_end - fall_start)
 
         # Filter Output
         if setup['Top']['outFilter'] == 0:
