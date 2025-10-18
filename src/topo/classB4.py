@@ -438,8 +438,8 @@ class classB4:
         # ------------------------------------------
         # Sequence
         # ------------------------------------------
-        s['A'] = signal.square(2 * np.pi * self.fel * t_ref + np.pi / 2 - alpha, duty=0.5)
-        s['B'] = signal.square(2 * np.pi * self.fel * t_ref + np.pi / 2 + alpha, duty=0.5)
+        s['A'] = signal.square(2 * np.pi * self.fel * t_ref, duty=0.5)
+        s['B'] = signal.square(2 * np.pi * self.fel * t_ref - (np.pi - 2*alpha), duty=0.5)
 
         # ------------------------------------------
         # Output
@@ -926,7 +926,7 @@ class classB4:
         # Initial Conditions
         # ------------------------------------------
         if not init:
-            init = {'inp': 0, 'out': 0, 'dc': 0, 'load': 0}
+            init = {'inp': [0, 0], 'out': 0, 'dc': 0, 'load': 0}
 
         # ==============================================================================
         # Calculation

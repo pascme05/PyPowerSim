@@ -1440,7 +1440,7 @@ class classB6:
         # Initial Conditions
         # ------------------------------------------
         if not init:
-            init = {'inp': 0, 'out': [0, 0, 0], 'dc': 0, 'load': 0}
+            init = {'inp': [0, 0], 'out': [0, 0, 0], 'dc': 0, 'load': 0}
 
         # ------------------------------------------
         # Parameters
