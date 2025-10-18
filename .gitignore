@@ -17,3 +17,4 @@ __pycache__
 /docu/literature/Advanced_PWM_and_Predictive_ControlAn_Overview.pdf
 /docu/literature/Optimal_Control_of_Medium-Voltage_DrivesAn_Overview.pdf
 .idea
+venv
