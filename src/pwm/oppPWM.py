@@ -5,7 +5,7 @@
 # File:         oppPWM
 # Date:         27.04.2024
 # Author:       Dr. Daniel Glose
-# Version:      V.1.0
+# Version:      V.1.1
 # Copyright:    Pascal Schirmer, Daniel Glose
 #######################################################################################################################
 #######################################################################################################################
@@ -23,6 +23,9 @@ Inputs:     1) kmax:        maximum order of harmonics, which are taken into acc
 Outputs:    1) ang_total:   total vector of switching angles (rad)
             2) val_total:   total vector of switching states (-)
             3) wthd:        weighted total harmonic distortion
+
+V1.1: 16.12.2025, Pascal Schirmer
+- Added timing summary (total execution time) for oppPWM
 """
 
 #######################################################################################################################
@@ -37,6 +40,7 @@ Outputs:    1) ang_total:   total vector of switching angles (rad)
 # ==============================================================================
 import numpy as np
 from scipy.optimize import LinearConstraint, NonlinearConstraint, basinhopping
+import time
 
 
 #######################################################################################################################
@@ -181,6 +185,9 @@ def oppPWM(kmax, p0, Mi, sym, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
+    # ==============================================================================
+    # Variables
+    # ==============================================================================
     p_deg = np.int16((p0 - 1)/2)                                                                                        # Degrees of freedom (quarter wave symmetry)
     bmin = 0                                                                                                            # Minimum angle between switching instances (tbd.)
     lbmin = bmin                                                                                                        # Minimum angle (lower bound for optimisation)
@@ -188,9 +195,14 @@ def oppPWM(kmax, p0, Mi, sym, setup):
     alpha0 = [lbmin]*p_deg                                                                                              # Starting point of alpha-values for optimisation
     ub = [ubmax]*p_deg                                                                                                  # Upper bound list
     lb = [lbmin]*p_deg                                                                                                  # Lower bound list
-    Mi_iter = np.linspace(0, Mi, 20)                                                                                    # Iteration for Modulation Index
+    Mi_iter = np.linspace(0, Mi, 20)                                                                         # Iteration for Modulation Index
     bounds = list(zip(lb, ub))                                                                                          # Bounds as a list of tuples
     opt_result = []
+
+    # ==============================================================================
+    # Start total timer
+    # ==============================================================================
+    total_start = time.perf_counter()
 
     ###################################################################################################################
     # Pre-processing
@@ -222,13 +234,13 @@ def oppPWM(kmax, p0, Mi, sym, setup):
             nonlinear_constraint = NonlinearConstraint(eq_B2, lb=Mi, ub=Mi)
 
         # ------------------------------------------
-        # B2
+        # B4
         # ------------------------------------------
         elif setup['Top']['sourceType'] == 'B4':
             nonlinear_constraint = NonlinearConstraint(eq_B4, lb=Mi, ub=Mi)
 
         # ------------------------------------------
-        # B2
+        # B6
         # ------------------------------------------
         else:
             nonlinear_constraint = NonlinearConstraint(eq_B6, lb=Mi, ub=Mi)
@@ -286,6 +298,23 @@ def oppPWM(kmax, p0, Mi, sym, setup):
     # Distortion
     # ==============================================================================
     wthd = opt_result.fun
+
+    ###################################################################################################################
+    # Timing
+    ###################################################################################################################
+    # ==============================================================================
+    # End total timer
+    # ==============================================================================
+    total_end = time.perf_counter()
+    total_elapsed = total_end - total_start
+
+    # ==============================================================================
+    # Print timing summary (total only)
+    # ==============================================================================
+    print("=======================================================================")
+    print('oppPWM TIMING SUMMARY (seconds):')
+    print(f"  {'Total':15s}: {total_elapsed:.6f}")
+    print("=======================================================================")
 
     ###################################################################################################################
     # Return
