@@ -18,3 +18,5 @@ __pycache__
 /docu/literature/Optimal_Control_of_Medium-Voltage_DrivesAn_Overview.pdf
 .idea
 venv
+!/setup/journal/
+!/setup/journal/**
