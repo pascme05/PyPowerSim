@@ -1047,9 +1047,9 @@ class classB4:
         # ------------------------------------------
         # AC Side (Line-to-Neutral)
         # ------------------------------------------
-        V_ab_eff = self.Vdc * np.sqrt(2 / np.pi * Mi) / 2
-        V_ab_v1_eff = 1 / np.sqrt(2) * self.Vdc * Mi / 2
-        V_ab_thd = self.Vdc * np.sqrt(1 - np.pi / 4 * Mi) / 2
+        V_ab_eff = self.Vdc * np.sqrt(2 / np.pi * Mi)
+        V_ab_v1_eff = 1 / np.sqrt(2) * self.Vdc * Mi
+        V_ab_thd = V_ab_eff * np.sqrt(1 - np.pi / 4 * Mi)
         I_a_thd = 1 / np.sqrt(48) * self.Vdc * self.Ts / L * np.sqrt(3 / 8 * Mi ** 4 - 8 / (3 * np.pi) * Mi ** 3 + 0.5 * Mi ** 2)
 
         # ------------------------------------------

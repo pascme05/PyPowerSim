@@ -1598,7 +1598,7 @@ class classB6:
         # Voltages
         V_a_eff = self.Vdc * np.sqrt(Mi / (np.sqrt(3) * np.pi))
         V_a_v1_eff = 1 / np.sqrt(2) * self.Vdc / 2 * Mi
-        V_a_thd = self.Vdc / 2 * np.sqrt(1 - Mi * (np.sqrt(3) * np.pi) / 8)
+        V_a_thd = V_a_eff * np.sqrt(1 - Mi * (np.sqrt(3) * np.pi) / 8)
 
         # Currents
         I_a_eff = V_a_eff / Z

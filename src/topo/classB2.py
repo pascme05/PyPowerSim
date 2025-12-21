@@ -950,7 +950,7 @@ class classB2:
         # ------------------------------------------
         V_a0_eff = self.Vdc / 2
         V_a0_v1_eff = 1 / np.sqrt(2) * self.Vdc / 2 * Mi
-        V_a0_thd = self.Vdc / 2 * np.sqrt(1 - Mi ** 2 / 2)
+        V_a0_thd = V_a0_eff * np.sqrt(1 - Mi ** 2 / 2)
         I_a_eff = V_a0_eff / Z
         I_a_v1_eff = V_a0_v1_eff / Z
         I_a_thd = 1 / np.sqrt(48) * self.Vdc / 2 * self.Ts / L * np.sqrt(3 / 8 * Mi ** 4 - Mi ** 2 + 1)
