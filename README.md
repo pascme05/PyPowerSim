@@ -18,8 +18,8 @@ the presented architectures and approaches. Please cite the following paper when
 using the PyPowerSim toolkit. When using the B6 architecture and the waveform analysis 
 options please also refer to the following article:
 
-Schirmer, Pascal A., Daniel Glose, and Ulrich Ammann. "Zero-voltage and frequency pattern 
-selection for DC-link loss minimization in PWM-VSI drives." Electrical Engineering (2022): 1-10.
+Pascal A. Schirmer, Daniel Glose, PyPowerSim: A Python toolkit for analysis of waveform distortions, power losses, and self-heating of standard converter topologies,
+Computers and Electrical Engineering, Volume 132, 2026, 110934, ISSN 0045-7906, https://doi.org/10.1016/j.compeleceng.2026.110934.
 
 
 # Dependencies
