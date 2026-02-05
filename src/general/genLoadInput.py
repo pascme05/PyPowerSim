@@ -58,6 +58,7 @@ def genLoadInput(setup):
     Mi = setup['Dat']['stat']['Mi']
     Vdc = setup['Dat']['stat']['Vdc']
     phiO = math.radians(setup['Dat']['stat']['phi'])
+    phiDAB = math.radians(setup['Dat']['stat']['PhiDAB'])
 
     # ------------------------------------------
     # Load
@@ -72,6 +73,16 @@ def genLoadInput(setup):
     # ------------------------------------------
     fel = setup['Top']['fel']
 
+    # ------------------------------------------
+    # DCDC
+    # ------------------------------------------
+    fs = setup['Par']['PWM']['fs']
+    Ntr = setup['Top']['n']
+    omega = 2 * np.pi * fs
+    Vo_max = Vdc/Ntr 
+    Po_max = Ntr * Vdc * Vo_max / (4 * omega* L) * np.pi
+    Io_max = Vo_max / R
+
     # ==============================================================================
     # Topology
     # ==============================================================================
@@ -81,6 +92,8 @@ def genLoadInput(setup):
         paraV = 1
     elif setup['Top']['sourceType'] == "B6":
         paraV = 2
+    elif setup['Top']['sourceType'] == "DAB":
+        paraV = 1
     else:
         paraV = 2
 
@@ -90,10 +103,16 @@ def genLoadInput(setup):
     # ==============================================================================
     # Load Parameters
     # ==============================================================================
-    magZ = np.sqrt(R ** 2 + (2 * np.pi * fel * L) ** 2)
-    angZ = math.atan2(2 * np.pi * fel * L, R)
-    Z = complex(R, 2 * np.pi * fel * L)
-    EMF = complex(E * np.cos(phiE), E * np.sin(phiE)) * Mi
+    if setup['Top']['sourceType'] == "DAB":
+        magZ = R
+        angZ = 0
+        Z = R
+        EMF = 0
+    else:
+        magZ = np.sqrt(R ** 2 + (2 * np.pi * fel * L) ** 2)
+        angZ = math.atan2(2 * np.pi * fel * L, R)
+        Z = complex(R, 2 * np.pi * fel * L)
+        EMF = complex(E * np.cos(phiE), E * np.sin(phiE)) * Mi
 
     # ==============================================================================
     # Printing Load
@@ -107,47 +126,98 @@ def genLoadInput(setup):
     # ==============================================================================
     # Modulation index is controlled
     # ==============================================================================
-    if setup['Exp']['output'] == 'Mi':
-        print(f"INFO: Modulation index controlled mode with Mi {setup['Dat']['stat']['Mi']:.2f} (p.u.)")
+    if setup['Exp']['output'] == 'Mi' or setup['Exp']['output'] == 'Phi':
+        if setup['Top']['sourceType'] == "DAB":
+            Mi = 0.5
+            Po = (Ntr * Vdc * Vo_max) / (omega * L) * (phiDAB - phiDAB**2 / np.pi)
+            Vo = min(np.sqrt(Po * R), Vo_max)
+            print(f"INFO: DAB phase-shift controlled mode with Phi0 {math.degrees(phiDAB):.2f} (deg) and Mi={Mi:.2f} (p.u.)")
+        else:
+            print(f"INFO: Modulation index controlled mode with Mi {setup['Dat']['stat']['Mi']:.2f} (p.u.)")
 
     # ==============================================================================
     # Voltage is controlled
     # ==============================================================================
     elif setup['Exp']['output'] == 'V':
         print(f"INFO: Voltage controlled mode with Vo {setup['Dat']['stat']['Vo']:.2f} (V)")
-        Mi = setup['Dat']['stat']['Vo'] / setup['Dat']['stat']['Vdc'] * paraV
+        if setup['Top']['sourceType'] == "DAB":
+            Mi = 0.5
+            Vo     = min(setup['Dat']['stat']['Vo'], Vo_max)
+            Io     = Vo / R
+            Po     = Vo * Io
+            K  = (Ntr * Vdc * Vo) / (omega * L)
+            Pn = Po / K if K > 0 else 0.0
+            disc = max(1 - 4 * Pn / np.pi, 0.0)
+            phiDAB  = (np.pi / 2) * (1 - np.sqrt(disc))
+        else:
+            Mi = setup['Dat']['stat']['Vo'] / setup['Dat']['stat']['Vdc'] * paraV
 
     # ==============================================================================
     # Current is controlled
     # ==============================================================================
     elif setup['Exp']['output'] == 'I':
         print(f"INFO: Current controlled mode with Io {setup['Dat']['stat']['Io']:.2f} (A)")
-        Vo = abs(setup['Dat']['stat']['Io'] * Z * np.sqrt(2) + EMF)
-        Mi = Vo / setup['Dat']['stat']['Vdc'] * paraV
+        if setup['Top']['sourceType'] == "DAB":
+            Mi = 0.5
+            Io     = min(setup['Dat']['stat']['Io'], Io_max)
+            Vo     = Io * R
+            Po     = Vo * Io
+            K  = (Ntr * Vdc * Vo) / (omega * L)
+            Pn = Po / K if K > 0 else 0.0
+            disc = max(1 - 4 * Pn / np.pi, 0.0)
+            phiDAB  = (np.pi / 2) * (1 - np.sqrt(disc))
+        else:
+            Vo = abs(setup['Dat']['stat']['Io'] * Z * np.sqrt(2) + EMF)
+            Mi = Vo / setup['Dat']['stat']['Vdc'] * paraV
 
     # ==============================================================================
     # Active power is controlled
     # ==============================================================================
     elif setup['Exp']['output'] == 'P':
         print(f"INFO: Active power controlled mode with Po {setup['Dat']['stat']['Po']:.2f} (W)")
-        Io = np.sqrt(setup['Dat']['stat']['Po'] / R) * np.sqrt(2)
-        Io = complex(Io * np.cos(angZ), Io * np.sin(angZ))
-        Mi = abs(Io * Z + EMF) / setup['Dat']['stat']['Vdc'] * paraV
+        if setup['Top']['sourceType'] == "DAB":
+            Mi = 0.5
+            Po = min(setup['Dat']['stat']['Po'], Po_max)
+            Vo = min(np.sqrt(Po * R), Vo_max)
+            Io = Vo / R
+            K  = (Ntr * Vdc * Vo) / (omega * L)
+            Pn = Po / K if K > 0 else 0.0
+            disc = max(1 - 4 * Pn / np.pi, 0.0)
+            phiDAB  = (np.pi / 2) * (1 - np.sqrt(disc))
+        else:
+            Io = np.sqrt(setup['Dat']['stat']['Po'] / R) * np.sqrt(2)
+            Io = complex(Io * np.cos(angZ), Io * np.sin(angZ))
+            Mi = abs(Io * Z + EMF) / setup['Dat']['stat']['Vdc'] * paraV
 
     # ==============================================================================
     # Reactive power is controlled
     # ==============================================================================
     elif setup['Exp']['output'] == 'Q':
-        print(f"INFO: Reactive power controlled mode with Qo {setup['Dat']['stat']['Qo']:.2f} (W)")
-        Io = np.sqrt(setup['Dat']['stat']['Qo'] / (2 * np.pi * fel * L)) * np.sqrt(2)
-        Io = complex(Io * np.cos(angZ), Io * np.sin(angZ))
-        Mi = abs(Io * Z + EMF) / setup['Dat']['stat']['Vdc'] * paraV
+        if setup['Top']['sourceType'] == "DAB":
+            print(f"WARN: No Reactive power controlled mode with DAB using active power controll instead.")
+            Mi = 0.5
+            Po = min(setup['Dat']['stat']['Po'], Po_max)
+            Vo = min(np.sqrt(Po * R), Vo_max)
+            Io = Vo / R
+            K  = (Ntr * Vdc * Vo) / (omega * L)
+            Pn = Po / K if K > 0 else 0.0
+            disc = max(1 - 4 * Pn / np.pi, 0.0)
+            phiDAB  = (np.pi / 2) * (1 - np.sqrt(disc))
+        else:
+            print(f"INFO: Reactive power controlled mode with Qo {setup['Dat']['stat']['Qo']:.2f} (W)")
+            Io = np.sqrt(setup['Dat']['stat']['Qo'] / (2 * np.pi * fel * L)) * np.sqrt(2)
+            Io = complex(Io * np.cos(angZ), Io * np.sin(angZ))
+            Mi = abs(Io * Z + EMF) / setup['Dat']['stat']['Vdc'] * paraV
 
     # ==============================================================================
     # Default
     # ==============================================================================
     else:
-        print(f"INFO: Modulation index controlled mode with Mi {setup['Dat']['stat']['Mi']:.2f} (p.u.)")
+        if setup['Top']['sourceType'] == "DAB":
+            Mi = 0.5
+            print(f"INFO: DAB phase-shift controlled mode with Phi0 {math.degrees(phiDAB):.2f} (deg) and Mi={Mi:.2f} (p.u.)")
+        else:
+            print(f"INFO: Modulation index controlled mode with Mi {setup['Dat']['stat']['Mi']:.2f} (p.u.)")
 
     ###################################################################################################################
     # Post-Processing
@@ -155,19 +225,28 @@ def genLoadInput(setup):
     # ==============================================================================
     # Output Values
     # ==============================================================================
-    Vo = Mi * Vdc / paraV
-    Io = (complex(Vo, phiO) - EMF) / Z / np.sqrt(2)
-    So = Vo * Io / np.sqrt(2)
-    Po = So.real
-    Qo = So.imag
+    if setup['Top']['sourceType'] == "DAB":
+        Po = Po
+        Vo = Vo
+        Io = Vo / R
+        So = Po
+        Qo = 0
+    else:
+        Vo = Mi * Vdc / paraV
+        Io = (complex(Vo, phiO) - EMF) / Z / np.sqrt(2)
+        So = Vo * Io / np.sqrt(2)
+        Po = So.real
+        Qo = So.imag
 
     # ==============================================================================
     # Printing
     # ==============================================================================
-    print(f"INFO: Modulation index being equal to {Mi:.2f} (p.u.)")
+    if setup['Top']['sourceType'] == "DAB":
+        print(f"INFO: DAB phase shift Phi0 being equal to {math.degrees(phiDAB):.2f} (deg)")
+    else:
+        print(f"INFO: Modulation index being equal to {Mi:.2f} (p.u.)")
     print(f"INFO: Output rms voltage being equal to {Vo:.2f} (V) and {phiO:.2f} (deg)")
-    print(
-        f"INFO: Output rms current being equal to {cmath.polar(Io)[0]:.2f} (A) and {math.degrees(cmath.polar(Io)[1]):.2f} (deg)")
+    print(f"INFO: Output rms current being equal to {cmath.polar(Io)[0]:.2f} (A) and {math.degrees(cmath.polar(Io)[1]):.2f} (deg)")
     print(f"INFO: Output power being equal to {Po:.2f} (W) and {Qo:.2f} (VAr)")
 
     # ==============================================================================
@@ -178,6 +257,7 @@ def genLoadInput(setup):
     setup['Dat']['stat']['Po'] = Po
     setup['Dat']['stat']['Qo'] = Qo
     setup['Dat']['stat']['Mi'] = Mi
+    setup['Dat']['stat']['PhiDAB'] = phiDAB
     setup['Dat']['stat']['PhiVI'] = cmath.polar(Io)[1]
 
     ###################################################################################################################

@@ -109,6 +109,15 @@ def genTF(para, setup):
     print("INFO: Load")
     out['TF']['Load'] = signal.TransferFunction([1], [L, R])
 
+    # ==============================================================================
+    # DAB
+    # ==============================================================================
+    print("INFO: DAB")
+    out['TF']['DAB_Lk'] = signal.TransferFunction([1], [L, 0])
+    out['TF']['DAB_R'] = signal.TransferFunction([1], [0, R])
+    out['TF']['DAB_Inp'] = signal.TransferFunction([Cinp, 1], [Cinp, 0])
+    out['TF']['DAB_Out'] = signal.TransferFunction([ESR*C, 1], [C, 0])
+
     ###################################################################################################################
     # Post-Processing
     ###################################################################################################################
@@ -119,7 +128,11 @@ def genTF(para, setup):
     out['SS']['DC'] = out['TF']['DC'].to_ss()
     out['SS']['Out'] = out['TF']['Out'].to_ss()
     out['SS']['Load'] = out['TF']['Load'].to_ss()
-    
+    out['SS']['DAB_Lk'] = out['TF']['DAB_Lk'].to_ss()
+    out['SS']['DAB_Inp'] = out['TF']['DAB_Inp'].to_ss()
+    out['SS']['DAB_Out'] = out['TF']['DAB_Out'].to_ss()
+    out['SS']['DAB_R'] = out['TF']['DAB_R'].to_ss()
+
     ###################################################################################################################
     # MSG Out
     ###################################################################################################################

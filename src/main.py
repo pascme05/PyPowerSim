@@ -36,6 +36,10 @@ from src.calcSweep import calcSweep
 from src.calcSteady import calcSteady
 from src.calcTrans import calcTrans
 from src.calcClose import calcClose
+from src.calcSweep_DCDC import calcSweep_DCDC
+from src.calcSteady_DCDC import calcSteady_DCDC
+from src.calcTrans_DCDC import calcTrans_DCDC
+from src.calcClose_DCDC import calcClose_DCDC
 from src.topo.initTopo import initTopo
 from src.plot.plot import plot
 from src.plot.plotResults import plotResults
@@ -180,25 +184,38 @@ def main(setup, path):
     # Sweep
     # ------------------------------------------
     if setup['Exp']['type'] == 0:
-        [time_var, freq, sweep] = calcSweep(top, mdl, para, setup)
+        # DCDC
+        if setup['Top']['sourceType'] == "DAB":
+            [time_var, freq, sweep] = calcSweep_DCDC(top, mdl, para, setup)
+        else:
+            [time_var, freq, sweep] = calcSweep(top, mdl, para, setup)
 
     # ------------------------------------------
     # Stationary
     # ------------------------------------------
     elif setup['Exp']['type'] == 1:
-        [time_var, freq] = calcSteady(top, mdl, para, setup)
+        if setup['Top']['sourceType'] == "DAB":
+            [time_var, freq] = calcSteady_DCDC(top, mdl, para, setup)
+        else:
+            [time_var, freq] = calcSteady(top, mdl, para, setup)
 
     # ------------------------------------------
     # Transient
     # ------------------------------------------
     elif setup['Exp']['type'] == 2:
-        [time_var, freq] = calcTrans(top, mdl, para, setup)
+        if setup['Top']['sourceType'] == "DAB":
+            [time_var, freq] = calcTrans_DCDC(top, mdl, para, setup)
+        else:
+            [time_var, freq] = calcTrans(top, mdl, para, setup)
 
     # ------------------------------------------
     # Closed Loop
     # ------------------------------------------
     elif setup['Exp']['type'] == 3:
-        [time_var, freq] = calcClose(top, mdl, para, setup)
+        if setup['Top']['sourceType'] == "DAB":
+            [time_var, freq] = calcClose_DCDC(top, mdl, para, setup)
+        else:
+            [time_var, freq] = calcClose(top, mdl, para, setup)
 
     # ------------------------------------------
     # Default

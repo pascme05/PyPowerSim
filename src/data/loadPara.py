@@ -58,7 +58,18 @@ def loadPara(setup, path):
     # ==============================================================================
     # Switches
     # ==============================================================================
+    # Inverter Topologies
     paraSwi = loadParaSwi(setup['Exp']['Swi'], path['parPath'], setup)
+
+    # DCDC Topologies
+    if setup['Top']['sourceType'] == 'DAB':
+        pri_name = setup['Exp'].get('SwiPri', setup['Exp']['Swi'])
+        sec_name = setup['Exp'].get('SwiSec', setup['Exp']['Swi'])
+        paraSwiPri = loadParaSwi(pri_name, path['parPath'], setup)
+        paraSwiSec = loadParaSwi(sec_name, path['parPath'], setup)
+    else:
+        paraSwiPri = paraSwi
+        paraSwiSec = paraSwi
 
     # ==============================================================================
     # Capacitor
@@ -69,6 +80,8 @@ def loadPara(setup, path):
     # Post-Processing
     ###################################################################################################################
     dataPara['Swi'] = paraSwi
+    dataPara['SwiPri'] = paraSwiPri
+    dataPara['SwiSec'] = paraSwiSec
     dataPara['Cap'] = paraCap
 
     ###################################################################################################################

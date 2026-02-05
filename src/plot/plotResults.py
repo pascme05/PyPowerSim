@@ -42,27 +42,32 @@ def plotResults(time, setup):
     # ==============================================================================
     # Labels
     # ==============================================================================
-    if setup['Top']['sourceType'] == 'B2':
-        id1 = ['S1', 'S2']
-        id2 = ['T1', 'T2']
-        id3 = ['D1', 'D2']
-        lab = ['S1', 'S2', 'C1']
-    elif setup['Top']['sourceType'] == 'B4':
-        id1 = ['S1', 'S2', 'S3', 'S4']
-        id2 = ['T1', 'T2', 'T3', 'T4']
-        id3 = ['D1', 'D2', 'D3', 'D4']
-        lab = ['S1', 'S2', 'S3', 'S4', 'C1']
-    elif setup['Top']['sourceType'] == 'B6':
-        id1 = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
-        id2 = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6']
-        id3 = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6']
-        lab = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'C1']
+    def _sort_ids(ids):
+        def _key(x):
+            try:
+                return int(x[1:])
+            except:
+                return 0
+        return sorted(ids, key=_key)
+
+    if 'Elec' in time and 'sw' in time['Elec']:
+        id1 = _sort_ids(list(time['Elec']['sw'].keys()))
     else:
-        print("WARN: Invalid topology assuming B6")
-        id1 = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
-        id2 = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6']
-        id3 = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6']
-        lab = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'C1']
+        if setup['Top']['sourceType'] == 'B2':
+            id1 = ['S1', 'S2']
+        elif setup['Top']['sourceType'] == 'B4':
+            id1 = ['S1', 'S2', 'S3', 'S4']
+        elif setup['Top']['sourceType'] == 'B6':
+            id1 = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+        elif setup['Top']['sourceType'] == 'DAB':
+            id1 = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8']
+        else:
+            print("WARN: Invalid topology assuming B6")
+            id1 = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+
+    id2 = ['T' + s[1:] for s in id1]
+    id3 = ['D' + s[1:] for s in id1]
+    lab = id1 + ['C1']
 
     # ==============================================================================
     # Parameters
@@ -96,7 +101,7 @@ def plotResults(time, setup):
     # ------------------------------------------
     # Switches
     # ------------------------------------------
-    for i in range(0, len(time['Elec']['sw'])):
+    for i in range(0, len(id1)):
         # Currents
         I_ALL[i, 0] = np.max(time['Elec']['sw'][id1[i]]['i_T'] + time['Elec']['sw'][id1[i]]['i_D'])
         I_ALL[i, 1] = np.mean(time['Elec']['sw'][id1[i]]['i_T'] + time['Elec']['sw'][id1[i]]['i_D'])

@@ -29,6 +29,7 @@ Outputs:    1) top:     topology class
 from src.topo.classB2 import classB2
 from src.topo.classB4 import classB4
 from src.topo.classB6 import classB6
+from src.topo.classDAB import classDAB
 
 # ==============================================================================
 # External
@@ -69,6 +70,12 @@ def initTopo(name, setup):
                       setup['Dat']['stat']['W'], setup['Dat']['stat']['Mi'], setup['Dat']['stat']['Vdc'],
                       setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], setup['Dat']['trans']['Tc'],
                       setup['Dat']['trans']['Tj'])
+    elif name == "DAB":
+        top = classDAB(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Par']['Cont']['fc'], setup['Exp']['fsim'],
+                       setup['Par']['PWM']['td'], setup['Par']['PWM']['tmin'], setup['Dat']['stat']['cyc'],
+                       setup['Dat']['stat']['W'], setup['Dat']['stat']['Mi'], setup['Dat']['stat']['PhiDAB'], 
+                       setup['Top']['n'], setup['Dat']['stat']['Vdc'], setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], 
+                       setup['Dat']['trans']['Tc'], setup['Dat']['trans']['Tj'])
     else:
         top = []
         print("ERROR: Invalid topology class")
