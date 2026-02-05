@@ -195,12 +195,14 @@ def plotStat_DAB(time, freq, setup):
     plt.grid('on')
 
     plt.subplot(2, 2, 3)
-    plt.plot(t[::down2], timeDc['i_dc'][::down2], t[::down2],
-             np.mean(timeDc['i_dc']) * np.ones(np.size(timeDc['i_dc'][::down2])), '--')
+    plt.plot(t[::down2], timeDc['i_dc_pri'][::down2], t[::down2],
+             np.mean(timeDc['i_dc_pri']) * np.ones(np.size(timeDc['i_dc_pri'][::down2])), '--')
+    plt.plot(t[::down2], timeDc['i_dc_sec'][::down2], t[::down2],
+             np.mean(timeDc['i_dc_sec']) * np.ones(np.size(timeDc['i_dc_sec'][::down2])), '--')
     plt.ylabel("$i_{dc}(t)$ (A)")
     plt.title('Time-domain DC Current')
     plt.xlabel('time in (sec)')
-    plt.legend(["$i_{dc}$", "$I_{dc,avg}$"], loc='upper right')
+    plt.legend(["$i_{dc,in}$", "$I_{dc-in,avg}$", "$i_{dc,out}$", "$I_{dc-out,avg}$"], loc='upper right')
     plt.grid('on')
 
     ax = plt.subplot(2, 2, 4)
@@ -224,14 +226,13 @@ def plotStat_DAB(time, freq, setup):
     plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
     plt.subplot(2, 2, 1)
-    v_p = timeAc['v_a0']
-    v_s = timeAc['v_b0']
-    v_s_ref = timeAc['v_b0_ref'] if 'v_b0_ref' in timeAc else n_tr * v_s
-    plt.plot(t[::down2], timeAc['v_a'][::down2], t[::down2], v_p[::down2], t[::down2], v_s_ref[::down2])
+    v_p = timeAc['v_ac_pri']
+    v_s = timeAc['v_a']
+    plt.plot(t[::down2], timeAc['v_L'][::down2], t[::down2], v_p[::down2], t[::down2], v_s[::down2])
     plt.ylabel("$v(t)$ (V)")
     plt.title('Time-domain DAB Voltages (Reflected)')
     plt.xlabel('time in (sec)')
-    plt.legend(["$v_{p}-n v_{s}$", "$v_{p}$", "$n v_{s}$"], loc='upper right')
+    plt.legend(["$v_{L}$", "$v_{p}$", "$n v_{s}$"], loc='upper right')
     plt.grid('on')
 
     ax = plt.subplot(2, 2, 2)
@@ -247,12 +248,11 @@ def plotStat_DAB(time, freq, setup):
     plt.grid('on')
 
     plt.subplot(2, 2, 3)
-    plt.plot(t[::down2], timeDc['v_in'][::down2], t[::down2], timeDc['v_dc'][::down2], t[::down2],
-             np.mean(timeDc['v_dc']) * np.ones(np.size(timeDc['v_dc'][::down2])), '--')
+    plt.plot(t[::down2], timeDc['v_dc_pri'][::down2], t[::down2], timeDc['v_dc_sec'][::down2])
     plt.ylabel("$v_{dc}(t)$ (V)")
     plt.title('Time-domain DC Voltage')
     plt.xlabel('time in (sec)')
-    plt.legend(["$v_{in}$", "$v_{dc}$", "$V_{dc,avg}$"], loc='upper right')
+    plt.legend(["$v_{in}$", "$v_{out}$"], loc='upper right')
     plt.grid('on')
 
     ax = plt.subplot(2, 2, 4)

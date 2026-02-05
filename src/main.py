@@ -43,6 +43,7 @@ from src.calcClose_DCDC import calcClose_DCDC
 from src.topo.initTopo import initTopo
 from src.plot.plot import plot
 from src.plot.plotResults import plotResults
+from src.plot.plotResults_DCDC import plotResults_DCDC
 from src.general.genTF import genTF
 from src.general.sanityCheck import sanityInput
 from src.general.saveResults import saveResults
@@ -254,7 +255,10 @@ def main(setup, path):
     # Plot Results
     # ==============================================================================
     if setup['Exp']['type'] == 1 or setup['Exp']['type'] == 2:
-        plotResults(time_var, setup)
+        if setup['Top']['sourceType'] == "DAB":
+            plotResults_DCDC(time_var, setup)
+        else:
+            plotResults(time_var, setup)
 
     # ==============================================================================
     # Plot Results

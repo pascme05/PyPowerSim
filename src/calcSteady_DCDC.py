@@ -181,9 +181,9 @@ def calcSteady_DCDC(top, mdl, para, setup):
                                                      T_sw[i], top.id5[i], para_swi, setup)
 
         # Output Capacitor
-        timeDc['v_dc_sec'] = calcElecCap(t_ref, timeDc['i_c_sec'], T_ca, para, setup)
+        timeDc['v_c_sec'] = calcElecCap(t_ref, timeDc['i_c_sec'], T_ca, para, setup)
         timeElec['cap']['C1']['i_c'] = timeDc['i_c_sec']
-        timeElec['cap']['C1']['v_c'] = timeDc['v_dc_sec']
+        timeElec['cap']['C1']['v_c'] = timeDc['v_c_sec']
 
         # ------------------------------------------
         # Losses

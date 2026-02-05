@@ -24,7 +24,7 @@ Inputs:     1) fel:     electrical frequency at the output (Hz)
             7) cyc:     number of cycles till convergence
             8) W:       number of points evaluated for distortion analysis
             9) Mi:      modulation index (p.u.)
-            10) phi:phase shift for DAB (deg)
+            10) phi:    phase shift for DAB (deg)
             11) N:      transformer ratio (Np/Ns)
             12) Vdc:    dc link voltage at the input of the converter cell (V)
             13) Tc_st:  case temperature for stationary analysis
@@ -62,7 +62,7 @@ class classDAB:
     ###################################################################################################################
     # Constructor
     ###################################################################################################################
-    def __init__(self, fel, fs, fc, fsim, td, tmin, cyc, W, Mi, phi, N, Vdc, Tc_st, Tj_st, Tc_tr, Tj_tr):
+    def __init__(self, fel, fs, fc, fsim, td, tmin, cyc, W, Mi, phi, Ntr, Vdc, Tc_st, Tj_st, Tc_tr, Tj_tr):
         self.fel = fel
         self.fs = fs
         self.fc = fc
@@ -73,7 +73,7 @@ class classDAB:
         self.W = int(W)
         self.Mi = Mi
         self.phi = phi
-        self.N = N
+        self.Ntr = Ntr
         self.Vdc = Vdc
         self.Tc_st = Tc_st
         self.Tj_st = Tj_st
@@ -619,17 +619,17 @@ class classDAB:
         # AC Voltages
         # ------------------------------------------
         v_ac_pri = 0.5 * self.Vdc * (s['A'] - s['B'])
-        v_ac_sec = 0.5 * (self.Vdc / self.N) * (s['C'] - s['D']) if self.N != 0 else 0.5 * self.Vdc * (s['C'] - s['D'])
-        v_ac_sec_ref = self.N * v_ac_sec
+        v_ac_sec = 0.5 * (self.Vdc / self.Ntr) * 0.9 * (s['C'] - s['D']) if self.Ntr != 0 else 0.5 * self.Vdc * 0.9 * (s['C'] - s['D'])
+        v_ac_sec_ref = self.Ntr * v_ac_sec
         v_ab = v_ac_pri - v_ac_sec_ref
 
         # ------------------------------------------
         # AC Currents
         # ------------------------------------------
-        _, i_l, _, = signal.lsim(mdl['SS']['DAB_Lk'], v_ab, t, X0=init['load'])
+        _, i_l, _, = signal.lsim(mdl['SS']['DAB_Lk'], v_ab - np.mean(v_ab), t, X0=init['load'])
         i_l = i_l[t0:t1]
-        i_ac_pri = i_l
-        i_ac_sec = i_l / self.N if self.N != 0 else i_l
+        i_ac_pri = i_l - np.mean(i_l)
+        i_ac_sec = i_ac_pri * self.Ntr if self.Ntr != 0 else i_l
 
         # ------------------------------------------
         # Cap Currents
@@ -637,18 +637,20 @@ class classDAB:
         i_dc_pri = i_ac_pri / 2 * (s['A'][t0:t1] - s['B'][t0:t1])
         i_dc_sec = -i_ac_sec / 2 * (s['C'][t0:t1] - s['D'][t0:t1])
         i_c_pri = np.mean(i_dc_pri) - i_dc_pri
-        i_c_sec = np.mean(i_dc_sec) - i_dc_sec
+        i_c_sec =-np.mean(i_dc_sec) + i_dc_sec
 
         # ------------------------------------------
         # DC Voltages
         # ------------------------------------------
         _, v_dc_pri, _, = signal.lsim(mdl['SS']['DAB_Inp'], i_c_pri, t[t0:t1], X0=init['dc'])
         _, v_dc_sec, _, = signal.lsim(mdl['SS']['DAB_Out'], i_c_sec, t[t0:t1], X0=init['dc'])
+        v_dc_pri = v_dc_pri + self.Vdc
+        v_dc_sec = v_dc_sec - np.mean(i_dc_sec) * 1
 
         # ------------------------------------------
         # DC Currents
         # ------------------------------------------
-        i_dc_pri = np.mean(i_dc_pri) * np.ones(len(i_dc_pri))
+        # i_dc_pri = np.mean(i_dc_pri) * np.ones(len(i_dc_pri))
         _, i_dc_sec, _, = signal.lsim(mdl['SS']['DAB_R'], v_dc_sec, t[t0:t1], X0=init['load'])
 
         # ==============================================================================
@@ -660,14 +662,14 @@ class classDAB:
         # Old for consistency
         outAc['v_ac_pri'] = v_ac_pri[t0:t1]
         outAc['v_ac_sec'] = v_ac_sec[t0:t1]
-        outAc['v_L'] = v_ac_sec_ref[t0:t1]
+        outAc['v_L'] = v_ab
         outAc['i_ac_pri'] = i_ac_pri
         outAc['i_ac_sec'] = i_ac_sec
 
         # New (TODO: Update var names)
         outAc['v_a0'] = v_ac_pri[t0:t1]
         outAc['v_b0'] = v_ac_sec[t0:t1]
-        outAc['v_L'] = v_ac_sec_ref[t0:t1]
+        outAc['v_L'] = v_ab
         outAc['v_a_out'] = v_ac_pri[t0:t1]
         outAc['v_a'] = v_ac_sec_ref[t0:t1]
         outAc['i_a'] = i_ac_sec
@@ -758,14 +760,6 @@ class classDAB:
         # ==============================================================================
         # Initialisation
         # ==============================================================================
-        # ------------------------------------------
-        # Parameters
-        # ------------------------------------------
-        n = self.N
-
-        # ------------------------------------------
-        # Reference
-        # ------------------------------------------
         v_ref = {}
         e_ref = {}
         i_ref = {}
@@ -786,7 +780,7 @@ class classDAB:
         # Absolute
         # ------------------------------------------
         v_ref['A'] = 0.5 * self.Vdc * s_p
-        v_ref['B'] = 0.5 * (self.Vdc / n) * s_s if n != 0 else 0.5 * self.Vdc * s_s
+        v_ref['B'] = 0.5 * (self.Vdc / self.Ntr) * s_s if self.Ntr != 0 else 0.5 * self.Vdc * s_s
         e_ref['A'] = np.zeros(np.size(t))
         e_ref['B'] = np.zeros(np.size(t))
         i_ref['A'] = np.zeros(np.size(t))
