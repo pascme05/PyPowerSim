@@ -590,7 +590,7 @@ class classDAB:
     ###################################################################################################################
     # Temporal Output
     ###################################################################################################################
-    def calcTime(self, s, e, t, Mi, mdl, t0, t1, init, para, setup):
+    def calcTime(self, s, vp, vs, e, t, Mi, mdl, t0, t1, init, para, setup):
         # ==============================================================================
         # Description
         # ==============================================================================
@@ -599,6 +599,8 @@ class classDAB:
 
         Input:
         1) s:       switching function
+        2) vp:      voltage at the primary bridge (V)
+        3) vs:      voltage at the secondary bridge (V)
         2) e:       induced voltage
         3) t:       reference time (sec)
         4) Mi:      modulation index (0 ... 4/pi)
@@ -637,24 +639,29 @@ class classDAB:
         # ------------------------------------------
         # AC Voltages
         # ------------------------------------------
-        v_ac_pri = 0.5 * self.Vdc * (s['A'] - s['B'])
-        v_ac_sec = 0.5 * (self.Vdc / self.Ntr) * (s['C'] - s['D']) if self.Ntr != 0 else 0.5 * self.Vdc * (s['C'] - s['D'])
-        v_ac_sec_ref = self.Ntr * v_ac_sec
-        v_ab = v_ac_pri - v_ac_sec_ref
+        if vp is not None and vs is not None:
+            v_ac_pri = vp
+            v_ac_sec = vs
+            v_ac_sec_ref = self.Ntr * v_ac_sec
+            v_ab = v_ac_pri - v_ac_sec_ref
+        else:
+            v_ac_pri = 0.5 * self.Vdc * (s['A'] - s['B'])
+            v_ac_sec = 0.5 * (self.Vdc / self.Ntr) * (s['C'] - s['D']) if self.Ntr != 0 else 0.5 * self.Vdc * (s['C'] - s['D'])
+            v_ac_sec_ref = self.Ntr * v_ac_sec
+            v_ab = v_ac_pri - v_ac_sec_ref
 
         # ------------------------------------------
         # AC Currents
         # ------------------------------------------
         _, i_l, _, = signal.lsim(mdl['SS']['AC'], v_ab - np.mean(v_ab), t, X0=init['load'])
-        # _, i_l2, _, = signal.lsim(mdl['SS']['Tra'], v_ab - np.mean(v_ab), t, X0=init['load'])
         i_ac_pri = i_l[t0:t1] - np.mean(i_l[t0:t1])
         i_ac_sec = i_ac_pri * self.Ntr if self.Ntr != 0 else i_ac_pri
 
         # ------------------------------------------
         # DC-side currents from modulation
         # ------------------------------------------
-        i_dc_pri = +0.5 * i_ac_pri * (s['A'][t0:t1] - s['B'][t0:t1])
-        i_dc_sec = -0.5 * i_ac_sec * (s['C'][t0:t1] - s['D'][t0:t1])
+        i_dc_pri = 0.5 * i_ac_pri * (s['A'][t0:t1] - s['B'][t0:t1])
+        i_dc_sec = 0.5 * i_ac_sec * (s['C'][t0:t1] - s['D'][t0:t1])
 
         # ------------------------------------------
         # Capacitor currents
@@ -677,14 +684,15 @@ class classDAB:
 
         # Output Side
         try:
-            v_dc_sec = v_dc_sec_cap + para['CapSec']['Elec']['con']['ESR'] * i_c_sec
+            v_dc_sec = np.mean(i_dc_sec) * setup['Top']['R'] + v_dc_sec_cap + para['CapSec']['Elec']['con']['ESR'] * i_c_sec
         except:
-            v_dc_sec = v_dc_sec_cap
+            v_dc_sec = np.mean(i_dc_sec) * setup['Top']['R'] + v_dc_sec_cap
 
         # ------------------------------------------
         # DC Currents
         # ------------------------------------------
-        _, i_dc_load, _, = signal.lsim(mdl['SS']['Load'], v_dc_sec, t[t0:t1], X0=init['load'])
+        i_dc_in = i_dc_pri - i_c_pri
+        i_dc_out = v_dc_sec / setup['Top']['R']
 
         # ==============================================================================
         # Post-Processing
@@ -695,8 +703,8 @@ class classDAB:
         # Old for consistency
         outAc['v_ac_pri'] = v_ac_pri[t0:t1]
         outAc['v_ac_sec'] = v_ac_sec[t0:t1]
-        outAc['v_ac_sec_ref'] = v_ac_sec_ref
-        outAc['v_L'] = v_ab
+        outAc['v_ac_sec_ref'] = v_ac_sec_ref[t0:t1]
+        outAc['v_L'] = v_ab[t0:t1]
         outAc['i_ac_pri'] = i_ac_pri
         outAc['i_ac_sec'] = i_ac_sec
 
@@ -707,10 +715,10 @@ class classDAB:
         outDc['v_dc_sec'] = v_dc_sec
         outDc['v_dc_pri_cap'] = v_dc_pri_cap
         outDc['v_dc_sec_cap'] = v_dc_sec_cap
-        outDc['i_dc'] = i_dc_pri
+        outDc['i_dc_in'] = i_dc_in
         outDc['i_dc_pri'] = i_dc_pri
         outDc['i_dc_sec'] = i_dc_sec
-        outDc['i_dc_load'] = i_dc_load
+        outDc['i_dc_out'] = i_dc_out
         outDc['i_c_pri'] = i_c_pri
         outDc['i_c_sec'] = i_c_sec
 

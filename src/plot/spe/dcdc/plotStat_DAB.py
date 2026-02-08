@@ -66,7 +66,7 @@ def plotStat_DAB(time, freq, setup):
     n_tr = setup['Top'].get('n', 1)
     phiDAB = setup['Dat']['stat']['PhiDAB']
     down = int(setup['Dat']['stat']['cyc']) - 2
-    down2 = int(fsim / fs / 200)
+    down2 = int(fsim / fs / 100)
     if down2 < 1:
         down2 = 1
 
@@ -149,7 +149,8 @@ def plotStat_DAB(time, freq, setup):
         t_label = "time in (s)"
 
     # Freq Axis Scaling
-    f_max = f[-1]
+    f_max = fs
+    f_max_plt = 200
     if f_max < 1e3:
         f_plot = f
         f_label = "$f$ in (Hz)"
@@ -160,291 +161,540 @@ def plotStat_DAB(time, freq, setup):
         f_plot = f / 1e6
         f_label = "$f$ in (MHz)"
 
-    ###################################################################################################################
-    # 1) Switching strategies
-    ###################################################################################################################
+    # ==============================================================================
+    # 1) Switching Function
+    # ==============================================================================
     gs = gridspec.GridSpec(3, 2)
     pl.figure(figsize=(12, 10))
-    txt = "DAB Switching Strategies: " + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) + ", Ntr=" + str(n_tr) + ", Phi=" + str(phiDAB)
+    txt = "Switching Functions DAB for PWM Control with: " \
+          + "$V_{dc}$=" + str(Vdc) + "V, " \
+          + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) \
+          + ", Phi=" + f"{math.degrees(phiDAB):.2f}"
     pl.suptitle(txt, size=18)
-    pl.subplots_adjust(hspace=0.4, wspace=0.3, left=0.1, right=0.9, top=0.9, bottom=0.1)
+    pl.subplots_adjust(hspace=0.35, wspace=0.20, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
     # ------------------------------------------
     # Modulation
     # ------------------------------------------
-    ax1 = pl.subplot(gs[0, :])
-    ax2 = ax1.twinx()
-    ax1.plot(t_plot[::down2], timeSw['cA'][::down2], 'tab:blue', label='$c_{pri}$')
-    ax1.plot(t_plot[::down2], timeSw['cB'][::down2], 'tab:orange', label='$c_{sec}$')
-    ax2.plot(t_plot[::down2], timeSw['v_a_ref'][::down2] / (Vdc / 2), color='tab:blue', linestyle='--', label='$v_{pri}^{*}$')
-    ax2.plot(t_plot[::down2], timeSw['v_b_ref'][::down2] / (Vdc / 2), color='tab:orange', linestyle='--', label='$v_{sec}^{*}$')
-    pl.title('Carrier and Reference Waveforms')
+    pl.subplot(gs[0, :])
+    pl.plot(t_plot[::down2], timeSw['sA'][::down2])
+    pl.plot(t_plot[::down2], timeSw['sC'][::down2])
+    pl.title('Time-domain Switching Functions Primary vs. Secondary')
     pl.xlabel(t_label)
-    ax1.set_ylabel('c(t)')
-    ax2.set_ylabel('v(t) (p.u)')
-    ax1.legend(loc='upper left')
-    ax2.legend(loc='upper right')
+    pl.ylabel("$s_{x}(t)$ (p.u)")
+    pl.legend(["$s_{a}$", "$s_{c}$"], loc='upper right')
     pl.grid('on')
 
     # ------------------------------------------
-    # Switching Waveforms
+    # Switching Waveform
     # ------------------------------------------
-    # Primary
+    # Time-Domain
     pl.subplot(gs[1, 0])
-    pl.plot(t_plot[::down2], timeSw['sA'][::down2], label='$s_{A}$')
-    pl.plot(t_plot[::down2], timeSw['sB'][::down2], label='$s_{B}$')
-    pl.title('Primary Bridge Switching')
+    pl.plot(t_plot[::down2], timeSw['sA'][::down2])
+    pl.plot(t_plot[::down2], timeSw['sB'][::down2])
+    pl.title('Time-domain Switching Functions Primary')
     pl.xlabel(t_label)
-    pl.ylabel("$s(t)$ (p.u)")
-    pl.legend(loc='upper right')
+    pl.ylabel("$s_{x}(t)$ (p.u)")
+    pl.legend(["$s_{a}$", "$s_{b}$"], loc='upper right')
     pl.grid('on')
 
-    # Secondary
-    pl.subplot(gs[1, 1])
-    pl.plot(t_plot[::down2], timeSw['sC'][::down2], label='$s_{C}$')
-    pl.plot(t_plot[::down2], timeSw['sD'][::down2], label='$s_{D}$')
-    pl.title('Secondary Bridge Switching')
-    pl.xlabel(t_label)
-    pl.ylabel("$s(t)$ (p.u)")
-    pl.legend(loc='upper right')
-    pl.grid('on')
-
-    # ------------------------------------------
-    # Spectrum
-    # ------------------------------------------
-    # Primary
+    # Freq-Domain
     pl.subplot(gs[2, 0])
-    pl.stem(f_plot[::down][0:50], freqSw['Sa'][::down][0:50])
-    pl.xlim(0, 50)
-    pl.title('Primary Switching Spectrum')
+    pl.stem(f_plot[::down][0:f_max_plt], freqSw['Sa'][::down][0:f_max_plt])
+    pl.title('Frequency-domain Switching Function Primary')
     pl.xlabel(f_label)
-    pl.ylabel("$S_{p}(f)$ (p.u)")
+    pl.ylabel("$S_{a}(f)$ (p.u)")
     pl.yscale('log')
     pl.ylim(0.0001, )
     pl.grid('on')
 
-    # Secondary
+    # ------------------------------------------
+    # Reference Waveform
+    # ------------------------------------------
+    # Time-Domain
+    pl.subplot(gs[1, 1])
+    pl.plot(t_plot[::down2], timeSw['sC'][::down2])
+    pl.plot(t_plot[::down2], timeSw['sD'][::down2])
+    pl.title('Time-domain Switching Functions Secondary')
+    pl.xlabel(t_label)
+    pl.ylabel("$s_{x}(t)$ (p.u)")
+    pl.legend(["$s_{c}$", "$s_{d}$"], loc='upper right')
+    pl.grid('on')
+
+    # Freq-Domain
     pl.subplot(gs[2, 1])
-    if 'Sb' in freqSw:
-        pl.stem(f_plot[::down][0:50], freqSw['Sb'][::down][0:50])
-    elif 'Sc' in freqSw:
-        pl.stem(f_plot[::down][0:50], freqSw['Sc'][::down][0:50])
-    pl.xlim(0, 50)
-    pl.title('Secondary Switching Spectrum')
+    if 'Sc' in freqSw:
+        pl.stem(f_plot[::down][0:f_max_plt], freqSw['Sc'][::down][0:f_max_plt])
+    elif 'Sb' in freqSw:
+        pl.stem(f_plot[::down][0:f_max_plt], freqSw['Sb'][::down][0:f_max_plt])
+    pl.title('Frequency-domain Switching Function Secondary')
     pl.xlabel(f_label)
-    pl.ylabel("$S_{s}(f)$ (p.u)")
+    pl.ylabel("$S_{c}(f)$ (p.u)")
     pl.yscale('log')
     pl.ylim(0.0001, )
     pl.grid('on')
 
-    ###################################################################################################################
-    # 2) Primary Side Current and Voltage
-    ###################################################################################################################
-    plt.figure(figsize=(12, 8))
-    plt.suptitle("DAB Primary Side: Current and Voltage", size=18)
-    plt.subplots_adjust(hspace=0.4, wspace=0.3)
+    # ==============================================================================
+    # 2) Primary Side Voltage / Current
+    # ==============================================================================
+    plt.figure()
+    txt = "Currents and Voltages DAB Primary Bridge for PWM Control with: " \
+          + "$V_{dc}$=" + str(Vdc) + "V, " \
+          + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) \
+          + ", Phi=" + f"{math.degrees(phiDAB):.2f}"
+    plt.suptitle(txt, size=18)
+    plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
-    # Voltage Time AC
-    plt.subplot(2, 2, 1)
+    # ------------------------------------------
+    # Phase Voltage
+    # ------------------------------------------
+    # Time
+    plt.subplot(4, 2, 1)
     plt.plot(t_plot[::down2], timeAc['v_ac_pri'][::down2])
-    plt.title('Primary Voltage (Time Domain)')
+    plt.plot(t_plot[::down2], timeAc['v_ac_sec_ref'][::down2])
+    plt.plot(t_plot[::down2], timeAc['v_L'][::down2])
+    plt.ylabel("$v_{ac,pri}(t)$ (V)")
+    plt.title('Time-domain Voltage AC-Side Primary')
+    plt.legend(["$v_{ac,pri}$", "$v_{ac,sec-ref}$", "$v_{ac,Lk}$"], loc='upper right')
     plt.xlabel(t_label)
-    plt.ylabel("$v_{p}(t)$ (V)")
     plt.grid('on')
 
-    # Voltage Freq
-    ax = plt.subplot(2, 2, 2)
-    v_p_spec = freqAc.get('v_ac_pri', freqAc.get('V_a'))
-    plt.stem(f_plot[::down][0:50], v_p_spec[::down][0:50])
-    plt.title('Primary Voltage (Frequency Domain)')
-    plt.xlabel("$f/f_{1}$")
-    plt.ylabel("$V_{p}(f)$ (V)")
+    # Frequency
+    plt.subplot(4, 2, 2)
+    m1, s1, _ = plt.stem(f_plot[::down][0:f_max_plt], freqAc['v_ac_pri'][::down][0:f_max_plt])
+    m2, s2, _ = plt.stem(f_plot[::down][0:f_max_plt], freqAc['v_L'][::down][0:f_max_plt])
+    plt.setp(m1, color='C0')
+    plt.setp(s1, color='C0')
+    plt.setp(m2, color='C1')
+    plt.setp(s2, color='C1')
+    plt.ylabel("$V_{ac,pri}(f)$ (V)")
+    plt.title('Frequency-domain Voltage AC-Side Primary')
+    plt.xlabel(f_label)
     plt.yscale('log')
-    pl.ylim(0.0001, )
+    plt.legend(handles=[m1, m2], labels=["$V_{ac,pri}$", "$V_{ac,Lk}$"], loc='upper right')
+    plt.ylim(OoM(max(freqAc['v_ac_pri']))/1000, )
     plt.grid('on')
 
-    # Current Time AC
-    plt.subplot(2, 2, 3)
+    # ------------------------------------------
+    # Phase Current
+    # ------------------------------------------
+    # Time
+    plt.subplot(4, 2, 3)
     plt.plot(t_plot[::down2], timeAc['i_ac_pri'][::down2])
-    plt.title('Primary Current (Time Domain)')
+    plt.ylabel("$i_{ac,pri}(t)$ (A)")
+    plt.title('Time-domain Currents AC-Side Primary')
     plt.xlabel(t_label)
-    plt.ylabel("$i_{p}(t)$ (A)")
     plt.grid('on')
 
-    # Current Freq
-    ax = plt.subplot(2, 2, 4)
-    i_p_spec = freqAc.get('i_ac_pri', freqAc.get('I_a'))
-    plt.stem(f_plot[::down][0:50], i_p_spec[::down][0:50])
-    plt.title('Primary Current (Frequency Domain)')
-    plt.xlabel("$f/f_{1}$")
-    plt.ylabel("$I_{p}(f)$ (A)")
+    # Frequency
+    plt.subplot(4, 2, 4)
+    plt.stem(f_plot[::down][0:f_max_plt], freqAc['i_ac_pri'][::down][0:f_max_plt])
+    plt.ylabel("$I_{ac,pri}(f)$ (V)")
+    plt.title('Frequency-domain Current AC-Side Primary')
+    plt.xlabel(f_label)
     plt.yscale('log')
+    plt.ylim(OoM(max(freqAc['i_ac_pri'])) / 1000, )
     plt.grid('on')
 
-    ###################################################################################################################
-    # 3) Secondary Side Current and Voltage
-    ###################################################################################################################
-    plt.figure(figsize=(12, 8))
-    plt.suptitle("DAB Secondary Side: Current and Voltage", size=18)
-    plt.subplots_adjust(hspace=0.4, wspace=0.3)
+    # ------------------------------------------
+    # DC-Link Voltage
+    # ------------------------------------------
+    # Time
+    plt.subplot(4, 2, 5)
+    plt.plot(t_plot[::down2], timeDc['v_dc_pri'][::down2], t_plot[::down2], np.mean(timeDc['v_dc_pri']) * np.ones(np.size(timeDc['i_dc_pri'][::down2])), '--')
+    plt.ylabel("$v_{dc,pri}(t)$ (V)")
+    plt.title('Time-domain Voltage DC-Side Primary')
+    plt.xlabel(t_label)
+    plt.legend(["$v_{dc,pri}$", "$V_{dc,pri,avg}$"], loc='upper right')
+    plt.grid('on')
 
-    # Voltage Time
+    # Frequency
+    plt.subplot(4, 2, 6)
+    plt.stem(f_plot[::down][0:f_max_plt], freqDc['v_dc_pri'][::down][0:f_max_plt])
+    plt.ylabel("$V_{dc,pri}(f)$ (V)")
+    plt.title('Frequency-domain Voltage DC-Side Primary')
+    plt.xlabel(f_label)
+    plt.yscale('log')
+    plt.ylim(OoM(max(freqDc['v_dc_pri'])) / 1000000, )
+    plt.grid('on')
+
+    # ------------------------------------------
+    # DC-Link Current
+    # ------------------------------------------
+    # Time
+    plt.subplot(4, 2, 7)
+    plt.plot(t_plot[::down2], timeDc['i_dc_pri'][::down2], color='tab:blue')
+    plt.plot(t_plot[::down2], np.mean(timeDc['i_dc_pri']) * np.ones(np.size(timeDc['i_dc_pri'][::down2])), '--', color='tab:blue')
+    plt.plot(t_plot[::down2], timeDc['i_c_pri'][::down2], color='tab:orange')
+    plt.plot(t_plot[::down2], np.mean(timeDc['i_c_pri']) * np.ones(np.size(timeDc['i_dc_pri'][::down2])), '--', color='tab:orange')
+    plt.plot(t_plot[::down2], timeDc['i_dc_in'][::down2], color='tab:green')
+    plt.plot(t_plot[::down2], np.mean(timeDc['i_dc_in']) * np.ones(np.size(timeDc['i_dc_in'][::down2])), '--', color='tab:green')
+    plt.ylabel("$i_{dc,pri}(t)$ (A)")
+    plt.title('Time-domain Currents DC-Side Primary')
+    plt.xlabel(t_label)
+    plt.legend(["$i_{dc,pri}$", "$I_{dc,pri,avg}$", "$i_{c,pri}$", "$I_{c,pri,avg}$"], loc='upper right')
+    plt.grid('on')
+
+    # Frequency
+    plt.subplot(4, 2, 8)
+    m1, s1, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['i_dc_pri'][::down][0:f_max_plt])
+    m2, s2, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['i_c_pri'][::down][0:f_max_plt])
+    plt.setp(m1, color='C0')
+    plt.setp(s1, color='C0')
+    plt.setp(m2, color='C1')
+    plt.setp(s2, color='C1')
+    plt.ylabel("$I_{dc,pri}(f)$ (A)")
+    plt.title('Frequency-domain Current DC-Side Primary')
+    plt.xlabel(f_label)
+    plt.yscale('log')
+    plt.legend(handles=[m1, m2], labels=["$I_{dc,pri}$", "$I_{c,pri}$"], loc='upper right')
+    plt.ylim(OoM(max(freqDc['i_c_pri'])) / 1000, )
+    plt.grid('on')
+
+    # ==============================================================================
+    # 3) Secondary Side Voltage / Current
+    # ==============================================================================
+    plt.figure()
+    txt = "Currents and Voltages DAB Secondary Bridge for PWM Control with: " \
+          + "$V_{dc}$=" + str(Vdc) + "V, " \
+          + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) \
+          + ", Phi=" + f"{math.degrees(phiDAB):.2f}"
+    plt.suptitle(txt, size=18)
+    plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
+
+    # ------------------------------------------
+    # Phase Voltage
+    # ------------------------------------------
+    # Time
+    plt.subplot(4, 2, 1)
+    plt.plot(t_plot[::down2], timeAc['v_ac_sec'][::down2])
+    plt.ylabel("$v_{ac,sec}(t)$ (V)")
+    plt.title('Time-domain Voltage AC-Side Secondary')
+    plt.legend(["$v_{ac,sec}$"], loc='upper right')
+    plt.xlabel(t_label)
+    plt.grid('on')
+
+    # Frequency
+    plt.subplot(4, 2, 2)
+    plt.stem(f_plot[::down][0:f_max_plt], freqAc['v_ac_sec'][::down][0:f_max_plt])
+    plt.ylabel("$V_{ac,sec}(f)$ (V)")
+    plt.title('Frequency-domain Voltage AC-Side Secondary')
+    plt.xlabel(f_label)
+    plt.yscale('log')
+    plt.legend(labels=["$V_{ac,sec}$"], loc='upper right')
+    plt.ylim(OoM(max(freqAc['v_ac_sec'])) / 1000, )
+    plt.grid('on')
+
+    # ------------------------------------------
+    # Phase Current
+    # ------------------------------------------
+    # Time
+    plt.subplot(4, 2, 3)
+    plt.plot(t_plot[::down2], timeAc['i_ac_sec'][::down2])
+    plt.ylabel("$i_{ac,sec}(t)$ (A)")
+    plt.title('Time-domain Currents AC-Side Secondary')
+    plt.xlabel(t_label)
+    plt.grid('on')
+
+    # Frequency
+    plt.subplot(4, 2, 4)
+    plt.stem(f_plot[::down][0:f_max_plt], freqAc['i_ac_sec'][::down][0:f_max_plt])
+    plt.ylabel("$I_{ac,sec}(f)$ (A)")
+    plt.title('Frequency-domain Current AC-Side Secondary')
+    plt.xlabel(f_label)
+    plt.yscale('log')
+    plt.ylim(OoM(max(freqAc['i_ac_sec'])) / 1000, )
+    plt.grid('on')
+
+    # ------------------------------------------
+    # DC-Link Voltage
+    # ------------------------------------------
+    # Time
+    plt.subplot(4, 2, 5)
+    plt.plot(t_plot[::down2], timeDc['v_dc_sec'][::down2], t_plot[::down2],
+             np.mean(timeDc['v_dc_sec']) * np.ones(np.size(timeDc['i_dc_sec'][::down2])), '--')
+    plt.ylabel("$v_{dc,sec}(t)$ (V)")
+    plt.title('Time-domain Voltage DC-Side Secondary')
+    plt.xlabel(t_label)
+    plt.legend(["$v_{dc,sec}$", "$V_{dc,sec,avg}$"], loc='upper right')
+    plt.grid('on')
+
+    # Frequency
+    plt.subplot(4, 2, 6)
+    plt.stem(f_plot[::down][0:f_max_plt], freqDc['v_dc_sec'][::down][0:f_max_plt])
+    plt.ylabel("$V_{dc,sec}(f)$ (V)")
+    plt.title('Frequency-domain Voltage DC-Side Secondary')
+    plt.xlabel(f_label)
+    plt.yscale('log')
+    plt.ylim(OoM(max(freqDc['v_dc_sec'])) / 1000000, )
+    plt.grid('on')
+
+    # ------------------------------------------
+    # DC-Link Current
+    # ------------------------------------------
+    # Time
+    plt.subplot(4, 2, 7)
+    plt.plot(t_plot[::down2], timeDc['i_dc_sec'][::down2], color='tab:blue')
+    plt.plot(t_plot[::down2], np.mean(timeDc['i_dc_sec']) * np.ones(np.size(timeDc['i_dc_sec'][::down2])), '--', color='tab:blue')
+    plt.plot(t_plot[::down2], timeDc['i_c_sec'][::down2], color='tab:orange')
+    plt.plot(t_plot[::down2], np.mean(timeDc['i_c_sec']) * np.ones(np.size(timeDc['i_c_sec'][::down2])), '--', color='tab:orange')
+    plt.plot(t_plot[::down2], timeDc['i_dc_out'][::down2], color='tab:green')
+    plt.plot(t_plot[::down2], np.mean(timeDc['i_dc_out']) * np.ones(np.size(timeDc['i_dc_out'][::down2])), '--', color='tab:green')
+    plt.ylabel("$i_{dc,sec}(t)$ (A)")
+    plt.title('Time-domain Currents DC-Side Secondary')
+    plt.xlabel(t_label)
+    plt.legend(["$i_{dc,sec}$", "$I_{dc,pri,sec}$", "$i_{c,sec}$", "$I_{c,pri,sec}$"], loc='upper right')
+    plt.grid('on')
+
+    # Frequency
+    plt.subplot(4, 2, 8)
+    m1, s1, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['i_dc_sec'][::down][0:f_max_plt])
+    m2, s2, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['i_c_sec'][::down][0:f_max_plt])
+    plt.setp(m1, color='C0')
+    plt.setp(s1, color='C0')
+    plt.setp(m2, color='C1')
+    plt.setp(s2, color='C1')
+    plt.ylabel("$I_{dc,sec}(f)$ (A)")
+    plt.title('Frequency-domain Current DC-Side Secondary')
+    plt.xlabel(f_label)
+    plt.yscale('log')
+    plt.legend(handles=[m1, m2], labels=["$I_{dc,sec}$", "$I_{c,sec}$"], loc='upper right')
+    plt.ylim(OoM(max(freqDc['i_c_sec'])) / 1000, )
+    plt.grid('on')
+
+    # ==============================================================================
+    # 4) Secondary Side Current
+    # ==============================================================================
+    plt.figure()
+    txt = "Currents DAB Secondary Bridge for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+        Mi) + "$ ,Q$=" + str(Q) + ", Phi=" + str(phiDAB)
+    plt.suptitle(txt, size=18)
+    plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
+
+    # ------------------------------------------
+    # Phase
+    # ------------------------------------------
+    # Time
+    plt.subplot(2, 2, 1)
+    plt.plot(t_plot[::down2], timeAc['i_ac_sec'][::down2])
+    plt.ylabel("$i_{s}(t)$ (A)")
+    plt.title('Time-domain Currents AC-Side Secondary')
+    plt.xlabel(t_label)
+    plt.grid('on')
+
+    # Frequency
+    ax = plt.subplot(2, 2, 2)
+    i_s_spec = freqAc.get('i_ac_sec', freqAc.get('I_b'))
+    if i_s_spec is not None:
+        plt.stem(f_plot[::down][0:50], i_s_spec[::down][0:50])
+    plt.ylabel("$I_{s}(f)$ (A)")
+    plt.xlim(0, 50)
+    plt.title('Frequency-domain Current AC-Side Secondary')
+    plt.xlabel("$f/f_{1}$ (Hz/Hz)")
+    plt.yscale('log')
+    if i_s_spec is not None:
+        plt.ylim(0.1 / OoM(max(i_s_spec)), )
+    plt.grid('on')
+
+    # ------------------------------------------
+    # DC-Link
+    # ------------------------------------------
+    # Time
+    plt.subplot(2, 2, 3)
+    plt.plot(t_plot[::down2], timeDc['i_dc_sec'][::down2], t_plot[::down2], np.mean(timeDc['i_dc_sec']) * np.ones(np.size(timeDc['i_dc_sec'][::down2])), '--')
+    plt.ylabel("$i_{dc,sec}(t)$ (A)")
+    plt.title('Time-domain Currents DC-Side Secondary')
+    plt.xlabel(t_label)
+    plt.legend(["$i_{dc,sec}$", "$I_{dc,sec,avg}$"], loc='upper right')
+    plt.grid('on')
+
+    # Frequency
+    ax = plt.subplot(2, 2, 4)
+    i_dc_s_spec = freqDc.get('i_dc_sec', freqDc.get('I_dc_s'))
+    if i_dc_s_spec is not None:
+        plt.stem(f_plot[::down][0:50], i_dc_s_spec[::down][0:50])
+    plt.ylabel("$I_{dc,sec}(f)$ (A)")
+    plt.xlim(0, 50)
+    plt.title('Frequency-domain Current DC-Side Secondary')
+    plt.xlabel("$f/f_{1}$ (Hz/Hz)")
+    plt.yscale('log')
+    if i_dc_s_spec is not None:
+        plt.ylim(0.1 / OoM(max(i_dc_s_spec)), )
+    plt.grid('on')
+
+    # ==============================================================================
+    # 5) Secondary Side Voltage
+    # ==============================================================================
+    plt.figure()
+    txt = "Voltages DAB Secondary Bridge for PWM Control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+        Mi) + "$ ,Q$=" + str(Q) + ", Phi=" + str(phiDAB)
+    plt.suptitle(txt, size=18)
+    plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
+
+    # ------------------------------------------
+    # Phase
+    # ------------------------------------------
+    # Time
     plt.subplot(2, 2, 1)
     plt.plot(t_plot[::down2], timeAc['v_ac_sec'][::down2])
-    plt.title('Secondary Voltage (Time Domain)')
-    plt.xlabel(t_label)
     plt.ylabel("$v_{s}(t)$ (V)")
+    plt.title('Time-domain Voltages AC-Side Secondary')
+    plt.xlabel(t_label)
     plt.grid('on')
 
-    # Voltage Freq
+    # Frequency
     ax = plt.subplot(2, 2, 2)
     v_s_spec = freqAc.get('v_ac_sec', freqAc.get('V_b'))
     if v_s_spec is None and 'v_b0' in freqAc: v_s_spec = freqAc['v_b0']
     if v_s_spec is not None:
         plt.stem(f_plot[::down][0:50], v_s_spec[::down][0:50])
-    plt.title('Secondary Voltage (Frequency Domain)')
-    plt.xlabel("$f/f_{1}$")
     plt.ylabel("$V_{s}(f)$ (V)")
+    plt.xlim(0, 50)
+    plt.title('Frequency-domain Voltages AC-Side Secondary')
+    plt.xlabel("$f/f_{1}$ (Hz/Hz)")
     plt.yscale('log')
+    if v_s_spec is not None:
+        plt.ylim(0.1 / OoM(max(v_s_spec)), )
     plt.grid('on')
 
-    # Current Time
+    # ------------------------------------------
+    # DC-Link
+    # ------------------------------------------
+    # Time
     plt.subplot(2, 2, 3)
-    plt.plot(t_plot[::down2], timeAc['i_ac_sec'][::down2])
-    plt.title('Secondary Current (Time Domain)')
+    plt.plot(t_plot[::down2], timeDc['v_dc_sec'][::down2], t_plot[::down2], np.mean(timeDc['v_dc_sec']) * np.ones(np.size(timeDc['v_dc_sec'][::down2])), '--')
+    plt.ylabel("$v_{dc,sec}(t)$ (V)")
+    plt.title('Time-domain Voltages DC-Side Secondary')
     plt.xlabel(t_label)
-    plt.ylabel("$i_{s}(t)$ (A)")
+    plt.legend(["$v_{dc,sec}$", "$V_{dc,sec,avg}$"], loc='upper right')
     plt.grid('on')
 
-    # Current Freq
+    # Frequency
     ax = plt.subplot(2, 2, 4)
-    i_s_spec = freqAc.get('i_ac_sec', freqAc.get('I_b'))
-    if i_s_spec is not None:
-        plt.stem(f_plot[::down][0:50], i_s_spec[::down][0:50])
-    plt.title('Secondary Current (Frequency Domain)')
-    plt.xlabel("$f/f_{1}$")
-    plt.ylabel("$I_{s}(f)$ (A)")
+    v_dc_s_spec = freqDc.get('v_dc_sec', freqDc.get('V_dc_s'))
+    if v_dc_s_spec is not None:
+        plt.stem(f_plot[::down][0:50], v_dc_s_spec[::down][0:50])
+    plt.ylabel("$V_{dc,sec}(f)$ (V)")
+    plt.xlim(0, 50)
+    plt.title('Frequency-domain Voltages DC-Side Secondary')
+    plt.xlabel("$f/f_{1}$ (Hz/Hz)")
     plt.yscale('log')
+    if v_dc_s_spec is not None:
+        plt.ylim(0.1 / OoM(max(v_dc_s_spec)), )
     plt.grid('on')
 
-    ###################################################################################################################
-    # 4) Overview power losses switches and capacitor
-    ###################################################################################################################
-    if 'sw' in timeLoss:
-        plt.figure(figsize=(12, 8))
-        plt.suptitle("Power Losses Overview: Switches and Capacitors", size=18)
-        plt.subplots_adjust(hspace=0.4, wspace=0.3)
+    # ==============================================================================
+    # 6) Time-domain Switches
+    # ==============================================================================
+    if 'sw' in timeElec:
+        # IDs
+        id_sw = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8']
+        id_T = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8']
+        id_D = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8']
+        id_C = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8']
+        Ta = setup['Dat']['stat']['Tc']
 
-        # Switches Losses
-        plt.subplot(2, 2, 1)
-        p_sw_pri = []
-        p_sw_sec = []
-        labels_pri = []
-        labels_sec = []
-        for i in range(1, 5):
-            sid = 'S' + str(i)
-            if sid in timeLoss['sw']:
-                p_sw_pri.append(np.mean(timeLoss['sw'][sid]['p_L']))
-                labels_pri.append(sid)
-        for i in range(5, 9):
-            sid = 'S' + str(i)
-            if sid in timeLoss['sw']:
-                p_sw_sec.append(np.mean(timeLoss['sw'][sid]['p_L']))
-                labels_sec.append(sid)
+        plt.figure(figsize=(18, 12))
+        txt = "Time domain switches DAB for PWM control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(
+            Mi) + "$ ,Q$=" + str(Q) + ", Phi=" + str(phiDAB)
+        plt.suptitle(txt, size=18)
+        plt.subplots_adjust(hspace=0.45, wspace=0.35, left=0.05, right=0.95, top=0.90, bottom=0.075)
 
-        plt.bar(labels_pri + labels_sec, p_sw_pri + p_sw_sec)
-        plt.title('Average Switch Losses')
-        plt.ylabel('Losses (W)')
-        plt.grid('on', axis='y')
+        for i in range(0, 8):
+            sid = id_sw[i]
+            if sid in timeElec['sw']:
+                # Current
+                plt.subplot(8, 5, 5 * i + 1)
+                plt.plot(t_plot[::down2], timeElec['sw'][sid]['i_T'][::down2], t_plot[::down2], timeElec['sw'][sid]['i_D'][::down2])
+                plt.ylabel("$i(t)$ (A)")
+                plt.title('Currents ' + sid)
+                if i == 7: plt.xlabel(t_label)
+                else: plt.xticks([], [])
+                plt.grid('on')
 
-        # Capacitor Losses
-        plt.subplot(2, 2, 2)
-        p_cap = []
-        labels_cap = []
-        if 'cap' in timeLoss:
-            for cid in timeLoss['cap']:
-                p_cap.append(np.mean(timeLoss['cap'][cid]['p_L']))
-                labels_cap.append(cid)
-        plt.bar(labels_cap, p_cap, color='tab:orange')
-        plt.title('Average Capacitor Losses')
-        plt.ylabel('Losses (W)')
-        plt.grid('on', axis='y')
+                # Voltage
+                plt.subplot(8, 5, 5 * i + 2)
+                plt.plot(t_plot[::down2], timeElec['sw'][sid]['v_T'][::down2], t_plot[::down2], timeElec['sw'][sid]['v_D'][::down2])
+                plt.ylabel("$v(t)$ (V)")
+                plt.title('Voltages ' + sid)
+                if i == 7: plt.xlabel(t_label)
+                else: plt.xticks([], [])
+                plt.grid('on')
 
-        # Losses over time (Summed)
-        plt.subplot(2, 1, 2)
-        p_total_sw = np.zeros(len(t))
-        for sid in timeLoss['sw']:
-            p_total_sw += timeLoss['sw'][sid]['p_L'].values
-        plt.plot(t_plot[::down2], p_total_sw[::down2], label='Total Switch Losses')
-        if 'cap' in timeLoss:
-            p_total_cap = np.zeros(len(t))
-            for cid in timeLoss['cap']:
-                p_total_cap += timeLoss['cap'][cid]['p_L'].values
-            plt.plot(t_plot[::down2], p_total_cap[::down2], label='Total Cap Losses')
-        plt.title('Instantaneous Losses')
-        plt.xlabel(t_label)
-        plt.ylabel('Power (W)')
-        plt.legend()
-        plt.grid('on')
+                # Conduction Losses
+                plt.subplot(8, 5, 5 * i + 3)
+                if sid in timeLoss['sw']:
+                    plt.plot(t_plot[::down2], timeLoss['sw'][sid]['p_T_c'][::down2], t_plot[::down2], timeLoss['sw'][sid]['p_D_c'][::down2])
+                plt.ylabel("$p_{c}(t)$ (W)")
+                plt.title('Cond. Losses ' + sid)
+                if i == 7: plt.xlabel(t_label)
+                else: plt.xticks([], [])
+                plt.grid('on')
 
-    ###################################################################################################################
-    # 5) Thermal switches and capacitor
-    ###################################################################################################################
-    if 'sw' in timeTher:
-        plt.figure(figsize=(12, 8))
-        plt.suptitle("Thermal Overview: Switches and Capacitors", size=18)
-        plt.subplots_adjust(hspace=0.4, wspace=0.3)
+                # Switching Losses
+                plt.subplot(8, 5, 5 * i + 4)
+                if sid in timeLoss['sw']:
+                    plt.plot(t_plot[::down2], timeLoss['sw'][sid]['p_T_s'][::down2], t_plot[::down2], timeLoss['sw'][sid]['p_D_s'][::down2])
+                plt.ylabel("$p_{s}(t)$ (W)")
+                plt.title('Swi. Losses ' + sid)
+                if i == 7: plt.xlabel(t_label)
+                else: plt.xticks([], [])
+                plt.grid('on')
 
-        # Primary Switches
-        plt.subplot(2, 2, 1)
-        for i in range(1, 5):
-            sid = 'T' + str(i)
-            if sid in timeTher['sw']:
-                plt.plot(t_plot[::down2], timeTher['sw'][sid][::down2], label=sid)
-        plt.title('Primary Switches Temperature')
-        plt.xlabel(t_label)
-        plt.ylabel('Temperature (°C)')
-        plt.legend()
-        plt.grid('on')
+                # Temperature
+                plt.subplot(8, 5, 5 * i + 5)
+                if 'sw' in timeTher:
+                    plt.plot(t_plot[::down2], timeTher['sw'][id_T[i]][::down2], t_plot[::down2], timeTher['sw'][id_D[i]][::down2], 
+                             t_plot[::down2], timeTher['sw'][id_C[i]][::down2], t_plot[::down2], Ta * np.ones(np.size(t_plot[::down2])))
+                plt.ylabel("$\Theta(t)$ (°C)")
+                plt.title('Thermal ' + sid)
+                if i == 7: plt.xlabel(t_label)
+                else: plt.xticks([], [])
+                plt.grid('on')
 
-        # Secondary Switches
-        plt.subplot(2, 2, 2)
-        for i in range(5, 9):
-            sid = 'T' + str(i)
-            if sid in timeTher['sw']:
-                plt.plot(t_plot[::down2], timeTher['sw'][sid][::down2], label=sid)
-        plt.title('Secondary Switches Temperature')
-        plt.xlabel(t_label)
-        plt.ylabel('Temperature (°C)')
-        plt.legend()
-        plt.grid('on')
+    # ==============================================================================
+    # 7) Time-domain Capacitor
+    # ==============================================================================
+    if 'cap' in timeElec:
+        plt.figure(figsize=(12, 10))
+        plt.suptitle("Time domain capacitor DAB", size=18)
+        plt.subplots_adjust(hspace=0.45, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
-        # Capacitor Thermal
-        plt.subplot(2, 2, 3)
-        if 'cap' in timeTher:
-            for cid in timeTher['cap']:
-                plt.plot(t_plot[::down2], timeTher['cap'][cid][::down2], label=cid)
-        plt.title('Capacitor Temperature')
-        plt.xlabel(t_label)
-        plt.ylabel('Temperature (°C)')
-        plt.legend()
-        plt.grid('on')
+        caps = list(timeElec['cap'].keys())
+        for i, cid in enumerate(caps):
+            # Current
+            plt.subplot(len(caps), 4, 4 * i + 1)
+            plt.plot(t_plot[::down2], timeElec['cap'][cid]['i_c'][::down2])
+            plt.ylabel("$i(t)$ (A)")
+            plt.title('Current ' + cid)
+            plt.grid('on')
 
-        # Heatsink/Case (if available)
-        plt.subplot(2, 2, 4)
-        for i in range(1, 9, 4): # S1 and S5
-            sid = 'C' + str(i)
-            if sid in timeTher['sw']:
-                plt.plot(t_plot[::down2], timeTher['sw'][sid][::down2], label='Case '+str(i))
-        plt.title('Case/Heatsink Temperature')
-        plt.xlabel(t_label)
-        plt.ylabel('Temperature (°C)')
-        plt.legend()
-        plt.grid('on')
+            # Voltage
+            plt.subplot(len(caps), 4, 4 * i + 2)
+            plt.plot(t_plot[::down2], timeElec['cap'][cid]['v_c'][::down2])
+            plt.ylabel("$v(t)$ (V)")
+            plt.title('Voltage ' + cid)
+            plt.grid('on')
 
-    ###################################################################################################################
-    # 6) Overview Trafo electrical and thermal
-    ###################################################################################################################
+            # Losses
+            plt.subplot(len(caps), 4, 4 * i + 3)
+            if 'cap' in timeLoss and cid in timeLoss['cap']:
+                plt.plot(t_plot[::down2], timeLoss['cap'][cid]['p_L'][::down2])
+            plt.ylabel("$p(t)$ (W)")
+            plt.title('Losses ' + cid)
+            plt.grid('on')
+
+            # Temperature
+            plt.subplot(len(caps), 4, 4 * i + 4)
+            if 'cap' in timeTher and cid in timeTher['cap']:
+                plt.plot(t_plot[::down2], timeTher['cap'][cid][::down2])
+            plt.ylabel("$\Theta(t)$ (°C)")
+            plt.title('Thermal ' + cid)
+            plt.grid('on')
+
+    # ==============================================================================
+    # 8) Transformer Overview
+    # ==============================================================================
     if 'tra' in timeElec and len(timeElec['tra']) > 0:
         plt.figure(figsize=(12, 10))
         plt.suptitle("Transformer Overview: Electrical and Thermal", size=18)

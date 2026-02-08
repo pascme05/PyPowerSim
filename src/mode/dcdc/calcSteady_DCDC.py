@@ -92,6 +92,7 @@ def calcSteady_DCDC(top, mdl, para, setup):
     Vdc = setup['Dat']['stat']['Vdc']
     phiE = math.radians(setup['Top']['phiE'])
     phiV = math.radians(setup['Dat']['stat']['phi'])
+    Ntr = top.Ntr
 
     # ------------------------------------------
     # Thermal
@@ -169,9 +170,15 @@ def calcSteady_DCDC(top, mdl, para, setup):
     [xs, xsh, s, c, x, xN0] = top.calcPWM(v_ref, t_ref, Mi, setup)
 
     # ==============================================================================
+    # Ideal Primary and Secondary Voltages
+    # ==============================================================================
+    v_ac_pri = 0.5 * Vdc * (s['A'] - s['B'])
+    v_ac_sec = 0.5 * (Vdc / Ntr) * (s['C'] - s['D']) if Ntr != 0 else 0.5 * Vdc * (s['C'] - s['D'])
+
+    # ==============================================================================
     # Time Domain
     # ==============================================================================
-    [timeAc, timeDc, _] = top.calcTime(s, e_ref, t_ref, Mi, mdl, start, ende, [], para, setup)
+    [timeAc, timeDc, _] = top.calcTime(s, v_ac_pri, v_ac_sec,  e_ref, t_ref, Mi, mdl, start, ende, [], para, setup)
 
     # ==============================================================================
     # Msg
@@ -184,15 +191,22 @@ def calcSteady_DCDC(top, mdl, para, setup):
     # ==============================================================================
     while err > setup['Exp']['tol']:
         # ------------------------------------------
+        # Waveforms
+        # ------------------------------------------
+        [timeAc, timeDc, _] = top.calcTime(s, v_ac_pri, v_ac_sec, e_ref, t_ref, Mi, mdl, start, ende, [], para, setup)
+
+        # ------------------------------------------
         # Electrical
         # ------------------------------------------
         # Switches
         for i in range(0, len(top.id2)):
             para_swi = para
+            Vdc_temp = Vdc
             if 'SwiPri' in para and 'SwiSec' in para:
                 para_swi = {'Swi': para['SwiPri'], 'Cap': para['Cap']} if i < 4 else {'Swi': para['SwiSec'], 'Cap': para['Cap']}
+                Vdc_temp = np.mean(timeDc['v_dc_pri']) if i < 4 else np.mean(timeDc['v_dc_sec'])
 
-            timeElec['sw'][top.id2[i]] = calcElecSwi(Vdc, top.id9[i] * timeAc[top.id4[i]], (s[top.id3[i]][start:ende] == (-1) ** i),
+            timeElec['sw'][top.id2[i]] = calcElecSwi(Vdc_temp, top.id9[i] * timeAc[top.id4[i]], (s[top.id3[i]][start:ende] == (-1) ** i),
                                                      T_sw[i], top.id5[i], para_swi, setup)
 
         # Output Capacitor
@@ -205,6 +219,14 @@ def calcSteady_DCDC(top, mdl, para, setup):
 
         # Transformer
         timeElec['tra'] = calcElecTra(t_ref[start:ende], timeAc['i_ac_pri'], timeAc['i_ac_sec'], timeAc['v_ac_pri'], timeAc['v_ac_sec'], T_tra, para, setup)
+
+        # ------------------------------------------
+        # Update AC Voltage
+        # ------------------------------------------
+        v_ac_pri[start:ende] = timeElec['sw']['S2']['v_T'] - timeElec['sw']['S1']['v_T']
+        v_ac_sec[start:ende] = timeElec['sw']['S6']['v_T'] - timeElec['sw']['S5']['v_T']
+        timeAc['v_ac_pri'] = v_ac_pri
+        timeAc['v_ac_sec'] = v_ac_sec
 
         # ------------------------------------------
         # Losses

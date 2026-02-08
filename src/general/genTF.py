@@ -94,8 +94,11 @@ def genTF(para, setup):
         # ------------------------------------------
         print("INFO: DCDC Topology")
         Lk = para['Tra']['Elec']['con']['Lk']
-        Rt = para['Tra']['Elec']['con']['Rp'] + para['Tra']['Elec']['con']['Rs'] * para['Tra']['Elec']['con'][
-            'N'] ** 2 + R
+        try:
+            Ron = para['SwiPri']['Elec']['con']['Ron'] + para['SwiSec']['Elec']['con']['Ron'] * para['Tra']['Elec']['con']['N'] ** 2
+        except:
+            Ron = 0
+        Rt = Ron + para['Tra']['Elec']['con']['Rp'] + para['Tra']['Elec']['con']['Rs'] * para['Tra']['Elec']['con']['N'] ** 2
 
         # ------------------------------------------
         # General
@@ -152,7 +155,7 @@ def genTF(para, setup):
     # ==============================================================================
     if para['Tra']:
         Lk = para['Tra']['Elec']['con']['Lk']
-        Rt = para['Tra']['Elec']['con']['Rp'] + para['Tra']['Elec']['con']['Rs'] * para['Tra']['Elec']['con']['N'] ** 2 + R
+        Rt = para['Tra']['Elec']['con']['Rp'] + para['Tra']['Elec']['con']['Rs'] * para['Tra']['Elec']['con']['N'] ** 2
         num = [para['Tra']['Elec']['con']['Lm'], para['Tra']['Elec']['con']['Rc']]
         den = [
             Lk * para['Tra']['Elec']['con']['Lm'],
@@ -160,7 +163,7 @@ def genTF(para, setup):
             Rt * para['Tra']['Elec']['con']['Rc']
         ]
         out['TF']['Tra'] = signal.TransferFunction(num, den)
-        out['TF']['Tra'] = signal.TransferFunction([1], [Lk, Rt])
+        # out['TF']['Tra'] = signal.TransferFunction([1], [Lk, Rt])
     else:
         out['TF']['Tra'] = signal.TransferFunction([1], [1])
         print("WARN: No transformer model Parameter provided.")

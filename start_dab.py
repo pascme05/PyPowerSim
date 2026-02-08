@@ -56,14 +56,14 @@ setup = initSetup()
 # ------------------------------------------
 # General
 # ------------------------------------------
-setup['Exp']['Name'] = "dab_test"                                                                                       # name of the simulation (str)
+setup['Exp']['Name'] = "DAB_SPS"                                                                                         # name of the simulation (str)
 setup['Exp']['Author'] = "Pascal Schirmer"                                                                               # name of the responsible person (str)
 setup['Exp']['debug'] = 0                                                                                                # (0): debug mode de-activated, (1): debug mode activated level-1, (2): debug mode activated level-2
 
 # ------------------------------------------
 # Operating Mode
 # ------------------------------------------
-setup['Exp']['output'] = 'I'                                                                                             # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled, (Phi): phase shift is controlled (DAB)
+setup['Exp']['output'] = 'V'                                                                                           # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled, (Phi): phase shift is controlled (DAB)
 setup['Exp']['type'] = 1                                                                                                 # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis, (3): closed loop analysis
 
 # ==============================================================================
@@ -83,7 +83,7 @@ setup['Exp']['Cap'] = "Elco"                                                    
 
 # DCDC Topologies (DAB, PSFB)
 setup['Exp']['SwiPri'] = "A2F12M12W2"                                                                                    # filename of the primary bridge switch parameter file
-setup['Exp']['SwiSec'] = "A2F12M12W2"                                                                                    # filename of the secondary bridge switch parameter file
+setup['Exp']['SwiSec'] = "A2F06M12W2"                                                                                    # filename of the secondary bridge switch parameter file
 setup['Exp']['CapPri'] = "none"                                                                                          # filename of the parameter set for the Input capacitor
 setup['Exp']['CapSec'] = "none"                                                                                          # filename of the parameter set for the Output capacitor
 setup['Exp']['Trafo'] = "trafoDAB"                                                                                       # filename of the parameter set for the transformer
