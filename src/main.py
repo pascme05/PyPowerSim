@@ -32,14 +32,14 @@ V1.1: 16.12.2025, Pascal Schirmer
 # ==============================================================================
 from src.data.loadPara import loadPara
 from src.data.loadSetup import loadSetup
-from src.calcSweep import calcSweep
-from src.calcSteady import calcSteady
-from src.calcTrans import calcTrans
-from src.calcClose import calcClose
-from src.calcSweep_DCDC import calcSweep_DCDC
-from src.calcSteady_DCDC import calcSteady_DCDC
-from src.calcTrans_DCDC import calcTrans_DCDC
-from src.calcClose_DCDC import calcClose_DCDC
+from src.mode.inv.calcSweep import calcSweep
+from src.mode.inv.calcSteady import calcSteady
+from src.mode.inv.calcTrans import calcTrans
+from src.mode.inv.calcClose import calcClose
+from src.mode.dcdc.calcSweep_DCDC import calcSweep_DCDC
+from src.mode.dcdc.calcSteady_DCDC import calcSteady_DCDC
+from src.mode.dcdc.calcTrans_DCDC import calcTrans_DCDC
+from src.mode.dcdc.calcClose_DCDC import calcClose_DCDC
 from src.topo.initTopo import initTopo
 from src.plot.plot import plot
 from src.plot.plotResults import plotResults

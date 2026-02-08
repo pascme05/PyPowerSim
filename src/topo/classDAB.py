@@ -523,7 +523,7 @@ class classDAB:
         # Description
         # ==============================================================================
         """
-        This function initialises the relevant variables for calculating closed loop
+        This function initializes the relevant variables for calculating closed loop
         control outputs.
 
         Input:
@@ -695,22 +695,14 @@ class classDAB:
         # Old for consistency
         outAc['v_ac_pri'] = v_ac_pri[t0:t1]
         outAc['v_ac_sec'] = v_ac_sec[t0:t1]
+        outAc['v_ac_sec_ref'] = v_ac_sec_ref
         outAc['v_L'] = v_ab
         outAc['i_ac_pri'] = i_ac_pri
         outAc['i_ac_sec'] = i_ac_sec
 
-        # New (TODO: Update var names)
-        outAc['v_a0'] = v_ac_pri[t0:t1]
-        outAc['v_b0'] = v_ac_sec[t0:t1]
-        outAc['v_L'] = v_ab
-        outAc['v_a_out'] = v_ac_pri[t0:t1]
-        outAc['v_a'] = v_ac_sec_ref[t0:t1]
-        outAc['i_a'] = i_ac_sec
-
         # ------------------------------------------
         # DC Side
         # ------------------------------------------
-        # New (TODO: Update var names)
         outDc['v_dc_pri'] = v_dc_pri
         outDc['v_dc_sec'] = v_dc_sec
         outDc['v_dc_pri_cap'] = v_dc_pri_cap
@@ -721,12 +713,6 @@ class classDAB:
         outDc['i_dc_load'] = i_dc_load
         outDc['i_c_pri'] = i_c_pri
         outDc['i_c_sec'] = i_c_sec
-
-        # Old for consistency
-        outDc['v_in'] = v_dc_pri
-        outDc['v_dc'] = v_dc_sec
-        outDc['i_dc'] = i_dc_sec
-        outDc['i_c'] = i_c_sec
 
         # ------------------------------------------
         # Init Conditions

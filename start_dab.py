@@ -86,7 +86,7 @@ setup['Exp']['SwiPri'] = "A2F12M12W2"                                           
 setup['Exp']['SwiSec'] = "A2F12M12W2"                                                                                    # filename of the secondary bridge switch parameter file
 setup['Exp']['CapPri'] = "none"                                                                                          # filename of the parameter set for the Input capacitor
 setup['Exp']['CapSec'] = "none"                                                                                          # filename of the parameter set for the Output capacitor
-setup['Exp']['Trafo'] = "templateTra"                                                                                    # filename of the parameter set for the transformer
+setup['Exp']['Trafo'] = "trafoDAB"                                                                                       # filename of the parameter set for the transformer
 
 # ==============================================================================
 # Plotting and Saving

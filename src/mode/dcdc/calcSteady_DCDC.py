@@ -30,7 +30,7 @@ Outputs:    1) time:    results in the time domain
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.general.calcFreq import calcFreq
+from src.general.calcSpec import calcFreq
 from src.elec.calcElecSwi import calcElecSwi
 from src.elec.calcLossSwi import calcLossSwi
 from src.elec.calcLossCap import calcLossCap
@@ -45,6 +45,7 @@ from src.general.calcAvg import calcAvg
 # External
 # ==============================================================================
 import numpy as np
+import pandas as pd
 import math
 
 
@@ -222,8 +223,8 @@ def calcSteady_DCDC(top, mdl, para, setup):
                                                      T_sw[i], para_swi, setup)
 
         # Capacitor
-        timeLoss['cap']['C1'] = calcLossCap(t_ref, timeElec['cap']['C1']['i_c'], T_ca[0], para, setup)
-        timeLoss['cap']['C2'] = calcLossCap(t_ref, timeElec['cap']['C2']['i_c'], T_ca[1], para, setup)
+        timeLoss['cap']['C1'] = calcLossCap(t_ref[start:ende], timeElec['cap']['C1']['i_c'], T_ca[0], para, setup)
+        timeLoss['cap']['C2'] = calcLossCap(t_ref[start:ende], timeElec['cap']['C2']['i_c'], T_ca[1], para, setup)
 
         # Transformer
         timeLoss['tra'] = calcLossTra(t_ref[start:ende], timeElec['tra']['i_p'], timeElec['tra']['i_s'],
@@ -380,8 +381,11 @@ def calcSteady_DCDC(top, mdl, para, setup):
     for c0 in out:
         for c1 in out[c0]:
             for c2 in out[c0][c1]:
-                out[c0][c1][c2] = out[c0][c1][c2].iloc[0:int(ende - start)]
-                out[c0][c1][c2] = out[c0][c1][c2].reset_index(drop=True)
+                if isinstance(out[c0][c1][c2], (pd.DataFrame, pd.Series)):
+                    out[c0][c1][c2] = out[c0][c1][c2].iloc[0:int(ende - start)]
+                elif isinstance(out[c0][c1][c2], np.ndarray):
+                    out[c0][c1][c2] = out[c0][c1][c2][0:int(ende - start)]
+                out[c0][c1][c2] = out[c0][c1][c2].reset_index(drop=True) if hasattr(out[c0][c1][c2], 'reset_index') else out[c0][c1][c2]
 
     # ------------------------------------------
     # Out
@@ -456,14 +460,22 @@ def calcSteady_DCDC(top, mdl, para, setup):
     # ==============================================================================
     # Frequency domain
     # ==============================================================================
-    [freqSw, freqAc, freqDc] = calcFreq(s['A'][start:ende], xs['A'][start:ende], timeAc['i_ac_pri'], timeAc['v_ac_pri'],
-                                        timeAc['v_ac_sec'], timeDc['i_dc_sec'], timeDc['v_dc_sec'])
+    # ------------------------------------------
+    # Calculation
+    # ------------------------------------------
+    dictSw = {'Sa': s['A'][start:ende], 'Xas': xs['A'][start:ende], 'Sb': s['B'][start:ende], 'Xbs': xs['B'][start:ende]}
+    [freqSw, freqAc, freqDc] = calcFreq(dictSw, timeAc, timeDc)
 
     # ==============================================================================
     # Output
     # ==============================================================================
     [time, freq, _] = top.out(timeElec, timeLoss, timeTher, timeAc, timeDc, freqSw, freqAc, freqDc, [], [], t_ref, v_ref,
                               e_ref, s, c, xs, xsh, x, xN0, [], start, ende, 1)
+
+    # Re-align lengths because top.out might have different internal logic for slicing
+    time['Loss'] = timeLoss
+    time['Elec'] = timeElec
+    time['Ther'] = timeTher
 
     ###################################################################################################################
     # MSG Out

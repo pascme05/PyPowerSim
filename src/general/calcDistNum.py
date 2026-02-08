@@ -46,6 +46,12 @@ from scipy.fft import fft
 # Function
 #######################################################################################################################
 def calcDistNum(t, i_a, v_a, i_dc, v_dc, Vdc, fel):
+    # Ensure inputs are numpy arrays (prevents KeyError: 'ALIGNED' with pandas and scipy fft)
+    i_a = np.asarray(i_a)
+    v_a = np.asarray(v_a)
+    i_dc = np.asarray(i_dc)
+    v_dc = np.asarray(v_dc)
+    
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################

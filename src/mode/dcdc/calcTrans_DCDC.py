@@ -228,7 +228,7 @@ def calcTrans_DCDC(top, mdl, para, setup):
             # Capacitor
             timeElec['cap']['C1']['i_c'] = timeDc['i_c'][start:ende]
             timeElec['cap']['C1']['v_c'] = timeDc['v_dc'][start:ende]
-            timeLoss['cap']['C1'] = calcLossCap(t_ref, timeDc['i_c'][start:ende], Tcap, para, setup)
+            timeLoss['cap']['C1'] = calcLossCap(t_ref[start:ende], timeDc['i_c'][start:ende], Tcap, para, setup)
             [timeTher['cap']['C1'], Tinit_Cap] = calcTherRC(Tinit_Cap, Ta, timeLoss['cap']['C1']['p_L'], t_ref[start:ende], Rth_JA_cap, Cth_JA_cap)
 
             # Appending
@@ -306,14 +306,22 @@ def calcTrans_DCDC(top, mdl, para, setup):
     # ==============================================================================
     # Frequency domain
     # ==============================================================================
-    [freqSw, freqAc, freqDc] = calcFreq(s['A'][Nsim:(K * Nsim + 1)], xs['A'][Nsim:(K * Nsim + 1)], timeAc['i_a'], timeAc['v_a'],
-                                        timeAc['v_a0'], timeDc['i_dc'], timeDc['v_dc'])
+    # ------------------------------------------
+    # Calculation
+    # ------------------------------------------
+    dictSw = {'Sa': s['A'][Nsim:(K * Nsim + 1)], 'Xas': xs['A'][Nsim:(K * Nsim + 1)]}
+    [freqSw, freqAc, freqDc] = calcFreq(dictSw, timeAc, timeDc)
 
     # ==============================================================================
     # Output
     # ==============================================================================
     [time, freq, _] = top.out(out['elec'], out['loss'], out['ther'], timeAc, timeDc, freqSw, freqAc, freqDc, [], [], t_ref,
                               v_ref, e_ref, s, c, xs, xsh, x, xN0, [], Nsim * (K - 1), (K * Nsim + 1), 1)
+
+    # Re-align lengths because top.out might have different internal logic for slicing
+    time['Loss'] = out['loss']
+    time['Elec'] = out['elec']
+    time['Ther'] = out['ther']
 
     ###################################################################################################################
     # MSG Out
