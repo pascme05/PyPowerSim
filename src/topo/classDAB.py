@@ -26,15 +26,12 @@ Inputs:     1) fel:     electrical frequency at the output (Hz)
             9) Mi:      modulation index (p.u.)
             10) phi:    phase shift for DAB (deg)
             11) N:      transformer ratio (Np/Ns)
-            12) Vdc:    dc link voltage at the input of the converter cell (V)
-            13) Tc_st:  case temperature for stationary analysis
-            14) Tj_st:  core temperature for stationary analysis
-            15) Tc_tr:  case temperature for transient analysis
-            16) Tj_tr:  core temperature for transient analysis
-
-Notes:
-    - For DAB, Top.L is treated as the leakage inductance (power transfer inductance).
-    - The DC-link capacitor model is not used in the DAB waveform analysis.
+            12) Lk:     leakage inductance (power transfer inductance) of the DAB (H)
+            13) Vdc:    dc link voltage at the input of the converter cell (V)
+            14) Tc_st:  case temperature for stationary analysis
+            15) Tj_st:  core temperature for stationary analysis
+            16) Tc_tr:  case temperature for transient analysis
+            17) Tj_tr:  core temperature for transient analysis
 """
 
 #######################################################################################################################
@@ -62,7 +59,7 @@ class classDAB:
     ###################################################################################################################
     # Constructor
     ###################################################################################################################
-    def __init__(self, fel, fs, fc, fsim, td, tmin, cyc, W, Mi, phi, Ntr, Vdc, Tc_st, Tj_st, Tc_tr, Tj_tr):
+    def __init__(self, fel, fs, fc, fsim, td, tmin, cyc, W, Mi, phi, Ntr, Lk, Vdc, Tc_st, Tj_st, Tc_tr, Tj_tr):
         self.fel = fel
         self.fs = fs
         self.fc = fc
@@ -74,6 +71,7 @@ class classDAB:
         self.Mi = Mi
         self.phi = phi
         self.Ntr = Ntr
+        self.Lk = Lk
         self.Vdc = Vdc
         self.Tc_st = Tc_st
         self.Tj_st = Tj_st
@@ -141,7 +139,6 @@ class classDAB:
         # ------------------------------------------
         data['ther']['sw'] = pd.DataFrame(columns=self.id6 + self.id7 + self.id8)
 
-
         # ==============================================================================
         # Capacitor
         # ==============================================================================
@@ -163,6 +160,27 @@ class classDAB:
         # Thermal
         # ------------------------------------------
         data['ther']['cap'] = pd.DataFrame(columns=['C1', 'C2'])
+
+        # ==============================================================================
+        # Transformer
+        # ==============================================================================
+        # ------------------------------------------
+        # Electric
+        # ------------------------------------------
+        data['elec']['tra'] = {}
+        data['elec']['tra']['T1'] = pd.DataFrame(columns=['i_p', 'i_s', 'i_m', 'v_p', 'v_s', 'Phi', 'B'])
+
+        # ------------------------------------------
+        # Losses
+        # ------------------------------------------
+        data['loss']['tra'] = {}
+        data['loss']['tra']['T1'] = pd.DataFrame(columns=['p_L_pri', 'p_L_sec', 'p_L_core', 'p_L'])
+
+        # ------------------------------------------
+        # Thermal
+        # ------------------------------------------
+        data['ther']['tra'] = {}
+        data['ther']['tra']['T1'] = pd.DataFrame(columns=['Pri', 'Sec', 'Core'])
 
         # ==============================================================================
         # Return
@@ -198,9 +216,9 @@ class classDAB:
         # ==============================================================================
         distAc = {'Pri': {}, 'Sec': {}}
         distDc = {'Pri': {}, 'Sec': {}}
-        timeElec = {'sw': {}, 'cap': {}}
-        timeLoss = {'sw': {}, 'cap': {}}
-        timeTher = {'sw': {}, 'cap': {}}
+        timeElec = {'sw': {}, 'cap': {}, 'tra': {}}
+        timeLoss = {'sw': {}, 'cap': {}, 'tra': {}}
+        timeTher = {'sw': {}, 'cap': {}, 'tra': {}}
 
         # ==============================================================================
         # Calculation
@@ -209,6 +227,7 @@ class classDAB:
         # Time
         # ------------------------------------------
         timeElec['cap']['C1'] = pd.DataFrame(columns=['i_c', 'v_c'])
+        timeElec['cap']['C2'] = pd.DataFrame(columns=['i_c', 'v_c'])
         timeSw = pd.DataFrame(columns=['t', 'v_a_ref', 'v_b_ref', 'e', 'xAs', 'xBs', 'xAsh', 'xBsh',
                                        'sA', 'sB', 'sC', 'sD', 'cA', 'cB', 'c'])
         
@@ -571,7 +590,7 @@ class classDAB:
     ###################################################################################################################
     # Temporal Output
     ###################################################################################################################
-    def calcTime(self, s, e, t, Mi, mdl, t0, t1, init, avg, setup):
+    def calcTime(self, s, e, t, Mi, mdl, t0, t1, init, para, setup):
         # ==============================================================================
         # Description
         # ==============================================================================
@@ -586,9 +605,9 @@ class classDAB:
         5) mdl:     transfer functions
         6) t0:      start time (sample)
         7) t1:      end time (sample)
-        8) setup:   all setup variables
         9) init:    initial conditions for the lsim solver
-        10) avg:    if 1) mean is subtracted from the signal
+        10) para:   all parameters used in the simulation
+        11) setup:  all setup variables
 
         Output:
         1) outAc:   outputs ac side
@@ -619,39 +638,53 @@ class classDAB:
         # AC Voltages
         # ------------------------------------------
         v_ac_pri = 0.5 * self.Vdc * (s['A'] - s['B'])
-        v_ac_sec = 0.5 * (self.Vdc / self.Ntr) * 0.9 * (s['C'] - s['D']) if self.Ntr != 0 else 0.5 * self.Vdc * 0.9 * (s['C'] - s['D'])
+        v_ac_sec = 0.5 * (self.Vdc / self.Ntr) * (s['C'] - s['D']) if self.Ntr != 0 else 0.5 * self.Vdc * (s['C'] - s['D'])
         v_ac_sec_ref = self.Ntr * v_ac_sec
         v_ab = v_ac_pri - v_ac_sec_ref
 
         # ------------------------------------------
         # AC Currents
         # ------------------------------------------
-        _, i_l, _, = signal.lsim(mdl['SS']['DAB_Lk'], v_ab - np.mean(v_ab), t, X0=init['load'])
-        i_l = i_l[t0:t1]
-        i_ac_pri = i_l - np.mean(i_l)
-        i_ac_sec = i_ac_pri * self.Ntr if self.Ntr != 0 else i_l
+        _, i_l, _, = signal.lsim(mdl['SS']['AC'], v_ab - np.mean(v_ab), t, X0=init['load'])
+        # _, i_l2, _, = signal.lsim(mdl['SS']['Tra'], v_ab - np.mean(v_ab), t, X0=init['load'])
+        i_ac_pri = i_l[t0:t1] - np.mean(i_l[t0:t1])
+        i_ac_sec = i_ac_pri * self.Ntr if self.Ntr != 0 else i_ac_pri
 
         # ------------------------------------------
-        # Cap Currents
+        # DC-side currents from modulation
         # ------------------------------------------
-        i_dc_pri = i_ac_pri / 2 * (s['A'][t0:t1] - s['B'][t0:t1])
-        i_dc_sec = -i_ac_sec / 2 * (s['C'][t0:t1] - s['D'][t0:t1])
-        i_c_pri = np.mean(i_dc_pri) - i_dc_pri
-        i_c_sec =-np.mean(i_dc_sec) + i_dc_sec
+        i_dc_pri = +0.5 * i_ac_pri * (s['A'][t0:t1] - s['B'][t0:t1])
+        i_dc_sec = -0.5 * i_ac_sec * (s['C'][t0:t1] - s['D'][t0:t1])
+
+        # ------------------------------------------
+        # Capacitor currents
+        # ------------------------------------------
+        i_c_pri = i_dc_pri - np.mean(i_dc_pri)
+        i_c_sec = i_dc_sec - np.mean(i_dc_sec)
 
         # ------------------------------------------
         # DC Voltages
         # ------------------------------------------
-        _, v_dc_pri, _, = signal.lsim(mdl['SS']['DAB_Inp'], i_c_pri, t[t0:t1], X0=init['dc'])
-        _, v_dc_sec, _, = signal.lsim(mdl['SS']['DAB_Out'], i_c_sec, t[t0:t1], X0=init['dc'])
-        v_dc_pri = v_dc_pri + self.Vdc
-        v_dc_sec = v_dc_sec - np.mean(i_dc_sec) * 1
+        # Caps
+        _, v_dc_pri_cap, _, = signal.lsim(mdl['SS']['Inp'], i_c_pri, t[t0:t1], X0=init['dc'])
+        _, v_dc_sec_cap, _, = signal.lsim(mdl['SS']['Out'], i_c_sec, t[t0:t1], X0=init['dc'])
+
+        # Input Side
+        try:
+            v_dc_pri = self.Vdc + v_dc_pri_cap - para['CapPri']['Elec']['con']['ESR'] * i_c_pri
+        except:
+            v_dc_pri = self.Vdc + v_dc_pri_cap
+
+        # Output Side
+        try:
+            v_dc_sec = v_dc_sec_cap + para['CapSec']['Elec']['con']['ESR'] * i_c_sec
+        except:
+            v_dc_sec = v_dc_sec_cap
 
         # ------------------------------------------
         # DC Currents
         # ------------------------------------------
-        # i_dc_pri = np.mean(i_dc_pri) * np.ones(len(i_dc_pri))
-        _, i_dc_sec, _, = signal.lsim(mdl['SS']['DAB_R'], v_dc_sec, t[t0:t1], X0=init['load'])
+        _, i_dc_load, _, = signal.lsim(mdl['SS']['Load'], v_dc_sec, t[t0:t1], X0=init['load'])
 
         # ==============================================================================
         # Post-Processing
@@ -680,9 +713,12 @@ class classDAB:
         # New (TODO: Update var names)
         outDc['v_dc_pri'] = v_dc_pri
         outDc['v_dc_sec'] = v_dc_sec
+        outDc['v_dc_pri_cap'] = v_dc_pri_cap
+        outDc['v_dc_sec_cap'] = v_dc_sec_cap
         outDc['i_dc'] = i_dc_pri
         outDc['i_dc_pri'] = i_dc_pri
         outDc['i_dc_sec'] = i_dc_sec
+        outDc['i_dc_load'] = i_dc_load
         outDc['i_c_pri'] = i_c_pri
         outDc['i_c_sec'] = i_c_sec
 

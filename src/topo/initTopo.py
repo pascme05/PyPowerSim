@@ -17,6 +17,7 @@
 This function initialises the respective topology under evaluation
 Inputs:     1) name:    name of the topology
             2) setup:   includes all setup variables
+            3) para:    all parameters used in the simulation
 Outputs:    1) top:     topology class
 """
 
@@ -43,7 +44,7 @@ from src.topo.classDAB import classDAB
 #######################################################################################################################
 # Main Function
 #######################################################################################################################
-def initTopo(name, setup):
+def initTopo(name, setup, para):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -74,8 +75,8 @@ def initTopo(name, setup):
         top = classDAB(setup['Top']['fel'], setup['Par']['PWM']['fs'], setup['Par']['Cont']['fc'], setup['Exp']['fsim'],
                        setup['Par']['PWM']['td'], setup['Par']['PWM']['tmin'], setup['Dat']['stat']['cyc'],
                        setup['Dat']['stat']['W'], setup['Dat']['stat']['Mi'], setup['Dat']['stat']['PhiDAB'], 
-                       setup['Top']['n'], setup['Dat']['stat']['Vdc'], setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], 
-                       setup['Dat']['trans']['Tc'], setup['Dat']['trans']['Tj'])
+                       para['Tra']['Elec']['con']['N'], para['Tra']['Elec']['con']['Lk'], setup['Dat']['stat']['Vdc'],
+                       setup['Dat']['stat']['Tc'], setup['Dat']['stat']['Tj'], setup['Dat']['trans']['Tc'], setup['Dat']['trans']['Tj'])
     else:
         top = []
         print("ERROR: Invalid topology class")

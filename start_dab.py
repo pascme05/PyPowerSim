@@ -63,7 +63,7 @@ setup['Exp']['debug'] = 0                                                       
 # ------------------------------------------
 # Operating Mode
 # ------------------------------------------
-setup['Exp']['output'] = 'Phi'                                                                                             # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled, (Phi): phase shift is controlled (DAB)
+setup['Exp']['output'] = 'I'                                                                                             # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled, (Phi): phase shift is controlled (DAB)
 setup['Exp']['type'] = 1                                                                                                 # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis, (3): closed loop analysis
 
 # ==============================================================================
@@ -72,18 +72,21 @@ setup['Exp']['type'] = 1                                                        
 # ------------------------------------------
 # Mission Profile and Config
 # ------------------------------------------
-setup['Exp']['conf'] = "dab"                                                                                             # name of the configuration file
+setup['Exp']['conf'] = "default_DCDC"                                                                                    # name of the configuration file
 
 # ------------------------------------------
 # Devices
 # ------------------------------------------
-# Inverter Topologie
-setup['Exp']['Swi'] = "IKQ75N120CS6"                                                                                     # default switch parameter file
-setup['Exp']['Cap'] = "Elco"                                                                                             # filename of the parameter set for the DC link capacitor (output cap for DCDC)
+# Inverter Topologies (B6, B4, B2)
+setup['Exp']['Swi'] = "IKQ75N120CS6"                                                                                     # filename of the default switch parameter file
+setup['Exp']['Cap'] = "Elco"                                                                                             # filename of the parameter set for the DC link capacitor
 
-# DCDC Topologies
-setup['Exp']['SwiPri'] = "AIMDQ75R050M2H"                                                                                # primary bridge switch parameter file
-setup['Exp']['SwiSec'] = "IAUT300N10S5N015"                                                                              # secondary bridge switch parameter file
+# DCDC Topologies (DAB, PSFB)
+setup['Exp']['SwiPri'] = "A2F12M12W2"                                                                                    # filename of the primary bridge switch parameter file
+setup['Exp']['SwiSec'] = "A2F12M12W2"                                                                                    # filename of the secondary bridge switch parameter file
+setup['Exp']['CapPri'] = "none"                                                                                          # filename of the parameter set for the Input capacitor
+setup['Exp']['CapSec'] = "none"                                                                                          # filename of the parameter set for the Output capacitor
+setup['Exp']['Trafo'] = "templateTra"                                                                                    # filename of the parameter set for the transformer
 
 # ==============================================================================
 # Plotting and Saving

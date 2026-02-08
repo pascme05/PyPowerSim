@@ -17,6 +17,7 @@
 This function checks the parameters for correctness. It also considers general parameters of the machine to assure
 smooth calculation.
 Inputs:     1) setup:   includes all simulation variables
+            2) para:    all parameters used in the simulation
 Outputs:    1) setup:   updated setup file
 """
 
@@ -38,7 +39,7 @@ import cmath
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def genLoadInput(setup):
+def genLoadInput(setup, para):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -76,12 +77,20 @@ def genLoadInput(setup):
     # ------------------------------------------
     # DCDC
     # ------------------------------------------
+    # Init
     fs = setup['Par']['PWM']['fs']
-    Ntr = setup['Top']['n']
-    omega = 2 * np.pi * fs
-    Vo_max = Vdc/Ntr 
-    Po_max = Ntr * Vdc * Vo_max / (4 * omega* L) * np.pi
-    Io_max = Vo_max / R
+
+    # Calc
+    try:
+        Ntr = para['Tra']['Elec']['con']['N']
+        Lk = para['Tra']['Elec']['con']['Lk']
+        omega = 2 * np.pi * fs
+        Vo_max = Vdc / Ntr
+        Po_max = Ntr * Vdc * Vo_max / (4 * omega * Lk) * np.pi
+        Io_max = Vo_max / R
+    except:
+        Ntr = 1
+        Lk = 50e-6
 
     # ==============================================================================
     # Topology
@@ -129,9 +138,9 @@ def genLoadInput(setup):
     if setup['Exp']['output'] == 'Mi' or setup['Exp']['output'] == 'Phi':
         if setup['Top']['sourceType'] == "DAB":
             Mi = 0.5
-            Po = (Ntr * Vdc * Vo_max) / (omega * L) * (phiDAB - phiDAB**2 / np.pi)
+            Po = (Ntr * Vdc * Vo_max) / (omega * Lk) * (phiDAB - phiDAB ** 2 / np.pi)
             Vo = min(np.sqrt(Po * R), Vo_max)
-            print(f"INFO: DAB phase-shift controlled mode with Phi0 {math.degrees(phiDAB):.2f} (deg) and Mi={Mi:.2f} (p.u.)")
+            print(f"INFO: DAB phase-shift mode with Phi {math.degrees(phiDAB):.2f} (deg) and Mi={Mi:.2f} (p.u.)")
         else:
             print(f"INFO: Modulation index controlled mode with Mi {setup['Dat']['stat']['Mi']:.2f} (p.u.)")
 
@@ -142,13 +151,13 @@ def genLoadInput(setup):
         print(f"INFO: Voltage controlled mode with Vo {setup['Dat']['stat']['Vo']:.2f} (V)")
         if setup['Top']['sourceType'] == "DAB":
             Mi = 0.5
-            Vo     = min(setup['Dat']['stat']['Vo'], Vo_max)
-            Io     = Vo / R
-            Po     = Vo * Io
-            K  = (Ntr * Vdc * Vo) / (omega * L)
+            Vo = min(setup['Dat']['stat']['Vo'], Vo_max)
+            Io = Vo / R
+            Po = Vo * Io
+            K = (Ntr * Vdc * Vo) / (omega * Lk)
             Pn = Po / K if K > 0 else 0.0
             disc = max(1 - 4 * Pn / np.pi, 0.0)
-            phiDAB  = (np.pi / 2) * (1 - np.sqrt(disc))
+            phiDAB = (np.pi / 2) * (1 - np.sqrt(disc))
         else:
             Mi = setup['Dat']['stat']['Vo'] / setup['Dat']['stat']['Vdc'] * paraV
 
@@ -159,13 +168,13 @@ def genLoadInput(setup):
         print(f"INFO: Current controlled mode with Io {setup['Dat']['stat']['Io']:.2f} (A)")
         if setup['Top']['sourceType'] == "DAB":
             Mi = 0.5
-            Io     = min(setup['Dat']['stat']['Io'], Io_max)
-            Vo     = Io * R
-            Po     = Vo * Io
-            K  = (Ntr * Vdc * Vo) / (omega * L)
+            Io = min(setup['Dat']['stat']['Io'], Io_max)
+            Vo = Io * R
+            Po = Vo * Io
+            K = (Ntr * Vdc * Vo) / (omega * Lk)
             Pn = Po / K if K > 0 else 0.0
             disc = max(1 - 4 * Pn / np.pi, 0.0)
-            phiDAB  = (np.pi / 2) * (1 - np.sqrt(disc))
+            phiDAB = (np.pi / 2) * (1 - np.sqrt(disc))
         else:
             Vo = abs(setup['Dat']['stat']['Io'] * Z * np.sqrt(2) + EMF)
             Mi = Vo / setup['Dat']['stat']['Vdc'] * paraV
@@ -179,11 +188,10 @@ def genLoadInput(setup):
             Mi = 0.5
             Po = min(setup['Dat']['stat']['Po'], Po_max)
             Vo = min(np.sqrt(Po * R), Vo_max)
-            Io = Vo / R
-            K  = (Ntr * Vdc * Vo) / (omega * L)
+            K = (Ntr * Vdc * Vo) / (omega * Lk)
             Pn = Po / K if K > 0 else 0.0
             disc = max(1 - 4 * Pn / np.pi, 0.0)
-            phiDAB  = (np.pi / 2) * (1 - np.sqrt(disc))
+            phiDAB = (np.pi / 2) * (1 - np.sqrt(disc))
         else:
             Io = np.sqrt(setup['Dat']['stat']['Po'] / R) * np.sqrt(2)
             Io = complex(Io * np.cos(angZ), Io * np.sin(angZ))
@@ -198,11 +206,10 @@ def genLoadInput(setup):
             Mi = 0.5
             Po = min(setup['Dat']['stat']['Po'], Po_max)
             Vo = min(np.sqrt(Po * R), Vo_max)
-            Io = Vo / R
-            K  = (Ntr * Vdc * Vo) / (omega * L)
+            K = (Ntr * Vdc * Vo) / (omega * Lk)
             Pn = Po / K if K > 0 else 0.0
             disc = max(1 - 4 * Pn / np.pi, 0.0)
-            phiDAB  = (np.pi / 2) * (1 - np.sqrt(disc))
+            phiDAB = (np.pi / 2) * (1 - np.sqrt(disc))
         else:
             print(f"INFO: Reactive power controlled mode with Qo {setup['Dat']['stat']['Qo']:.2f} (W)")
             Io = np.sqrt(setup['Dat']['stat']['Qo'] / (2 * np.pi * fel * L)) * np.sqrt(2)
@@ -215,7 +222,7 @@ def genLoadInput(setup):
     else:
         if setup['Top']['sourceType'] == "DAB":
             Mi = 0.5
-            print(f"INFO: DAB phase-shift controlled mode with Phi0 {math.degrees(phiDAB):.2f} (deg) and Mi={Mi:.2f} (p.u.)")
+            print(f"INFO: DAB phase-shift mode with Phi {math.degrees(phiDAB):.2f} (deg) and Mi={Mi:.2f} (p.u.)")
         else:
             print(f"INFO: Modulation index controlled mode with Mi {setup['Dat']['stat']['Mi']:.2f} (p.u.)")
 
@@ -241,10 +248,17 @@ def genLoadInput(setup):
     # ==============================================================================
     # Printing
     # ==============================================================================
+    # ------------------------------------------
+    # Topology Specific
+    # ------------------------------------------
     if setup['Top']['sourceType'] == "DAB":
         print(f"INFO: DAB phase shift Phi0 being equal to {math.degrees(phiDAB):.2f} (deg)")
     else:
         print(f"INFO: Modulation index being equal to {Mi:.2f} (p.u.)")
+
+    # ------------------------------------------
+    # General
+    # ------------------------------------------
     print(f"INFO: Output rms voltage being equal to {Vo:.2f} (V) and {phiO:.2f} (deg)")
     print(f"INFO: Output rms current being equal to {cmath.polar(Io)[0]:.2f} (A) and {math.degrees(cmath.polar(Io)[1]):.2f} (deg)")
     print(f"INFO: Output power being equal to {Po:.2f} (W) and {Qo:.2f} (VAr)")
@@ -256,6 +270,7 @@ def genLoadInput(setup):
     setup['Dat']['stat']['Io'] = Io
     setup['Dat']['stat']['Po'] = Po
     setup['Dat']['stat']['Qo'] = Qo
+    setup['Dat']['stat']['So'] = So
     setup['Dat']['stat']['Mi'] = Mi
     setup['Dat']['stat']['PhiDAB'] = phiDAB
     setup['Dat']['stat']['PhiVI'] = cmath.polar(Io)[1]

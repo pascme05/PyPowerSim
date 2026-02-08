@@ -3,9 +3,9 @@
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
 # File:         calcTrans_DCDC
-# Date:         01.05.2024
+# Date:         08.02.2026
 # Author:       Dr. Pascal A. Schirmer
-# Version:      V.1.0
+# Version:      V.1.1
 # Copyright:    Pascal Schirmer
 #######################################################################################################################
 #######################################################################################################################
@@ -133,12 +133,13 @@ def calcTrans_DCDC(top, mdl, para, setup):
     # ------------------------------------------
     # Parameters
     # ------------------------------------------
-    [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap] = initRC(para, setup)
+    [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap,
+     Rth_PC_tra, Cth_PC_tra, Rth_SC_tra, Cth_SC_tra, Rth_CC_tra, Cth_CC_tra] = initRC(para, setup)
 
     # Secondary switch thermal parameters (DAB only)
     if setup['Top']['sourceType'] == 'DAB' and 'SwiSec' in para:
-        para_sec = {'Swi': para['SwiSec'], 'Cap': para['Cap']}
-        [Rth_JA_s, Cth_JA_s, Rth_DA_s, Cth_DA_s, Rth_CA_s, Cth_CA_s, _, _] = initRC(para_sec, setup)
+        para_sec = {'Swi': para['SwiSec'], 'Cap': para['Cap'], 'Tra': para.get('Tra', [])}
+        [Rth_JA_s, Cth_JA_s, Rth_DA_s, Cth_DA_s, Rth_CA_s, Cth_CA_s, _, _, _, _, _, _, _, _] = initRC(para_sec, setup)
     else:
         Rth_JA_s, Cth_JA_s, Rth_DA_s, Cth_DA_s, Rth_CA_s, Cth_CA_s = Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA
 

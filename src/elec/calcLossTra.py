@@ -2,8 +2,8 @@
 #######################################################################################################################
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
-# File:         calcLossCap
-# Date:         01.05.2024
+# File:         calcLossTra
+# Date:         08.02.2026
 # Author:       Dr. Pascal A. Schirmer
 # Version:      V.1.0
 # Copyright:    Pascal Schirmer
@@ -14,13 +14,16 @@
 # Function Description
 #######################################################################################################################
 """
-This function calculates the losses of the capacitor devices.
+This function calculates the losses of the transformer.
 Inputs:     1) t:       time vector (sec)
-            2) i_c:     capacitor current (A)
-            3) t_Tj:    core temperature of the capacitor (°C)
-            4) para:    parameters of the switch
-            5) setup:   all setup variables
-Outputs:    1) out:     output array including capacitor
+            2) i_p:     primary current (A)
+            3) i_s:     secondary current (A)
+            4) v_p:     primary voltage (V)
+            5) v_s:     secondary voltage (V)
+            6) Ttra:    transformer temperature (°C)
+            7) para:    parameters of the transformer
+            8) setup:   all setup variables
+Outputs:    1) out:     output array including transformer losses
 """
 
 #######################################################################################################################
@@ -35,27 +38,26 @@ Outputs:    1) out:     output array including capacitor
 # ==============================================================================
 import pandas as pd
 import numpy as np
-from scipy import interpolate
 
 
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcLossCap(t, i_c, Tj, para, setup):
+def calcLossTra(t, i_p, i_s, v_p, v_s, Ttra, para, setup):
     ###################################################################################################################
     # Initialisation
-    ###################################################################################################################   
+    ###################################################################################################################
     # ==============================================================================
     # Variables
     # ==============================================================================
     dt = t[1] - t[0]
-    f = np.linspace(0, int(1 / dt), int(len(i_c) / 2))
+    f = np.linspace(0, int(1 / dt), int(len(i_p) / 2))
     fel = setup['Top']['fel']
 
     # ==============================================================================
     # Output
     # ==============================================================================
-    out = pd.DataFrame(columns=['p_L'])
+    out = pd.DataFrame(columns=['p_PC', 'p_SC', 'p_CC', 'p_L'])
 
     ###################################################################################################################
     # Pre-Processing
@@ -66,57 +68,70 @@ def calcLossCap(t, i_c, Tj, para, setup):
     idx = np.argmin(f - 2 * fel)
 
     # ==============================================================================
-    # RMS Capacitor Current
+    # RMS Currents
     # ==============================================================================
-    I_c_rms_sq = np.sum(i_c ** 2) / len(i_c)
+    I_p_rms_sq = np.sum(i_p ** 2) / len(i_p)
+    I_s_rms_sq = np.sum(i_s ** 2) / len(i_s)
 
-    # ------------------------------------------
+    # ==============================================================================
     # Extract Parameters
-    # ------------------------------------------
+    # ==============================================================================
     try:
         # ------------------------------------------
         # Constant
         # ------------------------------------------
-        if setup['Par']['Elec']['CapMdl'] == "con" or setup['Par']['Elec']['CapMdl'] == "pwl":
-            ESR = para['Cap']['Elec']['con']['ESR']
+        if setup['Par']['Elec'].get('TraMdl', 'con') == "con" or setup['Par']['Elec'].get('TraMdl', 'con') == "pwl":
+            Rp = para['Tra']['Elec']['con']['Rp']
+            Rs = para['Tra']['Elec']['con']['Rs']
+            Rc = para['Tra']['Elec']['con']['Rc']
 
         # ------------------------------------------
         # Tabular
         # ------------------------------------------
-        elif setup['Par']['Elec']['CapMdl'] == "tab":
-            # Matrix 
-            ESR_2d = interpolate.interp2d(para['Cap']['Elec']['vec']['Tj'].to_numpy(),
-                                          para['Cap']['Elec']['vec']['f'].to_numpy(),
-                                          para['Cap']['Elec']['tab']['ESR'].to_numpy(), kind='linear')
+        elif setup['Par']['Elec'].get('TraMdl', 'con') == "tab":
+            # Resistance Interpolation
+            Rp = para['Tra']['Elec']['tab']['Rp_2d']((Ttra[0], f[idx]))[0]
+            Rs = para['Tra']['Elec']['tab']['Rs_2d']((Ttra[1], f[idx]))[0]
 
-            # Fundamental Value
-            ESR = ESR_2d(Tj, f[idx])
-
-            # Static
-            ESR = ESR[0]
+            # Core Loss Resistance Interpolation (Flux density dependency)
+            # Find the max B from the previously calculated electrical quantities if available
+            B_max = 0
+            if 'tra' in para['Tra']['Elec'] and 'T1' in para['Tra']['Elec']['tra']:
+                B_max = np.max(np.abs(para['Tra']['Elec']['tra']['T1']['B']))
+            
+            Rc = para['Tra']['Elec']['tab']['Rc1_2d']((Ttra[2], B_max))[0]
 
         # ------------------------------------------
         # Default
         # ------------------------------------------
         else:
-            ESR = para['Cap']['Elec']['con']['ESR']
-            
+            Rp = para['Tra']['Elec']['con']['Rp']
+            Rs = para['Tra']['Elec']['con']['Rs']
+            Rc = para['Tra']['Elec']['con']['Rc']
+
     except:
-        ESR = 0
+        print("ERROR: Transformer electrical parameters (Rp, Rs, Rc) not found.")
+        Rp = 0
+        Rs = 0
+        Rc = 1e9
 
     ###################################################################################################################
     # Calculation
     ###################################################################################################################
-    loss = ESR * I_c_rms_sq
-    out['p_L'] = i_c ** 2 * (loss / (np.mean(i_c ** 2)))
+    # Primary Copper Losses
+    p_PC_avg = Rp * I_p_rms_sq
+    out['p_PC'] = i_p ** 2 * (p_PC_avg / (np.mean(i_p ** 2) if np.mean(i_p ** 2) != 0 else 1))
 
-    ###################################################################################################################
-    # Post-Processing
-    ###################################################################################################################
-    # ==============================================================================
-    # Scale Number Switches
-    # ==============================================================================
-    out['p_L'] = out['p_L'] * setup['Par']['Elec']['CapSeries'] * setup['Par']['Elec']['CapPara']
+    # Secondary Copper Losses
+    p_SC_avg = Rs * I_s_rms_sq
+    out['p_SC'] = i_s ** 2 * (p_SC_avg / (np.mean(i_s ** 2) if np.mean(i_s ** 2) != 0 else 1))
+
+    # Core Losses (assuming Rc is core loss resistance)
+    p_CC_avg = np.sum(v_p ** 2) / len(v_p) / (Rc if Rc != 0 else 1e9)
+    out['p_CC'] = v_p ** 2 / (Rc if Rc != 0 else 1e9)
+
+    # Total Losses
+    out['p_L'] = out['p_PC'] + out['p_SC'] + out['p_CC']
 
     ###################################################################################################################
     # Return

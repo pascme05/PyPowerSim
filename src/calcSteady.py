@@ -124,7 +124,7 @@ def calcSteady(top, mdl, para, setup):
     # ------------------------------------------
     # Load
     # ------------------------------------------
-    [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap] = initRC(para, setup)
+    [Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA, Rth_JA_cap, Cth_JA_cap, _, _, _, _, _, _] = initRC(para, setup)
 
     # ------------------------------------------
     # Variables
