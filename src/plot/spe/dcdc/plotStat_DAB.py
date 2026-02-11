@@ -151,6 +151,7 @@ def plotStat_DAB(time, freq, setup):
     # Freq Axis Scaling
     f_max = fs
     f_max_plt = 200
+    f_scale = 10000
     if f_max < 1e3:
         f_plot = f
         f_label = "$f$ in (Hz)"
@@ -249,18 +250,18 @@ def plotStat_DAB(time, freq, setup):
     # Phase Voltage
     # ------------------------------------------
     # Time
-    plt.subplot(4, 2, 1)
+    ax1 = plt.subplot(4, 2, 1)
     plt.plot(t_plot[::down2], timeAc['v_ac_pri'][::down2])
-    plt.plot(t_plot[::down2], timeAc['v_ac_sec_ref'][::down2])
     plt.plot(t_plot[::down2], timeAc['v_L'][::down2])
+    plt.plot(t_plot[::down2], timeAc['v_ac_sec_ref'][::down2])
     plt.ylabel("$v_{ac,pri}(t)$ (V)")
     plt.title('Time-domain Voltage AC-Side Primary')
-    plt.legend(["$v_{ac,pri}$", "$v_{ac,sec-ref}$", "$v_{ac,Lk}$"], loc='upper right')
-    plt.xlabel(t_label)
+    plt.legend(["$v_{ac,pri}$", "$v_{ac,Lk}$", "$v_{ac,sec-ref}$"], loc='upper right')
+    # plt.xlabel(t_label)
     plt.grid('on')
 
     # Frequency
-    plt.subplot(4, 2, 2)
+    ax2 = plt.subplot(4, 2, 2)
     m1, s1, _ = plt.stem(f_plot[::down][0:f_max_plt], freqAc['v_ac_pri'][::down][0:f_max_plt])
     m2, s2, _ = plt.stem(f_plot[::down][0:f_max_plt], freqAc['v_L'][::down][0:f_max_plt])
     plt.setp(m1, color='C0')
@@ -269,51 +270,51 @@ def plotStat_DAB(time, freq, setup):
     plt.setp(s2, color='C1')
     plt.ylabel("$V_{ac,pri}(f)$ (V)")
     plt.title('Frequency-domain Voltage AC-Side Primary')
-    plt.xlabel(f_label)
+    # plt.xlabel(f_label)
     plt.yscale('log')
     plt.legend(handles=[m1, m2], labels=["$V_{ac,pri}$", "$V_{ac,Lk}$"], loc='upper right')
-    plt.ylim(OoM(max(freqAc['v_ac_pri']))/1000, )
+    plt.ylim(OoM(max(freqAc['v_ac_pri']))/f_scale, )
     plt.grid('on')
 
     # ------------------------------------------
     # Phase Current
     # ------------------------------------------
     # Time
-    plt.subplot(4, 2, 3)
+    plt.subplot(4, 2, 3, sharex=ax1)
     plt.plot(t_plot[::down2], timeAc['i_ac_pri'][::down2])
     plt.ylabel("$i_{ac,pri}(t)$ (A)")
     plt.title('Time-domain Currents AC-Side Primary')
-    plt.xlabel(t_label)
+    # plt.xlabel(t_label)
     plt.grid('on')
 
     # Frequency
-    plt.subplot(4, 2, 4)
+    plt.subplot(4, 2, 4, sharex=ax2)
     plt.stem(f_plot[::down][0:f_max_plt], freqAc['i_ac_pri'][::down][0:f_max_plt])
-    plt.ylabel("$I_{ac,pri}(f)$ (V)")
+    plt.ylabel("$I_{ac,pri}(f)$ (A)")
     plt.title('Frequency-domain Current AC-Side Primary')
-    plt.xlabel(f_label)
+    # plt.xlabel(f_label)
     plt.yscale('log')
-    plt.ylim(OoM(max(freqAc['i_ac_pri'])) / 1000, )
+    plt.ylim(OoM(max(freqAc['i_ac_pri'])) / f_scale, )
     plt.grid('on')
 
     # ------------------------------------------
     # DC-Link Voltage
     # ------------------------------------------
     # Time
-    plt.subplot(4, 2, 5)
-    plt.plot(t_plot[::down2], timeDc['v_dc_pri'][::down2], t_plot[::down2], np.mean(timeDc['v_dc_pri']) * np.ones(np.size(timeDc['i_dc_pri'][::down2])), '--')
+    plt.subplot(4, 2, 5, sharex=ax1)
+    plt.plot(t_plot[::down2], timeDc['v_dc_pri'][::down2], t_plot[::down2], np.mean(timeDc['v_dc_pri']) * np.ones(np.size(timeDc['i_dc_pri'][::down2])))
     plt.ylabel("$v_{dc,pri}(t)$ (V)")
     plt.title('Time-domain Voltage DC-Side Primary')
-    plt.xlabel(t_label)
+    # plt.xlabel(t_label)
     plt.legend(["$v_{dc,pri}$", "$V_{dc,pri,avg}$"], loc='upper right')
     plt.grid('on')
 
     # Frequency
-    plt.subplot(4, 2, 6)
+    plt.subplot(4, 2, 6, sharex=ax2)
     plt.stem(f_plot[::down][0:f_max_plt], freqDc['v_dc_pri'][::down][0:f_max_plt])
     plt.ylabel("$V_{dc,pri}(f)$ (V)")
     plt.title('Frequency-domain Voltage DC-Side Primary')
-    plt.xlabel(f_label)
+    # plt.xlabel(f_label)
     plt.yscale('log')
     plt.ylim(OoM(max(freqDc['v_dc_pri'])) / 1000000, )
     plt.grid('on')
@@ -322,33 +323,33 @@ def plotStat_DAB(time, freq, setup):
     # DC-Link Current
     # ------------------------------------------
     # Time
-    plt.subplot(4, 2, 7)
+    plt.subplot(4, 2, 7, sharex=ax1)
     plt.plot(t_plot[::down2], timeDc['i_dc_pri'][::down2], color='tab:blue')
-    plt.plot(t_plot[::down2], np.mean(timeDc['i_dc_pri']) * np.ones(np.size(timeDc['i_dc_pri'][::down2])), '--', color='tab:blue')
     plt.plot(t_plot[::down2], timeDc['i_c_pri'][::down2], color='tab:orange')
-    plt.plot(t_plot[::down2], np.mean(timeDc['i_c_pri']) * np.ones(np.size(timeDc['i_dc_pri'][::down2])), '--', color='tab:orange')
     plt.plot(t_plot[::down2], timeDc['i_dc_in'][::down2], color='tab:green')
-    plt.plot(t_plot[::down2], np.mean(timeDc['i_dc_in']) * np.ones(np.size(timeDc['i_dc_in'][::down2])), '--', color='tab:green')
     plt.ylabel("$i_{dc,pri}(t)$ (A)")
     plt.title('Time-domain Currents DC-Side Primary')
     plt.xlabel(t_label)
-    plt.legend(["$i_{dc,pri}$", "$I_{dc,pri,avg}$", "$i_{c,pri}$", "$I_{c,pri,avg}$"], loc='upper right')
+    plt.legend(["$i_{dc,pri}$", "$i_{c,pri}$", "$I_{dc,in}$"], loc='upper right')
     plt.grid('on')
 
     # Frequency
-    plt.subplot(4, 2, 8)
+    plt.subplot(4, 2, 8, sharex=ax2)
     m1, s1, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['i_dc_pri'][::down][0:f_max_plt])
-    m2, s2, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['i_c_pri'][::down][0:f_max_plt])
+    m2, s3, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['i_c_pri'][::down][0:f_max_plt])
+    m3, s3, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['i_dc_in'][::down][0:f_max_plt])
     plt.setp(m1, color='C0')
     plt.setp(s1, color='C0')
     plt.setp(m2, color='C1')
     plt.setp(s2, color='C1')
+    plt.setp(m3, color='C2')
+    plt.setp(s3, color='C2')
     plt.ylabel("$I_{dc,pri}(f)$ (A)")
     plt.title('Frequency-domain Current DC-Side Primary')
     plt.xlabel(f_label)
     plt.yscale('log')
-    plt.legend(handles=[m1, m2], labels=["$I_{dc,pri}$", "$I_{c,pri}$"], loc='upper right')
-    plt.ylim(OoM(max(freqDc['i_c_pri'])) / 1000, )
+    plt.legend(handles=[m1, m2, m3], labels=["$I_{dc,pri}$", "$I_{c,pri}$", "$I_{dc,in}$"], loc='upper right')
+    plt.ylim(OoM(max(freqDc['i_dc_pri'])) / f_scale, )
     plt.grid('on')
 
     # ==============================================================================
@@ -366,65 +367,65 @@ def plotStat_DAB(time, freq, setup):
     # Phase Voltage
     # ------------------------------------------
     # Time
-    plt.subplot(4, 2, 1)
+    ax3 = plt.subplot(4, 2, 1)
     plt.plot(t_plot[::down2], timeAc['v_ac_sec'][::down2])
     plt.ylabel("$v_{ac,sec}(t)$ (V)")
     plt.title('Time-domain Voltage AC-Side Secondary')
     plt.legend(["$v_{ac,sec}$"], loc='upper right')
-    plt.xlabel(t_label)
+    # plt.xlabel(t_label)
     plt.grid('on')
 
     # Frequency
-    plt.subplot(4, 2, 2)
+    ax4 = plt.subplot(4, 2, 2)
     plt.stem(f_plot[::down][0:f_max_plt], freqAc['v_ac_sec'][::down][0:f_max_plt])
     plt.ylabel("$V_{ac,sec}(f)$ (V)")
     plt.title('Frequency-domain Voltage AC-Side Secondary')
-    plt.xlabel(f_label)
+    # plt.xlabel(f_label)
     plt.yscale('log')
     plt.legend(labels=["$V_{ac,sec}$"], loc='upper right')
-    plt.ylim(OoM(max(freqAc['v_ac_sec'])) / 1000, )
+    plt.ylim(OoM(max(freqAc['v_ac_sec'])) / f_scale, )
     plt.grid('on')
 
     # ------------------------------------------
     # Phase Current
     # ------------------------------------------
     # Time
-    plt.subplot(4, 2, 3)
+    plt.subplot(4, 2, 3, sharex=ax3)
     plt.plot(t_plot[::down2], timeAc['i_ac_sec'][::down2])
     plt.ylabel("$i_{ac,sec}(t)$ (A)")
     plt.title('Time-domain Currents AC-Side Secondary')
-    plt.xlabel(t_label)
+    # plt.xlabel(t_label)
     plt.grid('on')
 
     # Frequency
-    plt.subplot(4, 2, 4)
+    plt.subplot(4, 2, 4, sharex=ax4)
     plt.stem(f_plot[::down][0:f_max_plt], freqAc['i_ac_sec'][::down][0:f_max_plt])
     plt.ylabel("$I_{ac,sec}(f)$ (A)")
     plt.title('Frequency-domain Current AC-Side Secondary')
-    plt.xlabel(f_label)
+    # plt.xlabel(f_label)
     plt.yscale('log')
-    plt.ylim(OoM(max(freqAc['i_ac_sec'])) / 1000, )
+    plt.ylim(OoM(max(freqAc['i_ac_sec'])) / f_scale, )
     plt.grid('on')
 
     # ------------------------------------------
     # DC-Link Voltage
     # ------------------------------------------
     # Time
-    plt.subplot(4, 2, 5)
+    plt.subplot(4, 2, 5, sharex=ax3)
     plt.plot(t_plot[::down2], timeDc['v_dc_sec'][::down2], t_plot[::down2],
-             np.mean(timeDc['v_dc_sec']) * np.ones(np.size(timeDc['i_dc_sec'][::down2])), '--')
+             np.mean(timeDc['v_dc_sec']) * np.ones(np.size(timeDc['i_dc_sec'][::down2])))
     plt.ylabel("$v_{dc,sec}(t)$ (V)")
     plt.title('Time-domain Voltage DC-Side Secondary')
-    plt.xlabel(t_label)
+    # plt.xlabel(t_label)
     plt.legend(["$v_{dc,sec}$", "$V_{dc,sec,avg}$"], loc='upper right')
     plt.grid('on')
 
     # Frequency
-    plt.subplot(4, 2, 6)
+    plt.subplot(4, 2, 6, sharex=ax4)
     plt.stem(f_plot[::down][0:f_max_plt], freqDc['v_dc_sec'][::down][0:f_max_plt])
     plt.ylabel("$V_{dc,sec}(f)$ (V)")
     plt.title('Frequency-domain Voltage DC-Side Secondary')
-    plt.xlabel(f_label)
+    # plt.xlabel(f_label)
     plt.yscale('log')
     plt.ylim(OoM(max(freqDc['v_dc_sec'])) / 1000000, )
     plt.grid('on')
@@ -433,33 +434,33 @@ def plotStat_DAB(time, freq, setup):
     # DC-Link Current
     # ------------------------------------------
     # Time
-    plt.subplot(4, 2, 7)
+    plt.subplot(4, 2, 7, sharex=ax3)
     plt.plot(t_plot[::down2], timeDc['i_dc_sec'][::down2], color='tab:blue')
-    plt.plot(t_plot[::down2], np.mean(timeDc['i_dc_sec']) * np.ones(np.size(timeDc['i_dc_sec'][::down2])), '--', color='tab:blue')
     plt.plot(t_plot[::down2], timeDc['i_c_sec'][::down2], color='tab:orange')
-    plt.plot(t_plot[::down2], np.mean(timeDc['i_c_sec']) * np.ones(np.size(timeDc['i_c_sec'][::down2])), '--', color='tab:orange')
     plt.plot(t_plot[::down2], timeDc['i_dc_out'][::down2], color='tab:green')
-    plt.plot(t_plot[::down2], np.mean(timeDc['i_dc_out']) * np.ones(np.size(timeDc['i_dc_out'][::down2])), '--', color='tab:green')
     plt.ylabel("$i_{dc,sec}(t)$ (A)")
     plt.title('Time-domain Currents DC-Side Secondary')
     plt.xlabel(t_label)
-    plt.legend(["$i_{dc,sec}$", "$I_{dc,pri,sec}$", "$i_{c,sec}$", "$I_{c,pri,sec}$"], loc='upper right')
+    plt.legend(["$i_{dc,sec}$", "$i_{c,sec}$", "$i_{dc,out}$"], loc='upper right')
     plt.grid('on')
 
     # Frequency
-    plt.subplot(4, 2, 8)
+    plt.subplot(4, 2, 8, sharex=ax4)
     m1, s1, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['i_dc_sec'][::down][0:f_max_plt])
     m2, s2, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['i_c_sec'][::down][0:f_max_plt])
+    m3, s3, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['i_dc_out'][::down][0:f_max_plt])
     plt.setp(m1, color='C0')
     plt.setp(s1, color='C0')
     plt.setp(m2, color='C1')
     plt.setp(s2, color='C1')
+    plt.setp(m3, color='C2')
+    plt.setp(s3, color='C2')
     plt.ylabel("$I_{dc,sec}(f)$ (A)")
     plt.title('Frequency-domain Current DC-Side Secondary')
     plt.xlabel(f_label)
     plt.yscale('log')
-    plt.legend(handles=[m1, m2], labels=["$I_{dc,sec}$", "$I_{c,sec}$"], loc='upper right')
-    plt.ylim(OoM(max(freqDc['i_c_sec'])) / 1000, )
+    plt.legend(handles=[m1, m2, m3], labels=["$I_{dc,sec}$", "$I_{c,sec}$", "$I_{dc,out}$"], loc='upper right')
+    plt.ylim(OoM(max(freqDc['i_dc_sec'])) / f_scale, )
     plt.grid('on')
 
     # ==============================================================================

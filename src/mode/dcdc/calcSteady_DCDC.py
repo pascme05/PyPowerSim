@@ -223,8 +223,8 @@ def calcSteady_DCDC(top, mdl, para, setup):
         # ------------------------------------------
         # Update AC Voltage
         # ------------------------------------------
-        v_ac_pri[start:ende] = timeElec['sw']['S2']['v_T'] - timeElec['sw']['S1']['v_T']
-        v_ac_sec[start:ende] = timeElec['sw']['S6']['v_T'] - timeElec['sw']['S5']['v_T']
+        v_ac_pri[start:ende] = (timeElec['sw']['S2']['v_T'] - timeElec['sw']['S1']['v_T'])
+        v_ac_sec[start:ende] = (timeElec['sw']['S6']['v_T'] - timeElec['sw']['S5']['v_T'])
         timeAc['v_ac_pri'] = v_ac_pri
         timeAc['v_ac_sec'] = v_ac_sec
 

@@ -69,7 +69,7 @@ def loadParaTra(name, path, setup):
            'Value-10']
     tab = ['Description', 'Model', 'Symbol', 'Typical', 'Value-1', 'Value-2', 'Value-3', 'Value-4', 'Value-5',
            'Value-6']
-    lenElec = 18
+    lenElec = 23
     lenTher = 8
 
     ###################################################################################################################

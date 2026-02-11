@@ -61,7 +61,7 @@ def initRC(para, setup):
         Cth_DC = para['Swi']['Ther']['vec']['Cth_DC'].values
         Rth_CA = para['Swi']['Ther']['vec']['Rth_CA'].values
         Cth_CA = para['Swi']['Ther']['vec']['Cth_CA'].values
-    except KeyError:
+    except:
         print("ERROR: Switch thermal parameters not found. Rth=0 K/W and Cth=1 Ws/K")
         Rth_JC, Cth_JC, Rth_DC, Cth_DC, Rth_CA, Cth_CA = np.array([0]), np.array([1]), np.array([0]), np.array([1]), np.array([0]), np.array([1])
 
@@ -73,7 +73,7 @@ def initRC(para, setup):
         Cth_JC_cap = para['Cap']['Ther']['vec']['Cth_JC'].values
         Rth_CA_cap = para['Cap']['Ther']['vec']['Rth_CA'].values
         Cth_CA_cap = para['Cap']['Ther']['vec']['Cth_CA'].values
-    except (KeyError, TypeError):
+    except:
         print("ERROR: Capacitor thermal parameters not found. Rth=0 K/W and Cth=1 Ws/K")
         Rth_JC_cap, Cth_JC_cap, Rth_CA_cap, Cth_CA_cap = np.array([0]), np.array([1]), np.array([0]), np.array([1])
 
@@ -89,8 +89,7 @@ def initRC(para, setup):
         Cth_CC_tra = para['Tra']['Ther']['vec']['Cth_CC'].values
         Rth_CA_tra = para['Tra']['Ther']['vec']['Rth_CA'].values
         Cth_CA_tra = para['Tra']['Ther']['vec']['Cth_CA'].values
-
-    except KeyError:
+    except:
         print("ERROR: Transformer thermal parameters not found. Rth=0 K/W and Cth=1 Ws/K")
         Rth_PC_tra, Cth_PC_tra = np.array([0]), np.array([1])
         Rth_SC_tra, Cth_SC_tra = np.array([0]), np.array([1])
