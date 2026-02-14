@@ -32,13 +32,18 @@ V1.1: 16.12.2025, Pascal Schirmer
 # ==============================================================================
 from src.data.loadPara import loadPara
 from src.data.loadSetup import loadSetup
-from src.calcSweep import calcSweep
-from src.calcSteady import calcSteady
-from src.calcTrans import calcTrans
-from src.calcClose import calcClose
+from src.mode.inv.calcSweep import calcSweep
+from src.mode.inv.calcSteady import calcSteady
+from src.mode.inv.calcTrans import calcTrans
+from src.mode.inv.calcClose import calcClose
+from src.mode.dcdc.calcSweep_DCDC import calcSweep_DCDC
+from src.mode.dcdc.calcSteady_DCDC import calcSteady_DCDC
+from src.mode.dcdc.calcTrans_DCDC import calcTrans_DCDC
+from src.mode.dcdc.calcClose_DCDC import calcClose_DCDC
 from src.topo.initTopo import initTopo
 from src.plot.plot import plot
 from src.plot.plotResults import plotResults
+from src.plot.plotResults_DCDC import plotResults_DCDC
 from src.general.genTF import genTF
 from src.general.sanityCheck import sanityInput
 from src.general.saveResults import saveResults
@@ -115,7 +120,7 @@ def main(setup, path):
     # MSG OUT
     # ==============================================================================
     timeEnd = time.perf_counter()
-    stage_times['Loading'] = timeEnd- timeStart
+    stage_times['Loading'] = timeEnd - timeStart
     print("=======================================================================")
     print("END: Loading")
     print("=======================================================================")
@@ -145,7 +150,7 @@ def main(setup, path):
     # ==============================================================================
     # Control Mode
     # ==============================================================================
-    setup = genLoadInput(setup)
+    setup = genLoadInput(setup, para)
 
     # ==============================================================================
     # MSG OUT
@@ -171,7 +176,7 @@ def main(setup, path):
     # ==============================================================================
     # Init Topology
     # ==============================================================================
-    top = initTopo(setup['Top']['sourceType'], setup)
+    top = initTopo(setup['Top']['sourceType'], setup, para)
 
     # ==============================================================================
     # Operating Mode
@@ -180,25 +185,38 @@ def main(setup, path):
     # Sweep
     # ------------------------------------------
     if setup['Exp']['type'] == 0:
-        [time_var, freq, sweep] = calcSweep(top, mdl, para, setup)
+        # DCDC
+        if setup['Top']['sourceType'] == "DAB":
+            [time_var, freq, sweep] = calcSweep_DCDC(top, mdl, para, setup)
+        else:
+            [time_var, freq, sweep] = calcSweep(top, mdl, para, setup)
 
     # ------------------------------------------
     # Stationary
     # ------------------------------------------
     elif setup['Exp']['type'] == 1:
-        [time_var, freq] = calcSteady(top, mdl, para, setup)
+        if setup['Top']['sourceType'] == "DAB":
+            [time_var, freq] = calcSteady_DCDC(top, mdl, para, setup)
+        else:
+            [time_var, freq] = calcSteady(top, mdl, para, setup)
 
     # ------------------------------------------
     # Transient
     # ------------------------------------------
     elif setup['Exp']['type'] == 2:
-        [time_var, freq] = calcTrans(top, mdl, para, setup)
+        if setup['Top']['sourceType'] == "DAB":
+            [time_var, freq] = calcTrans_DCDC(top, mdl, para, setup)
+        else:
+            [time_var, freq] = calcTrans(top, mdl, para, setup)
 
     # ------------------------------------------
     # Closed Loop
     # ------------------------------------------
     elif setup['Exp']['type'] == 3:
-        [time_var, freq] = calcClose(top, mdl, para, setup)
+        if setup['Top']['sourceType'] == "DAB":
+            [time_var, freq] = calcClose_DCDC(top, mdl, para, setup)
+        else:
+            [time_var, freq] = calcClose(top, mdl, para, setup)
 
     # ------------------------------------------
     # Default
@@ -237,7 +255,10 @@ def main(setup, path):
     # Plot Results
     # ==============================================================================
     if setup['Exp']['type'] == 1 or setup['Exp']['type'] == 2:
-        plotResults(time_var, setup)
+        if setup['Top']['sourceType'] == "DAB":
+            plotResults_DCDC(time_var, setup)
+        else:
+            plotResults(time_var, setup)
 
     # ==============================================================================
     # Plot Results

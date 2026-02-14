@@ -2,8 +2,8 @@
 #######################################################################################################################
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
-# File:         plotTrans
-# Date:         11.05.2024
+# File:         plotTrans_DAB
+# Date:         05.02.2026
 # Author:       Dr. Pascal A. Schirmer
 # Version:      V.1.0
 # Copyright:    Pascal Schirmer
@@ -16,6 +16,7 @@
 # ==============================================================================
 # Internal
 # ==============================================================================
+from src.general.helpFnc import OoM
 
 # ==============================================================================
 # External
@@ -25,7 +26,6 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pl
 import matplotlib.gridspec as gridspec
-from scipy.fft import fft
 import matplotlib
 matplotlib.use('TkAgg')
 
@@ -33,11 +33,11 @@ matplotlib.use('TkAgg')
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def plotTrans(time, freq, setup):
+def plotTrans_DAB(time, freq, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
-    print("START: Plotting Transient Waveforms")
+    print("START: Plotting Transient DAB Waveforms")
 
     ###################################################################################################################
     # Initialisation
@@ -73,8 +73,9 @@ def plotTrans(time, freq, setup):
     Vdc = setup['Dat']['stat']['Vdc']
     phiE = setup['Top']['phiE']
     down = int(setup['Dat']['stat']['cyc']) - 1
+    phiDAB = setup['Dat']['stat']['PhiDAB']
     Ta = setup['Dat']['trans']['Tc']
-    down2 = int(fsim/fs/200)
+    down2 = int(fsim / fs / 200)
     if down2 < 1:
         down2 = 1
 
@@ -122,51 +123,44 @@ def plotTrans(time, freq, setup):
     else:
         t_label = "time in (s)"
 
-    # ==============================================================================
-    # Load angle Total
-    # ==============================================================================
-    Y = fft(timeAc['v_a'])
-    phiV = np.angle(Y)[1]
-    Y = fft(timeAc['i_a'])
-    phiI = np.angle(Y)[1]
-    phi = phiV - phiI + 2 * np.pi
-    while phi > 2 * np.pi:
-        phi = phi - 2 * np.pi
+    # Freq Axis Scaling
+    f_max = fs
+    f_max_plt = 200
+    f_scale = 10000
+    if f_max < 1e3:
+        f_plot = f
+        f_label = "$f$ in (Hz)"
+    elif f_max < 1e6:
+        f_plot = f / 1e3
+        f_label = "$f$ in (kHz)"
+    else:
+        f_plot = f / 1e6
+        f_label = "$f$ in (MHz)"
 
     # ==============================================================================
-    # Load angle RL
+    # 1) Switching Function
     # ==============================================================================
-    angZ = math.atan2(2 * np.pi * fel * L, R)
-
-    ###################################################################################################################
-    # Calculation
-    ###################################################################################################################
-    # ==============================================================================
-    # Switching Function
-    # ==============================================================================
+    """
     gs = gridspec.GridSpec(3, 2)
-    pl.figure()
-    txt = "Modulation Functions for: " + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) + ", Sampling: " + str(
-        setup['Par']['PWM']['samp']) + ", Update: " + str(setup['Par']['PWM']['upd']) + " and Edge Trigger: " + str(
-        setup['Par']['PWM']['tri'])
+    pl.figure(figsize=(12, 10))
+    txt = "Switching Functions DAB for PWM Control with: " \
+          + "$V_{dc}$=" + str(Vdc) + "V, " \
+          + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) \
+          + ", Phi=" + f"{math.degrees(phiDAB):.2f}"
     pl.suptitle(txt, size=18)
     pl.subplots_adjust(hspace=0.35, wspace=0.20, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
     # ------------------------------------------
     # Modulation
     # ------------------------------------------
-    ax1 = pl.subplot(gs[0, :])
-    ax2 = ax1.twinx()
-    ax1.plot(t_plot[::down2], timeSw['c'][::down2], 'black')
-    ax2.plot(t_plot[::down2], timeSw['v_a_ref'][::down2] / (Vdc / 2), color='tab:blue')
-    ax2.plot(t_plot[::down2], timeSw['xA'][::down2], '--', color='tab:blue')
-    ax2.plot(t_plot[::down2], timeSw['n0'][::down2], '-.', color='tab:blue')
-    pl.title('Carrier and Reference Waveform')
+    pl.subplot(gs[0, :])
+    pl.plot(t_plot[::down2], timeSw['sA'][::down2])
+    pl.plot(t_plot[::down2], timeSw['sC'][::down2])
+    pl.title('Time-domain Switching Functions Primary vs. Secondary')
     pl.xlabel(t_label)
-    ax1.set_ylabel('c(t)/s(t)', color='black')
-    ax2.set_ylabel('v(t) (p.u)', color='tab:blue')
-    pl.legend(["$c_{a}$", "$v_{a}^{*}$", "$v_{a0}^{*}$", "$v_{n0}^{*}$"], loc='upper right')
-    pl.grid(True)
+    pl.ylabel("$s_{x}(t)$ (p.u)")
+    pl.legend(["$s_{a}$", "$s_{c}$"], loc='upper right')
+    pl.grid('on')
 
     # ------------------------------------------
     # Switching Waveform
@@ -174,51 +168,58 @@ def plotTrans(time, freq, setup):
     # Time-Domain
     pl.subplot(gs[1, 0])
     pl.plot(t_plot[::down2], timeSw['sA'][::down2])
-    pl.title('Time-domain Switching Functions')
-    pl.xlabel('t in (sec)')
-    pl.ylabel("$s_{a}(t)$ (p.u)")
-    pl.legend(["$s_{a}$"], loc='upper right')
-    pl.grid(True)
+    pl.plot(t_plot[::down2], timeSw['sB'][::down2])
+    pl.title('Time-domain Switching Functions Primary')
+    pl.xlabel(t_label)
+    pl.ylabel("$s_{x}(t)$ (p.u)")
+    pl.legend(["$s_{a}$", "$s_{b}$"], loc='upper right')
+    pl.grid('on')
 
     # Freq-Domain
     pl.subplot(gs[2, 0])
-    pl.stem(f[::down][0:50], freqSw['Sa'][::down][0:50])
-    pl.xlim(0, 50)
-    pl.title('Frequency-domain Switching Function')
-    pl.xlabel("$f/f_{1}$ (Hz/Hz)")
+    pl.stem(f_plot[::down][0:f_max_plt], freqSw['Sa'][::down][0:f_max_plt])
+    pl.title('Frequency-domain Switching Function Primary')
+    pl.xlabel(f_label)
     pl.ylabel("$S_{a}(f)$ (p.u)")
     pl.yscale('log')
     pl.ylim(0.0001, )
-    pl.grid(True)
+    pl.grid('on')
 
     # ------------------------------------------
     # Reference Waveform
     # ------------------------------------------
     # Time-Domain
     pl.subplot(gs[1, 1])
-    pl.plot(t_plot[::down2], timeSw['xAs'][::down2])
-    pl.title('Time-domain Sampled References')
-    pl.xlabel('t in (sec)')
-    pl.ylabel("$x_{a}(t)$ (p.u)")
-    pl.legend(["$x_{a}$"], loc='upper right')
-    pl.grid(True)
+    pl.plot(t_plot[::down2], timeSw['sC'][::down2])
+    pl.plot(t_plot[::down2], timeSw['sD'][::down2])
+    pl.title('Time-domain Switching Functions Secondary')
+    pl.xlabel(t_label)
+    pl.ylabel("$s_{x}(t)$ (p.u)")
+    pl.legend(["$s_{c}$", "$s_{d}$"], loc='upper right')
+    pl.grid('on')
 
     # Freq-Domain
     pl.subplot(gs[2, 1])
-    pl.stem(f[::down][0:50], freqSw['Xas'][::down][0:50])
-    pl.xlim(0, 50)
-    pl.title('Frequency-domain Sampled Reference')
-    pl.xlabel("$f/f_{1}$ (Hz/Hz)")
-    pl.ylabel("$X_{a}(f)$ (p.u)")
+    if 'Sc' in freqSw:
+        pl.stem(f_plot[::down][0:f_max_plt], freqSw['Sc'][::down][0:f_max_plt])
+    elif 'Sb' in freqSw:
+        pl.stem(f_plot[::down][0:f_max_plt], freqSw['Sb'][::down][0:f_max_plt])
+    pl.title('Frequency-domain Switching Function Secondary')
+    pl.xlabel(f_label)
+    pl.ylabel("$S_{c}(f)$ (p.u)")
     pl.yscale('log')
     pl.ylim(0.0001, )
-    pl.grid(True)
+    pl.grid('on')
+    """
 
     # ==============================================================================
     # Current/Voltage
     # ==============================================================================
     plt.figure()
-    txt = "Currents and Voltages for PWM control with: " + "$V_{dc}$=" + str(Vdc) + "V, " + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) + ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg" + ", $\phi_{E}=$" + str(int(phiE)) + "deg" + ", $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg"
+    txt = "Switching Functions DAB for PWM Control with: " \
+          + "$V_{dc}$=" + str(Vdc) + "V, " \
+          + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) \
+          + ", Phi=" + f"{math.degrees(phiDAB):.2f}"
     plt.suptitle(txt, size=18)
     plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
@@ -227,21 +228,22 @@ def plotTrans(time, freq, setup):
     # ------------------------------------------
     # Current
     plt.subplot(2, 2, 1)
-    plt.plot(t_plot[::down2], timeAc['i_a'][::down2])
-    plt.ylabel("$i_{a}(t)$ (A)")
-    plt.title('Time-domain Currents AC-Side')
+    plt.plot(t_plot[::down2], timeAc['i_ac_pri'][::down2])
+    plt.plot(t_plot[::down2], timeAc['i_ac_sec'][::down2])
+    plt.ylabel("$i_{ac}(t)$ (A)")
+    plt.title('Time-domain Currents AC')
     plt.xlabel(t_label)
-    pl.legend(["$i_{a}$"], loc='upper right')
+    pl.legend(["$i_{ac,pri}$", "$i_{ac,sec}$"], loc='upper right')
     plt.grid(True)
 
     # Voltage
     plt.subplot(2, 2, 2)
-    plt.plot(t_plot[::down2], timeAc['v_a'][::down2], t_plot[::down2], timeAc['v_a0'][::down2], t_plot[::down2],
-             timeAc['v_a_out'][::down2], t_plot[::down2], timeSw['e_a'][::down2])
-    plt.ylabel("$v_{a}(t)$ (V)")
-    plt.title('Time-domain Voltages AC-Side')
+    plt.plot(t_plot[::down2], timeAc['v_ac_pri'][::down2])
+    plt.plot(t_plot[::down2], timeAc['v_ac_sec'][::down2])
+    plt.ylabel("$v_{ac}(t)$ (V)")
+    plt.title('Time-domain Voltages AC')
     plt.xlabel(t_label)
-    plt.legend(["$v_{a}(t)$", "$v_{a0}(t)$", "$v_{a,out}(t)$", "$e_{a}(t)$"], loc='upper right')
+    pl.legend(["$v_{ac,pri}$", "$v_{ac,sec}$"], loc='upper right')
     plt.grid(True)
 
     # ------------------------------------------
@@ -249,31 +251,32 @@ def plotTrans(time, freq, setup):
     # ------------------------------------------
     # Current
     plt.subplot(2, 2, 3)
-    plt.plot(t_plot[::down2], timeDc['i_dc'][::down2], t_plot[::down2],
-             np.mean(timeDc['i_dc']) * np.ones(np.size(timeDc['i_dc'][::down2])), '--')
+    plt.plot(t_plot[::down2], timeDc['i_dc_pri'][::down2])
+    plt.plot(t_plot[::down2], timeDc['i_dc_sec'][::down2])
     plt.ylabel("$i_{dc}(t)$ (A)")
-    plt.title('Time-domain Currents DC-Side')
+    plt.title('Time-domain Currents DC')
     plt.xlabel(t_label)
-    plt.legend(["$i_{dc}$", "$I_{dc,avg}$"], loc='upper right')
+    pl.legend(["$i_{dc,pri}$", "$i_{dc,sec}$"], loc='upper right')
     plt.grid(True)
 
     # Voltage
     plt.subplot(2, 2, 4)
-    plt.plot(t_plot[::down2], timeDc['v_in'][::down2], t_plot[::down2], timeDc['v_dc'][::down2], t_plot[::down2],
-             np.mean(timeDc['v_dc']) * np.ones(np.size(timeDc['v_dc'][::down2])), '--')
+    plt.plot(t_plot[::down2], timeDc['v_dc_pri'][::down2])
+    plt.plot(t_plot[::down2], timeDc['v_dc_sec'][::down2])
     plt.ylabel("$v_{dc}(t)$ (V)")
-    plt.title('Time-domain Voltages DC-Side')
+    plt.title('Time-domain Voltages DC')
     plt.xlabel(t_label)
-    plt.legend(["$v_{in}$", "$v_{dc}$", "$V_{dc,avg}$"], loc='upper right')
+    pl.legend(["$v_{dc,pri}$", "$v_{dc,sec}$"], loc='upper right')
     plt.grid(True)
 
     # ==============================================================================
     # Time-domain Transient
     # ==============================================================================
     fig, axs = plt.subplots(4, 1, sharex=True)
-    txt = ("Time domain switches for PWM control with: $V_{dc}$=" + str(Vdc) + "V, $M_{i}$=" + str(Mi) +
-           ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg, $\phi_{E}=$" + str(int(phiE)) +
-           "deg, $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg")
+    txt = "Switching Functions DAB for PWM Control with: " \
+          + "$V_{dc}$=" + str(Vdc) + "V, " \
+          + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) \
+          + ", Phi=" + f"{math.degrees(phiDAB):.2f}"
     plt.suptitle(txt, size=18)
     plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
@@ -282,52 +285,54 @@ def plotTrans(time, freq, setup):
     # ------------------------------------------
     # Switches Leg 1 - Voltages
     axs[0].plot(tel[::down2], timeElec['sw']['S1']['v_T'][::down2], 'b',
-                tel[::down2], timeElec['sw']['S2']['v_T'][::down2], 'r',
+                tel[::down2], timeElec['sw']['S5']['v_T'][::down2], 'r',
                 tel[::down2], timeElec['sw']['S1']['v_D'][::down2], 'b--',
-                tel[::down2], timeElec['sw']['S2']['v_D'][::down2], 'r--')
-    axs[0].set_title('Voltages Transistors and Diodes (A)')
+                tel[::down2], timeElec['sw']['S5']['v_D'][::down2], 'r--')
+    axs[0].set_title('Voltages Transistors and Diodes (Pri/Sec)')
     axs[0].set_ylabel('Voltage (V)')
-    axs[0].legend(['T1', 'T2', 'D1', 'D2'])
+    axs[0].legend(['T1', 'T5', 'D1', 'D5'])
     axs[0].grid(True)
 
     # Switches Leg 1 - Currents
     axs[1].plot(tel[::down2], timeElec['sw']['S1']['i_T'][::down2], 'b',
-                tel[::down2], timeElec['sw']['S2']['i_T'][::down2], 'r',
+                tel[::down2], timeElec['sw']['S5']['i_T'][::down2], 'r',
                 tel[::down2], timeElec['sw']['S1']['i_D'][::down2], 'b--',
-                tel[::down2], timeElec['sw']['S2']['i_D'][::down2], 'r--')
-    axs[1].set_title('Currents Transistors and Diodes (A)')
+                tel[::down2], timeElec['sw']['S5']['i_D'][::down2], 'r--')
+    axs[1].set_title('Currents Transistors and Diodes (Pri/Sec)')
     axs[1].set_ylabel('Current (A)')
-    axs[1].legend(['T1', 'T2', 'D1', 'D2'])
+    axs[1].legend(['T1', 'T5', 'D1', 'D5'])
     axs[1].grid(True)
 
     # Switches Leg 1 - Conduction Losses
     axs[2].plot(tel[::down2], timeLoss['sw']['S1']['p_T_c'][::down2], 'b',
-                tel[::down2], timeLoss['sw']['S2']['p_T_c'][::down2], 'r',
+                tel[::down2], timeLoss['sw']['S5']['p_T_c'][::down2], 'r',
                 tel[::down2], timeLoss['sw']['S1']['p_D_c'][::down2], 'b--',
-                tel[::down2], timeLoss['sw']['S2']['p_D_c'][::down2], 'r--')
-    axs[2].set_title('Conduction Losses Transistors and Diodes (A)')
+                tel[::down2], timeLoss['sw']['S5']['p_D_c'][::down2], 'r--')
+    axs[2].set_title('Conduction Losses Transistors and Diodes (Pri/Sec)')
     axs[2].set_ylabel('Power (W)')
-    axs[2].legend(['T1', 'T2', 'D1', 'D2'])
+    axs[2].legend(['T1', 'T5', 'D1', 'D5'])
     axs[2].grid(True)
 
     # Switches Leg 1 - Switching Losses
     axs[3].plot(tel[::down2], timeLoss['sw']['S1']['p_T_s'][::down2], 'b',
-                tel[::down2], timeLoss['sw']['S2']['p_T_s'][::down2], 'r',
+                tel[::down2], timeLoss['sw']['S5']['p_T_s'][::down2], 'r',
                 tel[::down2], timeLoss['sw']['S1']['p_D_s'][::down2], 'b--',
-                tel[::down2], timeLoss['sw']['S2']['p_D_s'][::down2], 'r--')
-    axs[3].set_title('Switching Losses Transistors and Diodes (A)')
+                tel[::down2], timeLoss['sw']['S5']['p_D_s'][::down2], 'r--')
+    axs[3].set_title('Switching Losses Transistors and Diodes (Pri/Sec)')
     axs[3].set_ylabel('Power (W)')
     axs[3].set_xlabel('Time (sec)')
-    axs[3].legend(['T1', 'T2', 'D1', 'D2'])
+    axs[3].legend(['T1', 'T5', 'D1', 'D5'])
     axs[3].grid(True)
+    plt.show()
 
     # ------------------------------------------
     # Capacitor
     # ------------------------------------------
-    fig, axs = plt.subplots(4, 1, sharex=True)
-    txt = ("Time domain capacitor for PWM control with: $V_{dc}$=" + str(Vdc) + "V, $M_{i}$=" + str(Mi) +
-           ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg, $\phi_{E}=$" + str(int(phiE)) +
-           "deg, $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg")
+    fig, axs = plt.subplots(4, 2, sharex=True)
+    txt = "Switching Functions DAB for PWM Control with: " \
+          + "$V_{dc}$=" + str(Vdc) + "V, " \
+          + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) \
+          + ", Phi=" + f"{math.degrees(phiDAB):.2f}"
     plt.suptitle(txt, size=18)
     plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
@@ -360,9 +365,10 @@ def plotTrans(time, freq, setup):
     # Thermal
     # ------------------------------------------
     fig, axs = plt.subplots(2, 1, sharex=True)
-    txt = ("Time domain thermal for PWM control with: $V_{dc}$=" + str(Vdc) + "V, $M_{i}$=" + str(Mi) +
-           ", $\phi_{RL}=$" + str(int(math.degrees(angZ))) + "deg, $\phi_{E}=$" + str(int(phiE)) +
-           "deg, $\phi_{VI}=$" + str(int(math.degrees(phi))) + "deg")
+    txt = "Switching Functions DAB for PWM Control with: " \
+          + "$V_{dc}$=" + str(Vdc) + "V, " \
+          + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) \
+          + ", Phi=" + f"{math.degrees(phiDAB):.2f}"
     plt.suptitle(txt, size=18)
     plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
@@ -392,4 +398,4 @@ def plotTrans(time, freq, setup):
     ###################################################################################################################
     # MSG OUT
     ###################################################################################################################
-    print("END: Plotting Transient Waveforms")
+    print("END: Plotting Transient DAB Waveforms")

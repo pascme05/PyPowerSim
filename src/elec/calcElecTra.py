@@ -2,8 +2,8 @@
 #######################################################################################################################
 # Title:        PWM Distortion Toolkit for Standard Topologies
 # Topic:        Power Electronics
-# File:         calcDistNum
-# Date:         28.04.2024
+# File:         calcElecTra
+# Date:         08.02.2026
 # Author:       Dr. Pascal A. Schirmer
 # Version:      V.1.0
 # Copyright:    Pascal Schirmer
@@ -14,16 +14,16 @@
 # Function Description
 #######################################################################################################################
 """
-This function calculates generic numerical distortion metrics for any input signal.
-
-Input:
-1) t:         input time vector (sec)
-2) x:         input signal (any unit)
-3) f1:        fundamental frequency (Hz). Use 0 for DC signals.
-4) dc_offset: optional DC offset to subtract for ripple/THD (default: 0)
-
-Output:
-1) out:       dictionary with keys: eff, v1_eff, thd, k1
+This function calculates the electrical output of the transformer.
+Inputs:     1) t:       time domain vector (sec)
+            2) i_p:     time domain primary current (A)
+            3) i_s:     time domain secondary current (A)
+            4) v_p:     time domain primary voltage (V)
+            5) v_s:     time domain secondary voltage (V)
+            6) Ttra:    transformer temperature (°C)
+            7) para:    all parameters of the transformer
+            8) setup:   all setup variables
+Outputs:    1) out:     time domain transformer electrical quantities (i_p, i_s, i_m, v_p, v_s, Phi, B)
 """
 
 #######################################################################################################################
@@ -37,56 +37,52 @@ Output:
 # External
 # ==============================================================================
 import numpy as np
-from scipy.fft import fft
+import pandas as pd
 
 
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcDistNum(t, x, f1, dc_offset=0.0):
-    # Ensure inputs are numpy arrays (prevents KeyError: 'ALIGNED' with pandas and scipy fft)
-    t = np.asarray(t)
-    x = np.asarray(x)
-
+def calcElecTra(t, i_p, i_s, v_p, v_s, Ttra, para, setup):
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
     # ==============================================================================
+    # Output
+    # ==============================================================================
+    out = pd.DataFrame(columns=['i_p', 'i_s', 'i_m', 'v_p', 'v_s', 'Phi', 'B'])
+
+    ###################################################################################################################
+    # Pre-Processing
+    ###################################################################################################################
+    # ==============================================================================
     # Parameters
     # ==============================================================================
-    if len(t) < 2 or len(x) < 2:
-        return {'eff': np.nan, 'v1_eff': np.nan, 'thd': np.nan, 'k1': 0}
-
-    dt = t[1] - t[0]
-    T = t[-1] - t[0]
-    N = int(len(x))
-    if T <= 0 or N < 2:
-        return {'eff': np.nan, 'v1_eff': np.nan, 'thd': np.nan, 'k1': 0}
-
-    # Fundamental index
-    if f1 is None:
-        k1 = 1
-    else:
-        k1 = int(np.round(f1 * T))
-    k1 = max(0, min(k1, N - 1))
+    N = para['Tra']['Elec']['con']['N']
+    Np = para['Tra']['Elec']['con']['Np']
+    Ae = para['Tra']['Elec']['con']['A']
 
     ###################################################################################################################
     # Calculation
     ###################################################################################################################
-    X = np.abs(fft(x) / N)
-    x_eff = np.sqrt(1 / T * np.sum(x ** 2 * dt))
+    # Currents and Voltages
+    out['i_p'] = i_p
+    out['i_s'] = i_s
+    out['v_p'] = v_p
+    out['v_s'] = v_s
 
-    if k1 == 0:
-        x_v1_eff = X[0]
-        x_ripple = x - dc_offset
-        x_ripple_eff = np.sqrt(1 / T * np.sum(x_ripple ** 2 * dt))
-        x_ripple_dc = np.abs(fft(x_ripple) / N)[0]
-        x_thd = np.sqrt(max(x_ripple_eff ** 2 - x_ripple_dc ** 2, 0))
-    else:
-        x_v1_eff = (1 / np.sqrt(2)) * 2 * X[k1]
-        x_thd = np.sqrt(max(x_eff ** 2 - x_v1_eff ** 2, 0))
+    # Magnetizing Current
+    out['i_m'] = i_p - (i_s / N)
+
+    # Magnetic Flux
+    dt = t[1] - t[0]
+    out['Phi'] = np.cumsum(v_p) * dt / Np
+    out['Phi'] = out['Phi'] - np.mean(out['Phi'])
+
+    # Magnetic Flux Density
+    out['B'] = out['Phi'] / Ae
 
     ###################################################################################################################
     # Return
     ###################################################################################################################
-    return {'eff': x_eff, 'v1_eff': x_v1_eff, 'thd': x_thd, 'k1': k1}
+    return out

@@ -63,6 +63,8 @@ def saveResults(time, freq, sweep, setup, path):
         idSw = ['S1', 'S2', 'S3', 'S4']
     elif setup['Top']['sourceType'] == 'B6':
         idSw = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+    elif setup['Top']['sourceType'] == 'DAB':
+        idSw = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8']
     else:
         print("WARN: Invalid topology assuming B6")
         idSw = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']

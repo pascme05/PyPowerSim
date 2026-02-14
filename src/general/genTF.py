@@ -58,12 +58,6 @@ def genTF(para, setup):
     L = setup['Top']['L']
     
     # ------------------------------------------
-    # DC-Link
-    # ------------------------------------------
-    C = para['Cap']['Elec']['con']['C']
-    ESR = para['Cap']['Elec']['con']['ESR']
-    
-    # ------------------------------------------
     # Output Filter
     # ------------------------------------------
     Rout = setup['Top']['Rout']
@@ -86,28 +80,94 @@ def genTF(para, setup):
     # Calculation
     ###################################################################################################################
     # ==============================================================================
-    # Input Filter
-    # ==============================================================================
-    print("INFO: Input filter")
-    out['TF']['Inp'] = signal.TransferFunction([ESR*C, 1], [Linp*Cinp, Rinp*Cinp + ESR*C, 1])
-    
-    # ==============================================================================
-    # DC-Link
-    # ==============================================================================
-    print("INFO: DC-Link")
-    out['TF']['DC'] = signal.TransferFunction([ESR*C, 1], [C, 0])
-    
-    # ==============================================================================
-    # Output Filter
-    # ==============================================================================
-    print("INFO: Output filter")
-    out['TF']['Out'] = signal.TransferFunction([L, R], [Lout*L*Cout, (Rout*L*Cout + Lout*R*Cout), (Lout + L + R*Rout*Cout), (R + Rout)])
-    
-    # ==============================================================================
     # Load
     # ==============================================================================
     print("INFO: Load")
     out['TF']['Load'] = signal.TransferFunction([1], [L, R])
+
+    # ==============================================================================
+    # DCDC Topology
+    # ==============================================================================
+    if setup['Top']['sourceType'] == 'DAB':
+        # ------------------------------------------
+        # Init
+        # ------------------------------------------
+        print("INFO: DCDC Topology")
+        Lk = para['Tra']['Elec']['con']['Lk']
+        try:
+            Ron = para['SwiPri']['Elec']['con']['Ron'] + para['SwiSec']['Elec']['con']['Ron'] * para['Tra']['Elec']['con']['N'] ** 2
+        except:
+            Ron = 0
+        Rt = Ron + para['Tra']['Elec']['con']['Rp'] + para['Tra']['Elec']['con']['Rs'] * para['Tra']['Elec']['con']['N'] ** 2
+
+        # ------------------------------------------
+        # General
+        # ------------------------------------------
+        out['TF']['AC'] = signal.TransferFunction([1], [Lk, Rt])
+        out['TF']['DC'] = signal.TransferFunction([1], [1])
+
+        # ------------------------------------------
+        # Filters
+        # ------------------------------------------
+        if para['CapPri'] and para['CapSec']:
+            Cinp = para['CapPri']['Elec']['con']['C']
+            # Rinp = para['CapPri']['Elec']['con']['ESR']
+            Cout = para['CapSec']['Elec']['con']['C']
+            # Rout = para['CapSec']['Elec']['con']['ESR']
+            out['TF']['Inp'] = signal.TransferFunction([1], [Cinp, 0])
+            out['TF']['Out'] = signal.TransferFunction([1], [Cout, 1/R])
+        else:
+            out['TF']['Inp'] = signal.TransferFunction([1], [Cinp, 0])
+            out['TF']['Out'] = signal.TransferFunction([1], [Cout, 1/R])
+
+    # ==============================================================================
+    # Inverter Topology
+    # ==============================================================================
+    else:
+        # ------------------------------------------
+        # Init
+        # ------------------------------------------
+        print("INFO: Inverter Topology")
+        C = para['Cap']['Elec']['con']['C']
+        ESR = para['Cap']['Elec']['con']['ESR']
+
+        # ------------------------------------------
+        # Input Filter
+        # ------------------------------------------
+        print("INFO: Input filter")
+        out['TF']['Inp'] = signal.TransferFunction([ESR*C, 1], [Linp*Cinp, Rinp*Cinp + ESR*C, 1])
+
+        # ------------------------------------------
+        # DC-Link
+        # ------------------------------------------
+        print("INFO: DC-Link")
+        out['TF']['DC'] = signal.TransferFunction([ESR*C, 1], [C, 0])
+        out['TF']['AC'] = signal.TransferFunction([1], [1])
+
+        # ------------------------------------------
+        # Output Filter
+        # ------------------------------------------
+        print("INFO: Output filter")
+        out['TF']['Out'] = signal.TransferFunction([L, R], [Lout*L*Cout, (Rout*L*Cout + Lout*R*Cout), (Lout + L + R*Rout*Cout), (R + Rout)])
+
+    # ==============================================================================
+    # Transformer
+    # ==============================================================================
+    if para['Tra']:
+        Lk = para['Tra']['Elec']['con']['Lk']
+        Rt = para['Tra']['Elec']['con']['Rp'] + para['Tra']['Elec']['con']['Rs'] * para['Tra']['Elec']['con']['N'] ** 2
+        num = [para['Tra']['Elec']['con']['Lm'], para['Tra']['Elec']['con']['Rc']]
+        den = [
+            Lk * para['Tra']['Elec']['con']['Lm'],
+            Rt * para['Tra']['Elec']['con']['Lm'], + para['Tra']['Elec']['con']['Rc'] * Lk,
+            Rt * para['Tra']['Elec']['con']['Rc']
+        ]
+        # out['TF']['Tra'] = signal.TransferFunction(num, den)
+        out['TF']['Tra'] = signal.TransferFunction([1], [para['Tra']['Elec']['con']['Lm'], para['Tra']['Elec']['con']['Rc']])
+        # out['TF']['Tra'] = signal.TransferFunction([1], [Lk, Rt])
+    else:
+        out['TF']['Tra'] = signal.TransferFunction([1], [1])
+        print("WARN: No transformer model Parameter provided.")
 
     ###################################################################################################################
     # Post-Processing
@@ -119,7 +179,9 @@ def genTF(para, setup):
     out['SS']['DC'] = out['TF']['DC'].to_ss()
     out['SS']['Out'] = out['TF']['Out'].to_ss()
     out['SS']['Load'] = out['TF']['Load'].to_ss()
-    
+    out['SS']['Tra'] = out['TF']['Tra'].to_ss()
+    out['SS']['AC'] = out['TF']['AC'].to_ss()
+
     ###################################################################################################################
     # MSG Out
     ###################################################################################################################

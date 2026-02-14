@@ -90,6 +90,13 @@ def sanityInput(para, setup):
         if setup['Dat']['stat']['Mi'] > 4/np.pi:
             setup['Dat']['stat']['Mi'] = 1.0
             print("WARN: Modulation index Mi too high, limited to 1.273")
+    elif setup['Top']['sourceType'] == 'DAB':
+        if setup['Dat']['stat']['Mi'] != 0.5:
+            setup['Dat']['stat']['Mi'] = 0.5
+            print("WARN: Modulation index Mi not equal to 0.5 (DAB), changed to 0.5")
+        if abs(setup['Dat']['stat']['PhiDAB']) > 90:
+            setup['Dat']['stat']['PhiDAB'] = 90
+            print("WARN: Phase shift Phi larger than 90 degrees (DAB), changed to 90 degrees")
 
     ###################################################################################################################
     # Parameters

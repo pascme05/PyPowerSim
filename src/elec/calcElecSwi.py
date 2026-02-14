@@ -169,7 +169,7 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setup):
             i_D[v_D < 0] = 0
 
             # HS Gate 1
-            i_D = i_D * (VfT / (VfD + VfT))
+            i_D[G.astype(bool)] = i_D[G.astype(bool)] * (VfT[G.astype(bool)] / (VfD[G.astype(bool)] + VfT[G.astype(bool)]))
 
             # Blanking time
             if setup['Par']['Elec']['SwiRecMdl'] == 1:
@@ -194,7 +194,7 @@ def calcElecSwi(Vdc, Is, G, Tj, pos, para, setup):
             i_D[v_D < 0] = 0
 
             # HS Gate 1
-            i_D = i_D * (VfT / (VfD + VfT))
+            i_D[G.astype(bool)] = i_D[G.astype(bool)] * (VfT[G.astype(bool)] / (VfD[G.astype(bool)] + VfT[G.astype(bool)]))
 
             # Blanking time
             if setup['Par']['Elec']['SwiRecMdl'] == 1:
