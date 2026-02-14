@@ -115,6 +115,20 @@ def plotSweep(time, freq, sweep, setup):
     for c1 in timeDc:
         timeDc[c1] = timeDc[c1][start:ende]
 
+    # ------------------------------------------
+    # Plot Axis
+    # ------------------------------------------
+    t_plot = t - t[0]
+    t_max = np.max(t_plot)
+    if t_max < 1e-3:
+        t_plot = t_plot * 1e6
+        t_label = "time in ($\mu$s)"
+    elif t_max < 1:
+        t_plot = t_plot * 1e3
+        t_label = "time in (ms)"
+    else:
+        t_label = "time in (s)"
+
     # ==============================================================================
     # Load angle Total
     # ==============================================================================
@@ -158,12 +172,12 @@ def plotSweep(time, freq, sweep, setup):
     # ------------------------------------------
     ax1 = pl.subplot(gs[0, :])
     ax2 = ax1.twinx()
-    ax1.plot(t[::down2], timeSw['c'][::down2], 'black')
-    ax2.plot(t[::down2], timeSw['v_a_ref'][::down2] / (Vdc / 2), color='tab:blue')
-    ax2.plot(t[::down2], timeSw['xA'][::down2], '--', color='tab:blue')
-    ax2.plot(t[::down2], timeSw['n0'][::down2], '-.', color='tab:blue')
+    ax1.plot(t_plot[::down2], timeSw['c'][::down2], 'black')
+    ax2.plot(t_plot[::down2], timeSw['v_a_ref'][::down2] / (Vdc / 2), color='tab:blue')
+    ax2.plot(t_plot[::down2], timeSw['xA'][::down2], '--', color='tab:blue')
+    ax2.plot(t_plot[::down2], timeSw['n0'][::down2], '-.', color='tab:blue')
     pl.title('Carrier and Reference Waveform')
-    pl.xlabel('t in (sec)')
+    pl.xlabel(t_label)
     ax1.set_ylabel('c(t)/s(t)', color='black')
     ax2.set_ylabel('v(t) (p.u)', color='tab:blue')
     pl.legend(["$c_{a}$", "$v_{a}^{*}$", "$v_{a0}^{*}$", "$v_{n0}^{*}$"], loc='upper right')
@@ -174,9 +188,9 @@ def plotSweep(time, freq, sweep, setup):
     # ------------------------------------------
     # Time-Domain
     pl.subplot(gs[1, 0])
-    pl.plot(t[::down2], timeSw['sA'][::down2])
+    pl.plot(t_plot[::down2], timeSw['sA'][::down2])
     pl.title('Time-domain Switching Functions')
-    pl.xlabel('t in (sec)')
+    pl.xlabel(t_label)
     pl.ylabel("$s_{a}(t)$ (p.u)")
     pl.legend(["$s_{a}$"], loc='upper right')
     pl.grid('on')
@@ -197,9 +211,9 @@ def plotSweep(time, freq, sweep, setup):
     # ------------------------------------------
     # Time-Domain
     pl.subplot(gs[1, 1])
-    pl.plot(t[::down2], timeSw['xAs'][::down2])
+    pl.plot(t_plot[::down2], timeSw['xAs'][::down2])
     pl.title('Time-domain Sampled References')
-    pl.xlabel('t in (sec)')
+    pl.xlabel(t_label)
     pl.ylabel("$x_{a}(t)$ (p.u)")
     pl.legend(["$x_{a}$"], loc='upper right')
     pl.grid('on')
@@ -230,10 +244,10 @@ def plotSweep(time, freq, sweep, setup):
     # ------------------------------------------
     # Time
     plt.subplot(2, 3, 1)
-    plt.plot(t[::down2], timeAc['i_a'][::down2])
+    plt.plot(t_plot[::down2], timeAc['i_a'][::down2])
     plt.ylabel("$i_{a}(t)$ (A)")
     plt.title('Time-domain Currents AC-Side')
-    plt.xlabel('time in (sec)')
+    plt.xlabel(t_label)
     pl.legend(["$i_{a}$"], loc='upper right')
     plt.grid('on')
 
@@ -267,11 +281,11 @@ def plotSweep(time, freq, sweep, setup):
     # ------------------------------------------
     # Time
     plt.subplot(2, 3, 4)
-    plt.plot(t[::down2], timeDc['i_dc'][::down2], t[::down2],
+    plt.plot(t_plot[::down2], timeDc['i_dc'][::down2], t_plot[::down2],
              np.mean(timeDc['i_dc']) * np.ones(np.size(timeDc['i_dc'][::down2])), '--')
     plt.ylabel("$i_{dc}(t)$ (A)")
     plt.title('Time-domain Currents DC-Side')
-    plt.xlabel('time in (sec)')
+    plt.xlabel(t_label)
     plt.legend(["$i_{dc}$", "$I_{dc,avg}$"], loc='upper right')
     plt.grid('on')
 
@@ -315,11 +329,11 @@ def plotSweep(time, freq, sweep, setup):
     # ------------------------------------------
     # Time
     plt.subplot(2, 3, 1)
-    plt.plot(t[::down2], timeAc['v_a'][::down2], t[::down2], timeAc['v_a0'][::down2], t[::down2],
-             timeAc['v_a_out'][::down2], t[::down2], timeSw['e_a'][::down2])
+    plt.plot(t_plot[::down2], timeAc['v_a'][::down2], t_plot[::down2], timeAc['v_a0'][::down2], t_plot[::down2],
+             timeAc['v_a_out'][::down2], t_plot[::down2], timeSw['e_a'][::down2])
     plt.ylabel("$v_{a}(t)$ (V)")
     plt.title('Time-domain Voltages AC-Side')
-    plt.xlabel('time in (sec)')
+    plt.xlabel(t_label)
     plt.legend(["$v_{a}(t)$", "$v_{a0}(t)$", "$v_{a,out}(t)$", "$e_{a}(t)$"], loc='upper right')
     plt.grid('on')
 
@@ -352,11 +366,11 @@ def plotSweep(time, freq, sweep, setup):
     # ------------------------------------------
     # Time
     plt.subplot(2, 3, 4)
-    plt.plot(t[::down2], timeDc['v_in'][::down2], t[::down2], timeDc['v_dc'][::down2], t[::down2],
+    plt.plot(t_plot[::down2], timeDc['v_in'][::down2], t_plot[::down2], timeDc['v_dc'][::down2], t_plot[::down2],
              np.mean(timeDc['v_dc']) * np.ones(np.size(timeDc['v_dc'][::down2])), '--')
     plt.ylabel("$v_{dc}(t)$ (V)")
     plt.title('Time-domain Voltages DC-Side')
-    plt.xlabel('time in (sec)')
+    plt.xlabel(t_label)
     plt.legend(["$v_{in}$", "$v_{dc}$", "$V_{dc,avg}$"], loc='upper right')
     plt.grid('on')
 

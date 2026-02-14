@@ -68,6 +68,20 @@ def plotClose(time, freq, setup):
     # ==============================================================================
     tel = time['t'] * setup['Dat']['trans']['tmax']*fel
 
+    # ------------------------------------------
+    # Plot Axis
+    # ------------------------------------------
+    t_plot = tel - tel[0]
+    t_max = np.max(t_plot)
+    if t_max < 1e-3:
+        t_plot = t_plot * 1e6
+        t_label = "time in ($\mu$s)"
+    elif t_max < 1:
+        t_plot = t_plot * 1e3
+        t_label = "time in (ms)"
+    else:
+        t_label = "time in (s)"
+
     ###################################################################################################################
     # Pre-Processing
     ###################################################################################################################
@@ -102,10 +116,10 @@ def plotClose(time, freq, setup):
 
     # Current
     scale = setup['Par']['Cont']['hys'] / 100
-    ax1.plot(tel[::down2], timeAc['i_ref']['A'][::down2], color='#1f77b4')
-    ax1.plot(tel[::down2], timeAc['i_ref']['A'][::down2] * (scale + 1), color='#1f77b4', linestyle='--')
-    ax1.plot(tel[::down2], timeAc['i_ref']['A'][::down2] * (1 - scale), color='#1f77b4', linestyle='--')
-    ax1.plot(tel[::down2], timeAc['i_a'][::down2], color='#ff7f0e')
+    ax1.plot(t_plot[::down2], timeAc['i_ref']['A'][::down2], color='#1f77b4')
+    ax1.plot(t_plot[::down2], timeAc['i_ref']['A'][::down2] * (scale + 1), color='#1f77b4', linestyle='--')
+    ax1.plot(t_plot[::down2], timeAc['i_ref']['A'][::down2] * (1 - scale), color='#1f77b4', linestyle='--')
+    ax1.plot(t_plot[::down2], timeAc['i_a'][::down2], color='#ff7f0e')
     ax1.set_ylabel("$i_{a}(t)$ (A)")
     ax1.set_title('Time-domain Currents AC-Side')
     ax1.legend(["$i_{a}^{ref}$", "$i_{a}^{ref,max}$", "$i_{a}^{ref,min}$", "$i_{a}^{act}$"], loc='upper right')
@@ -113,21 +127,21 @@ def plotClose(time, freq, setup):
 
     # Current Error
     err = timeAc['i_a'][::down2] - timeAc['i_ref']['A'][::down2]
-    ax2.plot(tel[::down2], np.max(timeAc['i_ref']['A'][::down2]) * scale * np.ones(len(err)), color='#1f77b4', linestyle='--')
-    ax2.plot(tel[::down2], np.min(timeAc['i_ref']['A'][::down2]) * scale * np.ones(len(err)), color='#1f77b4', linestyle='--')
-    ax2.plot(tel[::down2], err, color='#ff7f0e')
+    ax2.plot(t_plot[::down2], np.max(timeAc['i_ref']['A'][::down2]) * scale * np.ones(len(err)), color='#1f77b4', linestyle='--')
+    ax2.plot(t_plot[::down2], np.min(timeAc['i_ref']['A'][::down2]) * scale * np.ones(len(err)), color='#1f77b4', linestyle='--')
+    ax2.plot(t_plot[::down2], err, color='#ff7f0e')
     ax2.set_ylabel("$i_{err}(t)$ (A)")
     ax2.set_title('Time-domain Error Current AC-Side')
     ax2.legend(["$i_{a}^{err}$"], loc='upper right')
     ax2.grid(True)
 
     # Voltage
-    ax3.plot(tel[::down2], timeAc['v_a'][::down2], label="$v_{a}(t)$")
-    ax3.plot(tel[::down2], timeAc['v_a0'][::down2], label="$v_{a0}(t)$")
-    ax3.plot(tel[::down2], timeAc['v_a_out'][::down2], label="$v_{a,out}(t)$")
+    ax3.plot(t_plot[::down2], timeAc['v_a'][::down2], label="$v_{a}(t)$")
+    ax3.plot(t_plot[::down2], timeAc['v_a0'][::down2], label="$v_{a0}(t)$")
+    ax3.plot(t_plot[::down2], timeAc['v_a_out'][::down2], label="$v_{a,out}(t)$")
     ax3.set_ylabel("$v_{a}(t)$ (V)")
     ax3.set_title('Time-domain Voltages AC-Side')
-    ax3.set_xlabel('Time (sec)')
+    ax3.set_xlabel(t_label)
     ax3.legend(loc='upper right')
     ax3.grid(True)
 
@@ -145,9 +159,9 @@ def plotClose(time, freq, setup):
     # Switches Leg 1
     # ------------------------------------------
     # Voltages Transistors and Diodes (A)
-    axs[0].plot(tel[::down2], timeElec['sw']['S1']['v_T'][::down2], 'b', tel[::down2],
+    axs[0].plot(t_plot[::down2], timeElec['sw']['S1']['v_T'][::down2], 'b', t_plot[::down2],
                 timeElec['sw']['S2']['v_T'][::down2], 'r',
-                tel[::down2], timeElec['sw']['S1']['v_D'][::down2], 'b--', tel[::down2],
+                t_plot[::down2], timeElec['sw']['S1']['v_D'][::down2], 'b--', t_plot[::down2],
                 timeElec['sw']['S2']['v_D'][::down2], 'r--')
     axs[0].set_title('Voltages Transistors and Diodes (A)')
     axs[0].set_ylabel('Voltage (V)')
@@ -155,9 +169,9 @@ def plotClose(time, freq, setup):
     axs[0].grid(True)
 
     # Currents Transistors and Diodes (A)
-    axs[1].plot(tel[::down2], timeElec['sw']['S1']['i_T'][::down2], 'b', tel[::down2],
+    axs[1].plot(t_plot[::down2], timeElec['sw']['S1']['i_T'][::down2], 'b', t_plot[::down2],
                 timeElec['sw']['S2']['i_T'][::down2], 'r',
-                tel[::down2], timeElec['sw']['S1']['i_D'][::down2], 'b--', tel[::down2],
+                t_plot[::down2], timeElec['sw']['S1']['i_D'][::down2], 'b--', t_plot[::down2],
                 timeElec['sw']['S2']['i_D'][::down2], 'r--')
     axs[1].set_title('Currents Transistors and Diodes (A)')
     axs[1].set_ylabel('Current (A)')
@@ -165,9 +179,9 @@ def plotClose(time, freq, setup):
     axs[1].grid(True)
 
     # Conduction Losses Transistors and Diodes (A)
-    axs[2].plot(tel[::down2], timeLoss['sw']['S1']['p_T_c'][::down2], 'b', tel[::down2],
+    axs[2].plot(t_plot[::down2], timeLoss['sw']['S1']['p_T_c'][::down2], 'b', t_plot[::down2],
                 timeLoss['sw']['S2']['p_T_c'][::down2], 'r',
-                tel[::down2], timeLoss['sw']['S1']['p_D_c'][::down2], 'b--', tel[::down2],
+                t_plot[::down2], timeLoss['sw']['S1']['p_D_c'][::down2], 'b--', t_plot[::down2],
                 timeLoss['sw']['S2']['p_D_c'][::down2], 'r--')
     axs[2].set_title('Conduction Losses Transistors and Diodes (A)')
     axs[2].set_ylabel('Power (W)')
@@ -175,13 +189,13 @@ def plotClose(time, freq, setup):
     axs[2].grid(True)
 
     # Switching Losses Transistors and Diodes (A)
-    axs[3].plot(tel[::down2], timeLoss['sw']['S1']['p_T_s'][::down2], 'b', tel[::down2],
+    axs[3].plot(t_plot[::down2], timeLoss['sw']['S1']['p_T_s'][::down2], 'b', t_plot[::down2],
                 timeLoss['sw']['S2']['p_T_s'][::down2], 'r',
-                tel[::down2], timeLoss['sw']['S1']['p_D_s'][::down2], 'b--', tel[::down2],
+                t_plot[::down2], timeLoss['sw']['S1']['p_D_s'][::down2], 'b--', t_plot[::down2],
                 timeLoss['sw']['S2']['p_D_s'][::down2], 'r--')
     axs[3].set_title('Switching Losses Transistors and Diodes (A)')
     axs[3].set_ylabel('Power (W)')
-    axs[3].set_xlabel('Time (sec)')
+    axs[3].set_xlabel(t_label)
     axs[3].legend(['T1', 'T2', 'D1', 'D2'])
     axs[3].grid(True)
 
@@ -196,22 +210,22 @@ def plotClose(time, freq, setup):
     plt.subplots_adjust(hspace=0.35, wspace=0.35, left=0.075, right=0.925, top=0.90, bottom=0.075)
 
     # Voltage Capacitor
-    axs[0].plot(tel[::down2], timeElec['cap']['C1']['v_c'][::down2])
+    axs[0].plot(t_plot[::down2], timeElec['cap']['C1']['v_c'][::down2])
     axs[0].set_title('Voltage Capacitor')
     axs[0].set_ylabel('Voltage (V)')
     axs[0].grid(True)
 
     # Current Capacitor
-    axs[1].plot(tel[::down2], timeElec['cap']['C1']['i_c'][::down2])
+    axs[1].plot(t_plot[::down2], timeElec['cap']['C1']['i_c'][::down2])
     axs[1].set_title('Current Capacitor')
     axs[1].set_ylabel('Current (A)')
     axs[1].grid(True)
 
     # Losses Capacitor
-    axs[2].plot(tel[::down2], timeLoss['cap']['C1']['p_L'][::down2])
+    axs[2].plot(t_plot[::down2], timeLoss['cap']['C1']['p_L'][::down2])
     axs[2].set_title('Losses Capacitor')
     axs[2].set_ylabel('Power (W)')
-    axs[2].set_xlabel('Time (sec)')
+    axs[2].set_xlabel(t_label)
     axs[2].grid(True)
     plt.show()
 
