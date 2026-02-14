@@ -27,7 +27,6 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pl
 import matplotlib.gridspec as gridspec
-from scipy.fft import fft
 import matplotlib
 matplotlib.use('TkAgg')
 
@@ -39,11 +38,16 @@ def plotSweep_DAB(time, freq, sweep, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
-    print("START: Plotting Stationary DAB Waveforms")
+    print("START: Plotting Sweep DAB Waveforms")
 
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
+    # ==============================================================================
+    # Init
+    # ==============================================================================
+    distAc = sweep['Ac']
+    distDc = sweep['Dc']
     timeSw = time['Sw']
     timeAc = time['Ac']
     timeDc = time['Dc']
@@ -54,6 +58,9 @@ def plotSweep_DAB(time, freq, sweep, setup):
     freqAc = freq['Ac']
     freqDc = freq['Dc']
 
+    # ==============================================================================
+    # Parameters
+    # ==============================================================================
     fel = setup['Top']['fel']
     fs = setup['Par']['PWM']['fs']
     fsim = setup['Exp']['fsim']
@@ -66,9 +73,12 @@ def plotSweep_DAB(time, freq, sweep, setup):
     if down2 < 1:
         down2 = 1
 
+    # ==============================================================================
+    # Variables
+    # ==============================================================================
     t = timeSw['t'].values
     f = fsim * np.linspace(0, 0.5, int(len(t) / 2))
-    phi_i = np.linspace(0, np.pi/2, len(sweep['Mi']))
+    phi_i = np.linspace(0, np.pi / 2, int(setup['Dat']['stat']['W']))
 
     ###################################################################################################################
     # Pre-Processing
@@ -77,16 +87,16 @@ def plotSweep_DAB(time, freq, sweep, setup):
     # Distortion
     # ==============================================================================
     # AC
-    I_ac_pri_thd = thd(timeAc['i_ac_pri'], t, (2 / np.sqrt(2)), 1)
-    I_ac_sec_thd = thd(timeAc['i_ac_sec'], t, (2 / np.sqrt(2)), 1)
-    V_ac_pri_thd = thd(timeAc['v_ac_pri'], t, (2 / np.sqrt(2)), 1)
-    V_ac_sec_thd = thd(timeAc['v_ac_sec'], t, (2 / np.sqrt(2)), 1)
+    # I_ac_pri_thd = thd(timeAc['i_ac_pri'], t, (2 / np.sqrt(2)), 1)
+    # I_ac_sec_thd = thd(timeAc['i_ac_sec'], t, (2 / np.sqrt(2)), 1)
+    # V_ac_pri_thd = thd(timeAc['v_ac_pri'], t, (2 / np.sqrt(2)), 1)
+    # V_ac_sec_thd = thd(timeAc['v_ac_sec'], t, (2 / np.sqrt(2)), 1)
 
     # DC
-    I_dc_pri_thd = thd(timeAc['i_dc_pri'], t, 1, 0)
-    I_dc_sec_thd = thd(timeAc['i_dc_sec'], t, 1, 0)
-    V_dc_pri_thd = thd(timeAc['v_dc_pri'], t, 1, 0)
-    V_dc_sec_thd = thd(timeAc['v_dc_sec'], t, 1, 0)
+    I_dc_pri_thd = thd(timeDc['i_dc_pri'], t, 1, 0)
+    I_dc_sec_thd = thd(timeDc['i_dc_sec'], t, 1, 0)
+    V_dc_pri_thd = thd(timeDc['v_dc_pri'], t, 1, 0)
+    V_dc_sec_thd = thd(timeDc['v_dc_sec'], t, 1, 0)
 
     # ==============================================================================
     # Time
@@ -254,7 +264,7 @@ def plotSweep_DAB(time, freq, sweep, setup):
     # Current
     # ==============================================================================
     plt.figure()
-    txt = "Switching Functions DAB for PWM Control with: " \
+    txt = "Currents DAB for PWM Control with: " \
           + "$V_{dc}$=" + str(Vdc) + "V, " \
           + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) \
           + ", Phi=" + f"{math.degrees(phiDAB):.2f}"
@@ -276,27 +286,27 @@ def plotSweep_DAB(time, freq, sweep, setup):
 
     # Frequency
     ax = plt.subplot(2, 3, 2)
-    plt.stem(f_plot[::down][0:f_max_plt], freqAc['i_ac_pri'][::down][0:f_max_plt])
-    plt.stem(f_plot[::down][0:f_max_plt], freqAc['i_ac_sec'][::down][0:f_max_plt])
+    m1, s1, _ = plt.stem(f_plot[::down][0:f_max_plt], freqAc['i_ac_pri'][::down][0:f_max_plt])
+    m2, s2, _ = plt.stem(f_plot[::down][0:f_max_plt], freqAc['i_ac_sec'][::down][0:f_max_plt])
+    plt.setp(m1, color='C0')
+    plt.setp(s1, color='C0')
+    plt.setp(m2, color='C1')
+    plt.setp(s2, color='C1')
     plt.ylabel("$I_{ac}(f)$ (A)")
-    plt.xlim(0, 50)
     plt.title('Frequency-domain Current AC-Side')
     plt.xlabel(f_label)
     plt.yscale('log')
     plt.ylim(OoM(max(freqAc['i_ac_pri'])) / f_scale, )
     plt.grid('on')
-    txt = "THD_pri=" + str(round(I_ac_pri_thd * 100, 2)) + "%"
-    plt.text(0.75, 0.90, txt, bbox=dict(facecolor='tab:blue', alpha=0.5), transform=ax.transAxes)
-    txt = "THD_sec=" + str(round(I_ac_sec_thd * 100, 2)) + "%"
-    plt.text(0.75, 0.85, txt, bbox=dict(facecolor='tab:blue', alpha=0.5), transform=ax.transAxes)
-    plt.grid('on')
 
     # Modulation
     plt.subplot(233)
-    plt.plot(phi_i, distAc['num']['I_a_thd'])
+    plt.plot(phi_i, distAc['Pri']['num']['I_a_thd'], label='Primary')
+    plt.plot(phi_i, distAc['Sec']['num']['I_a_thd'], label='Secondary')
     if setup['Exp']['plot'] == 2:
-        plt.plot(M_i, distAc['ana']['I_a_thd'], 'tab:blue', linestyle="", marker="o")
-        plt.legend(['Numerical', 'Analytical'])
+        plt.plot(phi_i, distAc['Pri']['ana']['I_a_thd'], 'tab:blue', linestyle="", marker="o", label='Analytical Pri')
+        plt.plot(phi_i, distAc['Sec']['ana']['I_a_thd'], 'tab:orange', linestyle="", marker="o", label='Analytical Sec')
+    plt.legend(loc='upper right')
     plt.ylim(0, )
     plt.title('Distortion Current AC-Side')
     plt.ylabel("$I_{ac,rms}^{THD}$ (A)")
@@ -308,44 +318,52 @@ def plotSweep_DAB(time, freq, sweep, setup):
     # ------------------------------------------
     # Time
     plt.subplot(2, 3, 4)
-    plt.plot(t_plot[::down2], timeDc['i_dc'][::down2], t_plot[::down2],
-             np.mean(timeDc['i_dc']) * np.ones(np.size(timeDc['i_dc'][::down2])), '--')
+    plt.plot(t_plot[::down2], timeDc['i_dc_pri'][::down2])
+    plt.plot(t_plot[::down2], timeDc['i_dc_sec'][::down2])
     plt.ylabel("$i_{dc}(t)$ (A)")
     plt.title('Time-domain Currents DC-Side')
     plt.xlabel(t_label)
-    plt.legend(["$i_{dc}$", "$I_{dc,avg}$"], loc='upper right')
+    plt.legend(["$i_{dc,pri}$", "$i_{dc,sec}$", "$I_{dc,pri,avg}$", "$I_{dc,sec,avg}$"], loc='upper right')
     plt.grid('on')
 
     # Frequency
     ax = plt.subplot(2, 3, 5)
-    plt.stem(f[::down][0:50], freqDc['I_dc'][::down][0:50])
+    m1, s1, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['i_dc_pri'][::down][0:f_max_plt])
+    m2, s2, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['i_dc_sec'][::down][0:f_max_plt])
+    plt.setp(m1, color='C0')
+    plt.setp(s1, color='C0')
+    plt.setp(m2, color='C1')
+    plt.setp(s2, color='C1')
     plt.ylabel("$I_{dc}(f)$ (A)")
-    plt.xlim(0, 50)
     plt.title('Frequency-domain Current DC-Side')
-    plt.xlabel("$f/f_{1}$ (Hz/Hz)")
+    plt.xlabel(f_label)
     plt.yscale('log')
-    plt.ylim(0.1 / OoM(max(freqDc['I_dc'])), )
-    txt = "THD=" + str(round(I_dc_thd * 100, 2)) + "%"
-    plt.text(0.75, 0.90, txt, bbox=dict(facecolor='tab:blue', alpha=0.5), transform=ax.transAxes)
+    plt.ylim(0.1 / OoM(max(freqDc['i_dc_pri'])), )
+    txt = "THD_pri=" + str(round(I_dc_pri_thd * 100, 2)) + "%"
+    plt.text(0.70, 0.90, txt, bbox=dict(facecolor='tab:blue', alpha=0.5), transform=ax.transAxes)
+    txt = "THD_sec=" + str(round(I_dc_sec_thd * 100, 2)) + "%"
+    plt.text(0.70, 0.80, txt, bbox=dict(facecolor='tab:blue', alpha=0.5), transform=ax.transAxes)
     plt.grid('on')
 
     # Modulation
     plt.subplot(236)
-    plt.plot(M_i, distDc['num']['I_dc_thd'])
+    plt.plot(phi_i, distDc['Pri']['num']['I_dc_thd'], label='Primary')
+    plt.plot(phi_i, distDc['Sec']['num']['I_dc_thd'], label='Secondary')
     if setup['Exp']['plot'] == 2:
-        plt.plot(M_i, distDc['ana']['I_dc_thd'], 'tab:blue', linestyle="", marker="o")
-        plt.legend(['Numerical', 'Analytical'])
+        plt.plot(phi_i, distDc['Pri']['ana']['I_dc_thd'], 'tab:blue', linestyle="", marker="o", label='Analytical Pri')
+        plt.plot(phi_i, distDc['Sec']['ana']['I_dc_thd'], 'tab:orange', linestyle="", marker="o", label='Analytical Sec')
+    plt.legend(loc='upper right')
     plt.ylim(0, )
     plt.title('Distortion Current DC-Side')
     plt.ylabel("$I_{dc,rms}^{THD}$ (A)")
-    plt.xlabel("$M_{i}$ in (p.u)")
+    plt.xlabel("$Phi$ in (rad)")
     plt.grid('on')
 
     # ==============================================================================
     # Voltage
     # ==============================================================================
     plt.figure()
-    txt = "Switching Functions DAB for PWM Control with: " \
+    txt = "Voltages DAB for PWM Control with: " \
           + "$V_{dc}$=" + str(Vdc) + "V, " \
           + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) \
           + ", Phi=" + f"{math.degrees(phiDAB):.2f}"
@@ -357,36 +375,41 @@ def plotSweep_DAB(time, freq, sweep, setup):
     # ------------------------------------------
     # Time
     plt.subplot(2, 3, 1)
-    plt.plot(t_plot[::down2], timeAc['v_a'][::down2], t_plot[::down2], timeAc['v_a0'][::down2], t_plot[::down2],
-             timeAc['v_a_out'][::down2], t_plot[::down2], timeSw['e_a'][::down2])
-    plt.ylabel("$v_{a}(t)$ (V)")
+    plt.plot(t_plot[::down2], timeAc['v_ac_pri'][::down2])
+    plt.plot(t_plot[::down2], timeAc['v_L'][::down2])
+    plt.plot(t_plot[::down2], timeAc['v_ac_sec_ref'][::down2])
+    plt.ylabel("$v_{ac}(t)$ (V)")
     plt.title('Time-domain Voltages AC-Side')
     plt.xlabel(t_label)
-    plt.legend(["$v_{a}(t)$", "$v_{a0}(t)$", "$v_{a,out}(t)$", "$e_{a}(t)$"], loc='upper right')
+    plt.legend(["$v_{ac,pri}$", "$v_{ac,Lk}$", "$v_{ac,sec,ref}$"], loc='upper right')
     plt.grid('on')
 
     # Frequency
     ax = plt.subplot(2, 3, 2)
-    plt.stem(f[::down][0:50], freqAc['V_a'][::down][0:50])
-    plt.ylabel("$V_{a}(f)$ (V)")
-    plt.xlim(0, 50)
+    m1, s1, _ = plt.stem(f_plot[::down][0:f_max_plt], freqAc['v_ac_pri'][::down][0:f_max_plt])
+    m2, s2, _ = plt.stem(f_plot[::down][0:f_max_plt], freqAc['v_L'][::down][0:f_max_plt])
+    plt.setp(m1, color='C0')
+    plt.setp(s1, color='C0')
+    plt.setp(m2, color='C1')
+    plt.setp(s2, color='C1')
+    plt.ylabel("$V_{ac}(f)$ (V)")
     plt.title('Frequency-domain Voltages AC-Side')
-    plt.xlabel("$f/f_{1}$ (Hz/Hz)")
+    plt.xlabel(f_label)
     plt.yscale('log')
-    plt.ylim(0.1 / OoM(max(freqAc['V_a'])), )
-    txt = "THD=" + str(round(V_ph_thd * 100, 2)) + "%"
-    plt.text(0.75, 0.90, txt, bbox=dict(facecolor='tab:blue', alpha=0.5), transform=ax.transAxes)
+    plt.ylim(OoM(max(freqAc['v_ac_pri'])) / f_scale, )
     plt.grid('on')
 
     # Modulation
     plt.subplot(233)
-    plt.plot(M_i, distAc['num']['V_a_thd'])
+    plt.plot(phi_i, distAc['Pri']['num']['V_a_thd'], label='Primary')
+    plt.plot(phi_i, distAc['Sec']['num']['V_a_thd'], label='Secondary')
     if setup['Exp']['plot'] == 2:
-        plt.plot(M_i, distAc['ana']['V_a_thd'], 'tab:blue', linestyle="", marker="o")
-        plt.legend(['Numerical', 'Analytical'])
+        plt.plot(phi_i, distAc['Pri']['ana']['V_a_thd'], 'tab:blue', linestyle="", marker="o", label='Analytical Pri')
+        plt.plot(phi_i, distAc['Sec']['ana']['V_a_thd'], 'tab:orange', linestyle="", marker="o", label='Analytical Sec')
+    plt.legend(loc='upper right')
     plt.title('Distortion Voltage AC-Side')
     plt.ylabel("$V_{a,rms}^{THD}$ (V)")
-    plt.xlabel("$M_{i}$ in (p.u)")
+    plt.xlabel("$Phi$ in (rad)")
     plt.grid('on')
 
     # ------------------------------------------
@@ -394,36 +417,44 @@ def plotSweep_DAB(time, freq, sweep, setup):
     # ------------------------------------------
     # Time
     plt.subplot(2, 3, 4)
-    plt.plot(t_plot[::down2], timeDc['v_in'][::down2], t_plot[::down2], timeDc['v_dc'][::down2], t_plot[::down2],
-             np.mean(timeDc['v_dc']) * np.ones(np.size(timeDc['v_dc'][::down2])), '--')
+    plt.plot(t_plot[::down2], timeDc['v_dc_pri'][::down2])
+    plt.plot(t_plot[::down2], timeDc['v_dc_sec'][::down2])
     plt.ylabel("$v_{dc}(t)$ (V)")
     plt.title('Time-domain Voltages DC-Side')
     plt.xlabel(t_label)
-    plt.legend(["$v_{in}$", "$v_{dc}$", "$V_{dc,avg}$"], loc='upper right')
+    plt.legend(["$v_{dc,pri}$", "$v_{dc,sec}$"], loc='upper right')
     plt.grid('on')
 
     # Frequency
     ax = plt.subplot(2, 3, 5)
-    plt.stem(f[::down][0:50], freqDc['V_dc'][::down][0:50])
-    plt.ylabel("$V_{dc}(f)$ (A)")
-    plt.xlim(0, 50)
+    m1, s1, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['v_dc_pri'][::down][0:f_max_plt])
+    m2, s2, _ = plt.stem(f_plot[::down][0:f_max_plt], freqDc['v_dc_sec'][::down][0:f_max_plt])
+    plt.setp(m1, color='C0')
+    plt.setp(s1, color='C0')
+    plt.setp(m2, color='C1')
+    plt.setp(s2, color='C1')
+    plt.ylabel("$V_{dc}(f)$ (V)")
     plt.title('Frequency-domain Voltages DC-Side')
-    plt.xlabel("$f/f_{1}$ (Hz/Hz)")
+    plt.xlabel(f_label)
     plt.yscale('log')
-    plt.ylim(0.1 / OoM(max(freqDc['V_dc'])), )
-    txt = "THD=" + str(round(V_dc_thd * 100, 2)) + "%"
-    plt.text(0.75, 0.90, txt, bbox=dict(facecolor='tab:blue', alpha=0.5), transform=ax.transAxes)
+    plt.ylim(0.1 / OoM(max(freqDc['v_dc_pri'])), )
+    txt = "THD_pri=" + str(round(V_dc_pri_thd * 100, 2)) + "%"
+    plt.text(0.7, 0.90, txt, bbox=dict(facecolor='tab:blue', alpha=0.5), transform=ax.transAxes)
+    txt = "THD_sec=" + str(round(V_dc_sec_thd * 100, 2)) + "%"
+    plt.text(0.7, 0.80, txt, bbox=dict(facecolor='tab:blue', alpha=0.5), transform=ax.transAxes)
     plt.grid('on')
 
     # Modulation
     plt.subplot(236)
-    plt.plot(M_i, distDc['num']['V_dc_thd'])
+    plt.plot(phi_i, distDc['Pri']['num']['V_dc_thd'], label='Primary')
+    plt.plot(phi_i, distDc['Sec']['num']['V_dc_thd'], label='Secondary')
     if setup['Exp']['plot'] == 2:
-        plt.plot(M_i, distDc['ana']['V_dc_thd'], 'tab:blue', linestyle="", marker="o")
-        plt.legend(['Numerical', 'Analytical'])
+        plt.plot(phi_i, distDc['Pri']['ana']['V_dc_thd'], 'tab:blue', linestyle="", marker="o", label='Analytical Pri')
+        plt.plot(phi_i, distDc['Sec']['ana']['V_dc_thd'], 'tab:orange', linestyle="", marker="o", label='Analytical Sec')
+    plt.legend(loc='upper right')
     plt.title('Distortion Voltage DC-Side')
     plt.ylabel("$V_{dc,rms}^{THD}$ (V)")
-    plt.xlabel("$M_{i}$ in (p.u)")
+    plt.xlabel("$Phi$ in (rad)")
     plt.grid('on')
     plt.show()
 
