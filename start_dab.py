@@ -84,8 +84,8 @@ setup['Exp']['Cap'] = "Elco"                                                    
 # DCDC Topologies (DAB, PSFB)
 setup['Exp']['SwiPri'] = "A2F12M12W2"                                                                                    # filename of the primary bridge switch parameter file
 setup['Exp']['SwiSec'] = "A2F06M12W2"                                                                                    # filename of the secondary bridge switch parameter file
-setup['Exp']['CapPri'] = "none"                                                                                          # filename of the parameter set for the Input capacitor
-setup['Exp']['CapSec'] = "none"                                                                                          # filename of the parameter set for the Output capacitor
+setup['Exp']['CapPri'] = "Cin"                                                                                           # filename of the parameter set for the Input capacitor
+setup['Exp']['CapSec'] = "Cout"                                                                                          # filename of the parameter set for the Output capacitor
 setup['Exp']['Trafo'] = "trafoDAB"                                                                                       # filename of the parameter set for the transformer
 
 # ==============================================================================

@@ -162,7 +162,8 @@ def genTF(para, setup):
             Rt * para['Tra']['Elec']['con']['Lm'], + para['Tra']['Elec']['con']['Rc'] * Lk,
             Rt * para['Tra']['Elec']['con']['Rc']
         ]
-        out['TF']['Tra'] = signal.TransferFunction(num, den)
+        # out['TF']['Tra'] = signal.TransferFunction(num, den)
+        out['TF']['Tra'] = signal.TransferFunction([1], [para['Tra']['Elec']['con']['Lm'], para['Tra']['Elec']['con']['Rc']])
         # out['TF']['Tra'] = signal.TransferFunction([1], [Lk, Rt])
     else:
         out['TF']['Tra'] = signal.TransferFunction([1], [1])

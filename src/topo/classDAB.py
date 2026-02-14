@@ -621,6 +621,11 @@ class classDAB:
         # Initialisation
         # ==============================================================================
         # ------------------------------------------
+        # Variables
+        # ------------------------------------------
+        Lk = para['Tra']['Elec']['con']['Lk']
+
+        # ------------------------------------------
         # Outputs
         # ------------------------------------------
         outAc = {}
@@ -653,9 +658,10 @@ class classDAB:
         # ------------------------------------------
         # AC Currents
         # ------------------------------------------
-        _, i_l, _, = signal.lsim(mdl['SS']['AC'], v_ab - np.mean(v_ab), t, X0=init['load'])
+        _, i_l, _, = signal.lsim(mdl['SS']['AC'], v_ab, t, X0=init['load']*Lk)
+        _, i_m, _, = signal.lsim(mdl['SS']['Tra'], v_ac_pri, t, X0=0)
         i_ac_pri = i_l[t0:t1] - np.mean(i_l[t0:t1])
-        i_ac_sec = i_ac_pri * self.Ntr if self.Ntr != 0 else i_ac_pri
+        i_ac_sec = self.Ntr * (i_ac_pri - i_m[t0:t1]) if self.Ntr != 0 else i_ac_pri
 
         # ------------------------------------------
         # DC-side currents from modulation
@@ -692,7 +698,7 @@ class classDAB:
         # DC Currents
         # ------------------------------------------
         i_dc_in = i_dc_pri - i_c_pri
-        i_dc_out = v_dc_sec / setup['Top']['R']
+        i_dc_out = i_dc_sec - i_c_sec
 
         # ==============================================================================
         # Post-Processing
@@ -725,15 +731,15 @@ class classDAB:
         # ------------------------------------------
         # Init Conditions
         # ------------------------------------------
-        outIn['inp'] = v_dc_pri[-1]
-        outIn['out'] = v_ac_sec[-1]
-        outIn['dc'] = v_dc_sec[-1]
-        outIn['load'] = i_dc_sec[-1]
+        outIn['inp'] = 0
+        outIn['out'] = 0
+        outIn['dc'] = 0
+        outIn['load'] = i_ac_pri[-1]
 
         # ==============================================================================
         # Return
         # ==============================================================================
-        return [outAc, outDc, _]
+        return [outAc, outDc, outIn]
 
     ###################################################################################################################
     # Analytical distortion

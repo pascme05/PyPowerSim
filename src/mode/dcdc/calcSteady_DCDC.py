@@ -106,7 +106,7 @@ def calcSteady_DCDC(top, mdl, para, setup):
     T_sw = np.ones((len(top.id2), 1)) * setup['Dat']['stat']['Tj']
     T_ca = np.ones((2, 1)) * setup['Dat']['stat']['Tj']
     T_tra = np.ones((3, 1)) * setup['Dat']['stat']['Tj']
-    T_old = setup['Dat']['stat']['Tj']
+    T_old = [setup['Dat']['stat']['Tj'], setup['Dat']['stat']['Tj'], setup['Dat']['stat']['Tj']]
     iter1 = 0
 
     # ==============================================================================
@@ -178,7 +178,7 @@ def calcSteady_DCDC(top, mdl, para, setup):
     # ==============================================================================
     # Time Domain
     # ==============================================================================
-    [timeAc, timeDc, _] = top.calcTime(s, v_ac_pri, v_ac_sec,  e_ref, t_ref, Mi, mdl, start, ende, [], para, setup)
+    [timeAc, timeDc, initL] = top.calcTime(s, v_ac_pri, v_ac_sec,  e_ref, t_ref, Mi, mdl, start, ende, [], para, setup)
 
     # ==============================================================================
     # Msg
@@ -193,7 +193,7 @@ def calcSteady_DCDC(top, mdl, para, setup):
         # ------------------------------------------
         # Waveforms
         # ------------------------------------------
-        [timeAc, timeDc, _] = top.calcTime(s, v_ac_pri, v_ac_sec, e_ref, t_ref, Mi, mdl, start, ende, [], para, setup)
+        [timeAc, timeDc, initL] = top.calcTime(s, v_ac_pri, v_ac_sec, e_ref, t_ref, Mi, mdl, start, ende, initL, para, setup)
 
         # ------------------------------------------
         # Electrical
@@ -211,11 +211,11 @@ def calcSteady_DCDC(top, mdl, para, setup):
 
         # Output Capacitor
         timeElec['cap']['C2']['i_c'] = timeDc['i_c_sec']
-        timeElec['cap']['C2']['v_c'] = timeDc['v_dc_sec_cap']
+        timeElec['cap']['C2']['v_c'] = timeDc['v_dc_sec']
 
         # Input Capacitor
         timeElec['cap']['C1']['i_c'] = timeDc['i_c_pri']
-        timeElec['cap']['C1']['v_c'] = timeDc['v_dc_pri_cap']
+        timeElec['cap']['C1']['v_c'] = timeDc['v_dc_pri']
 
         # Transformer
         timeElec['tra'] = calcElecTra(t_ref[start:ende], timeAc['i_ac_pri'], timeAc['i_ac_sec'], timeAc['v_ac_pri'], timeAc['v_ac_sec'], T_tra, para, setup)
@@ -336,7 +336,10 @@ def calcSteady_DCDC(top, mdl, para, setup):
         # ------------------------------------------
         # Error
         # ------------------------------------------
-        err = np.mean(np.abs(timeTher['sw']['T1'] - T_old)) / np.mean(T_old)
+        err_sw = np.mean(np.abs(timeTher['sw']['T1'] - T_old[0])) / np.mean(T_old[0])
+        err_cap = np.mean(np.abs(timeTher['cap']['C1'] - T_old[1])) / np.mean(T_old[1])
+        err_tra = np.mean(np.abs(timeTher['tra']['PC'] - T_old[2])) / np.mean(T_old[2])
+        err = err_sw + err_cap + err_tra
 
         # ------------------------------------------
         # Update Para
@@ -359,7 +362,9 @@ def calcSteady_DCDC(top, mdl, para, setup):
         iter1 = iter1 + 1
 
         # Previous Temperature
-        T_old = timeTher['sw']['T1']
+        T_old[0] = timeTher['sw']['T1']
+        T_old[1] = timeTher['cap']['C1']
+        T_old[2] = timeTher['tra']['PC']
 
         # ------------------------------------------
         # Msg
