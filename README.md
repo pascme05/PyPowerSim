@@ -1,15 +1,24 @@
 # PyPowerSim
-PyPowerSim is a simple python toolkit for evaluation of standard power converter topologies.
-The current version includes simulation architectures for a half-bridge (B2), a 
-full-bridge (B4), and a three-phase full-bridge converter (B6) [1, 2]. The toolkit 
-allows simple and fast calculation of power converter circuits including waveform, 
-stead-state, and transient analysis using datasheet values of switching devices and 
-DC-link capacitors. The aim is to illustrate the influence of PWM control methods 
-to students and the interested reader without the use of commercial tools like SIMULINK, 
-PLECs or LTSpice. It is clear, that this toolkit cannot be anywhere near the capabilities 
-of commercial software but will hopefully provide a better understanding due to the freely 
-available source code. The toolkit is obviously not complete; thus, suggestions are 
-always welcome.
+PyPowerSim is a Python toolkit for evaluating standard power converter topologies with
+clear, inspectable models. It includes half‑bridge (B2), full‑bridge (B4), three‑phase
+full‑bridge (B6), and dual‑active‑bridge (DAB) simulation architectures, including
+sweep, steady‑state, transient, and closed‑loop analyses. The goal is to make PWM
+and converter behavior easy to study and modify without commercial tools.
+
+**Quick Start**
+1. Install dependencies from `requirements.txt`.
+2. Open `start_INV.py` (inverter) or `start_DCDC.py` (DAB) and set the configuration file in `setup['Exp']['conf']`.
+3. Select the analysis mode in `setup['Exp']['type']` and run the script.
+
+**Documentation**
+1. Toolkit overview: `docu/OVERVIEW.md`
+2. Quick start guide: `docu/QUICKSTART.md`
+3. Tutorials: `docu/TUTORIALS.md`
+4. API reference: `docu/API_REFERENCE.md`
+5. Configuration guide: `docu/CONFIG_GUIDE.md`
+6. Plotting guide: `docu/PLOTTING.md`
+
+The existing PDF and DOCX references remain in `docu/` for deeper theory and earlier tutorials.
 
     
 # Publication
@@ -18,8 +27,9 @@ the presented architectures and approaches. Please cite the following paper when
 using the PyPowerSim toolkit. When using the B6 architecture and the waveform analysis 
 options please also refer to the following article:
 
-Schirmer, Pascal A., Daniel Glose, and Ulrich Ammann. "Zero-voltage and frequency pattern 
-selection for DC-link loss minimization in PWM-VSI drives." Electrical Engineering (2022): 1-10.
+Pascal A. Schirmer, Daniel Glose, PyPowerSim: A Python toolkit for analysis of waveform distortions, power losses, and 
+self-heating of standard converter topologies, Computers and Electrical Engineering, Volume 132, 2026, 110934, 
+ISSN 0045-7906, https://doi.org/10.1016/j.compeleceng.2026.110934.
 
 
 # Dependencies
