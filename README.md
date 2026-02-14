@@ -18,6 +18,15 @@ and converter behavior easy to study and modify without commercial tools.
 5. Configuration guide: `docu/CONFIG_GUIDE.md`
 6. Plotting guide: `docu/PLOTTING.md`
 
+**Example Results**
+The following images under `docu/images` illustrate typical outputs:
+1. Modulation function: `docu/images/img.png`
+2. Currents: `docu/images/img_1.png`
+3. Voltages: `docu/images/img_2.png`
+4. Steady‑state losses and temperatures: `docu/images/steady1.png`, `docu/images/steady2.png`
+
+Inline examples and explanations are available in `docu/EXAMPLE_RESULTS.md`.
+
 The existing PDF and DOCX references remain in `docu/` for deeper theory and earlier tutorials.
 
     

@@ -9,6 +9,11 @@ These short tutorials walk through typical workflows for inverter and DAB analys
 5. Run `python start.py`.
 6. Inspect sweep plots for modulation‑dependent distortion.
 
+Expected results:
+1. A modulation‑function plot showing switching and reference waveforms.
+2. Current and voltage plots with THD overlays.
+3. Distortion curves vs `M_i`.
+
 **Tutorial 2: Inverter Steady‑State (B6)**
 1. Open `start.py`.
 2. Set `setup['Exp']['conf'] = "default"` with a B6 topology.
@@ -28,6 +33,11 @@ These short tutorials walk through typical workflows for inverter and DAB analys
 3. Set `setup['Exp']['type'] = 0`.
 4. Run `python start_dab.py`.
 5. Inspect DAB sweep plots for phase‑shift distortion and power.
+
+Expected results:
+1. Primary vs secondary switching functions.
+2. Primary vs secondary current and voltage plots.
+3. Distortion curves vs phase shift `Phi`.
 
 **Tutorial 5: DAB Steady‑State**
 1. Open `start_dab.py`.
