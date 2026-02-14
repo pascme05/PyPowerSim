@@ -144,27 +144,43 @@ def plotResults_DCDC(time, setup):
     # ------------------------------------------
     # Transformer
     # ------------------------------------------
-    # Currents
-    I_ALL[len(id1) + 2, 0] = np.max(time['Elec']['tra']['i_p'])
-    I_ALL[len(id1) + 2, 1] = np.mean(time['Elec']['tra']['i_p'])
-    I_ALL[len(id1) + 2, 2] = rms(time['Elec']['tra']['i_p'])
+    try:
+        tra_elec = time['Elec'].get('tra', {})
+        tra_loss = time['Loss'].get('tra', {})
+        tra_ther = time['Ther'].get('tra', {})
 
-    # Voltages
-    V_ALL[len(id1) + 2, 0] = np.max(time['Elec']['tra']['v_p'])
-    V_ALL[len(id1) + 2, 1] = np.mean(time['Elec']['tra']['v_p'])
-    V_ALL[len(id1) + 2, 2] = rms(time['Elec']['tra']['v_p'])
+        # Flatten if stored under a device key (e.g., 'T1')
+        if isinstance(tra_elec, dict) and 'T1' in tra_elec:
+            tra_elec = tra_elec['T1']
+        if isinstance(tra_loss, dict) and 'T1' in tra_loss:
+            tra_loss = tra_loss['T1']
+        if isinstance(tra_ther, dict) and 'T1' in tra_ther:
+            tra_ther = tra_ther['T1']
 
-    # Losses
-    P_ALL[len(id1) + 2, 0] = np.mean(time['Loss']['tra']['p_PC'])
-    P_ALL[len(id1) + 2, 1] = np.mean(time['Loss']['tra']['p_SC'])
-    P_ALL[len(id1) + 2, 2] = np.mean(time['Loss']['tra']['p_CC'])
-    P_ALL[len(id1) + 2, 3] = np.mean(time['Loss']['tra']['p_L'])
+        # Currents
+        I_ALL[len(id1) + 2, 0] = np.max(tra_elec['i_p'])
+        I_ALL[len(id1) + 2, 1] = np.mean(tra_elec['i_p'])
+        I_ALL[len(id1) + 2, 2] = rms(tra_elec['i_p'])
 
-    # Thermal
-    T_ALL[len(id1) + 2, 0] = np.max(time['Ther']['tra']['PC'])
-    T_ALL[len(id1) + 2, 1] = np.max(time['Ther']['tra']['SC'])
-    T_ALL[len(id1) + 2, 2] = np.max(time['Ther']['tra']['CC'])
-    T_ALL[len(id1) + 2, 3] = np.mean(time['Ther']['tra']['PC'])
+        # Voltages
+        V_ALL[len(id1) + 2, 0] = np.max(tra_elec['v_p'])
+        V_ALL[len(id1) + 2, 1] = np.mean(tra_elec['v_p'])
+        V_ALL[len(id1) + 2, 2] = rms(tra_elec['v_p'])
+
+        # Losses
+        P_ALL[len(id1) + 2, 0] = np.mean(tra_loss['p_PC'])
+        P_ALL[len(id1) + 2, 1] = np.mean(tra_loss['p_SC'])
+        P_ALL[len(id1) + 2, 2] = np.mean(tra_loss['p_CC'])
+        P_ALL[len(id1) + 2, 3] = np.mean(tra_loss['p_L'])
+
+        # Thermal
+        T_ALL[len(id1) + 2, 0] = np.max(tra_ther['PC'])
+        T_ALL[len(id1) + 2, 1] = np.max(tra_ther['SC'])
+        T_ALL[len(id1) + 2, 2] = np.max(tra_ther['CC'])
+        T_ALL[len(id1) + 2, 3] = np.mean(tra_ther['PC'])
+    except Exception:
+        # Transformer data might be unavailable in transient runs
+        pass
 
     # ==============================================================================
     # Converter Level

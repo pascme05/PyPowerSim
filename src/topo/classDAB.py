@@ -483,23 +483,119 @@ class classDAB:
         # Init
         # ==============================================================================
         s_out = {}
-        tol = np.max(abs(i_ref['A'])) * setup['Par']['Cont']['hys'] / 100 * scale
+
+        # Helper: safely pick a signal value from a dict at index t_con
+        def _pick_signal(sig_dict, keys, idx):
+            for key in keys:
+                if key in sig_dict:
+                    sig = sig_dict[key]
+                    break
+            else:
+                return 0.0
+            try:
+                sig = np.asarray(sig)
+                if sig.size == 0:
+                    return 0.0
+                return float(sig[idx])
+            except Exception:
+                try:
+                    return float(sig)
+                except Exception:
+                    return 0.0
+
+        # Helper: get full signal for tolerance calculation
+        def _pick_signal_arr(sig_dict, keys):
+            for key in keys:
+                if key in sig_dict:
+                    sig = sig_dict[key]
+                    break
+            else:
+                return np.array([0.0])
+            try:
+                return np.asarray(sig)
+            except Exception:
+                try:
+                    return np.array([float(sig)])
+                except Exception:
+                    return np.array([0.0])
+
+        # Reference amplitude for hysteresis band
+        ref_for_tol = _pick_signal_arr(i_ref, ['i_dc_out', 'A', 'i_ac_pri', 'i_ac_sec'])
+        tol = np.max(np.abs(ref_for_tol)) * setup['Par']['Cont']['hys'] / 100 * scale
 
         # ==============================================================================
         # Calculation
         # ==============================================================================
-        i_act = i_act['i_a'][t_con]
-        i_ref = copy.deepcopy(i_ref['A'][t_con]) * scale
+        i_act_val = _pick_signal(i_act, ['i_dc_out', 'i_ac_pri', 'i_ac_sec', 'i_a'], t_con)
+        i_ref_val = _pick_signal(i_ref, ['i_dc_out', 'A', 'i_ac_pri', 'i_ac_sec'], t_con) * scale
 
         # ==============================================================================
         # Calculation
         # ==============================================================================
         if setup['Par']['Cont']['type'] == "HY":
-            [s, err] = conHys(i_act, i_ref, s_act['A'], tol)
+            [s, err] = conHys(i_act_val, i_ref_val, s_act['A'], tol)
         elif setup['Par']['Cont']['type'] == "PI":
-            [s, err] = conHys(i_act, i_ref, s_act['A'], tol)
+            # PI controller to set phase shift (phi) for DAB
+            Kp = setup['Par']['Cont'].get('Kp', 0.0)
+            Ki = setup['Par']['Cont'].get('Ki', 0.0)
+            dt = 1 / self.fc if self.fc != 0 else 0.0
+
+            # Initialize PI integrator if needed
+            if not hasattr(self, '_pi_int'):
+                self._pi_int = 0.0
+            if not hasattr(self, '_pwm_phase'):
+                self._pwm_phase = 0.0
+
+            err = i_ref_val - i_act_val
+            # Integrate
+            self._pi_int = self._pi_int + err * dt
+            u_unsat = Kp * err + Ki * self._pi_int
+
+            # Saturation (default: +/- 90 deg)
+            phi_lim = np.pi / 2
+            sat_min = setup['Par']['Cont'].get('satMin', -phi_lim)
+            sat_max = setup['Par']['Cont'].get('satMax', phi_lim)
+            try:
+                phi_min = max(-phi_lim, float(sat_min))
+                phi_max = min(phi_lim, float(sat_max))
+            except Exception:
+                phi_min, phi_max = -phi_lim, phi_lim
+
+            u_sat = np.clip(u_unsat, phi_min, phi_max)
+
+            # Anti-windup: freeze integrator if saturated and error drives further into saturation
+            if (u_unsat != u_sat) and Ki != 0:
+                if (u_sat >= phi_max and err > 0) or (u_sat <= phi_min and err < 0):
+                    self._pi_int = self._pi_int - err * dt
+                    u_unsat = Kp * err + Ki * self._pi_int
+                    u_sat = np.clip(u_unsat, phi_min, phi_max)
+
+            phi_cmd = u_sat
+
+            # Build switching sequences for the current control period
+            Ncon = len(s_act['A'])
+            t_ref = np.arange(Ncon) / self.fsim
+            phase = self._pwm_phase + 2 * np.pi * self.fs * t_ref
+            s_p = np.where(np.sin(phase) >= 0, 1, -1)
+            s_s = np.where(np.sin(phase - phi_cmd) >= 0, 1, -1)
+
+            # Apply dead-time/min pulse
+            Mi_loc = setup['Dat']['stat'].get('Mi', 0.5)
+            sA = self.calcDead(s_p.copy(), t_ref, Mi_loc)
+            sC = self.calcDead(s_s.copy(), t_ref, Mi_loc)
+
+            s_out['A'] = sA
+            s_out['B'] = -s_out['A']
+            s_out['C'] = sC
+            s_out['D'] = -s_out['C']
+
+            # Update phase accumulator for continuity
+            self._pwm_phase = (self._pwm_phase + 2 * np.pi * self.fs * (Ncon / self.fsim)) % (2 * np.pi)
+
+            Mi = abs(phi_cmd) / (np.pi / 2) if (np.pi / 2) != 0 else 0.0
+            return [s_out, Mi, err]
         else:
-            [s, err] = conHys(i_act, i_ref, s_act['A'], tol)
+            [s, err] = conHys(i_act_val, i_ref_val, s_act['A'], tol)
 
         # ==============================================================================
         # Post-Processing
@@ -545,6 +641,10 @@ class classDAB:
         s = {'A': np.ones(Ncon), 'B': np.ones(Ncon), 'C': np.ones(Ncon), 'D': np.ones(Ncon)}
         i_act = {'i_a': np.zeros(Ncon)}
         outSw = {'A': [], 'B': [], 'C': [], 'D': []}
+
+        # Reset PI controller states for closed-loop runs
+        self._pi_int = 0.0
+        self._pwm_phase = 0.0
 
         # ==============================================================================
         # Return
@@ -819,8 +919,14 @@ class classDAB:
         v_ref['B'] = 0.5 * (self.Vdc / self.Ntr) * s_s if self.Ntr != 0 else 0.5 * self.Vdc * s_s
         e_ref['A'] = np.zeros(np.size(t))
         e_ref['B'] = np.zeros(np.size(t))
-        i_ref['A'] = np.zeros(np.size(t))
-        i_ref['B'] = np.zeros(np.size(t))
+        try:
+            Io = setup['Dat']['stat'].get('Io', 0)
+            Io = float(np.real(Io))
+        except Exception:
+            Io = 0.0
+        i_ref['A'] = Io * np.ones(np.size(t))
+        i_ref['B'] = Io * np.ones(np.size(t))
+        i_ref['i_dc_out'] = i_ref['A']
 
         # ==============================================================================
         # Return

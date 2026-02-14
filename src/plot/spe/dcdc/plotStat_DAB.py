@@ -16,7 +16,7 @@
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.general.helpFnc import OoM, thd
+from src.general.helpFnc import OoM
 
 # ==============================================================================
 # External
@@ -27,7 +27,6 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pl
 import matplotlib.gridspec as gridspec
-from scipy.fft import fft
 import matplotlib
 matplotlib.use('TkAgg')
 
@@ -58,12 +57,8 @@ def plotStat_DAB(time, freq, setup):
     fs = setup['Par']['PWM']['fs']
     fsim = setup['Exp']['fsim']
     Q = int(fs / fel)
-    R = setup['Top']['R']
-    L = setup['Top']['L']
     Mi = setup['Dat']['stat']['Mi']
     Vdc = setup['Dat']['stat']['Vdc']
-    phiE = setup['Top']['phiE']
-    n_tr = setup['Top'].get('n', 1)
     phiDAB = setup['Dat']['stat']['PhiDAB']
     down = int(setup['Dat']['stat']['cyc']) - 2
     down2 = int(fsim / fs / 100)
@@ -238,7 +233,7 @@ def plotStat_DAB(time, freq, setup):
     # ==============================================================================
     # 2) Primary Side Voltage / Current
     # ==============================================================================
-    plt.figure()
+    plt.figure(figsize=(12, 10))
     txt = "Currents and Voltages DAB Primary Bridge for PWM Control with: " \
           + "$V_{dc}$=" + str(Vdc) + "V, " \
           + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) \
@@ -355,7 +350,7 @@ def plotStat_DAB(time, freq, setup):
     # ==============================================================================
     # 3) Secondary Side Voltage / Current
     # ==============================================================================
-    plt.figure()
+    plt.figure(figsize=(12, 10))
     txt = "Currents and Voltages DAB Secondary Bridge for PWM Control with: " \
           + "$V_{dc}$=" + str(Vdc) + "V, " \
           + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) \
@@ -474,7 +469,7 @@ def plotStat_DAB(time, freq, setup):
         id_C = ['C1', 'C2', 'C5', 'C6']
         Ta = setup['Dat']['stat']['Tc']
 
-        plt.figure(figsize=(18, 12))
+        plt.figure(figsize=(12, 10))
         txt = "Time domain switches DAB for PWM control with: " \
               + "$V_{dc}$=" + str(Vdc) + "V, " \
               + "$M_{i}$=" + str(Mi) + "$ ,Q$=" + str(Q) \

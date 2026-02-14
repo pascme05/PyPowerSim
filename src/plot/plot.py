@@ -28,6 +28,7 @@ from src.plot.spe.inv.plotTrans_B6 import plotTrans_B6
 from src.plot.spe.dcdc.plotStat_DAB import plotStat_DAB
 from src.plot.spe.dcdc.plotSweep_DAB import plotSweep_DAB
 from src.plot.spe.dcdc.plotTrans_DAB import plotTrans_DAB
+from src.plot.spe.dcdc.plotClose_DAB import plotClose_DAB
 from src.plot.gen.plotGen import plotGenTF, plotGenLoss, plotGenTher
 from src.plot.gen.plotSweep import plotSweep
 from src.plot.gen.plotStat import plotStat
@@ -184,6 +185,10 @@ def plot(mdl, para, time, freq, sweep, setup):
             # Transient
             if setup['Exp']['type'] == 2:
                 plotTrans_DAB(time, freq, setup)
+
+            # Closed Loop
+            if setup['Exp']['type'] == 3:
+                plotClose_DAB(time, freq, setup)
 
     ###################################################################################################################
     # MSG Out

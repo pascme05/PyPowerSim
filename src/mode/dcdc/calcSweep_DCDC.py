@@ -30,8 +30,10 @@ Outputs:    1) time:    results in the time domain
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.general.calcFreq import calcFreq
+from src.general.calcSpec import calcFreq as calcFreqSpec
+from src.general.calcFreq import calcFreq as calcFreqStd
 from src.general.calcDistNum import calcDistNum
+from src.general.helpFnc import calcDistSignals
 
 # ==============================================================================
 # External
@@ -44,7 +46,7 @@ from tqdm import tqdm
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcSweep_DCDC(top, mdl, _, setup):
+def calcSweep_DCDC(top, mdl, para, setup):
     ###################################################################################################################
     # MSG IN
     ###################################################################################################################
@@ -63,8 +65,7 @@ def calcSweep_DCDC(top, mdl, _, setup):
     N = int(fsim / fel)
     K = int(setup['Dat']['stat']['cyc'])
     W = int(setup['Dat']['stat']['W'])
-    Mi = setup['Dat']['stat']['Mi']
-    Mi_max = top.Mi_max
+    M_i = setup['Dat']['stat']['Mi']
     E = setup['Top']['E']
     Vdc = setup['Dat']['stat']['Vdc']
     phiE = math.radians(setup['Top']['phiE'])
@@ -88,18 +89,21 @@ def calcSweep_DCDC(top, mdl, _, setup):
     [v_ref, e_ref, _] = top.calcRef(E, phiE, phiV, [], setup)
 
     # ==============================================================================
-    # Maximum Modulation Index
+    # Sweep Parameter
     # ==============================================================================
     if setup['Top']['sourceType'] == 'DAB':
-        phi0_deg = setup['Dat']['stat'].get('Phi0', 90)
-        phi_max = math.radians(phi0_deg)
-        if phi_max <= 0:
-            phi_max = 1e-3
-        M_i = np.linspace(1e-3, phi_max - 1e-3, W)  # sweep in radians
+        phi_base = setup['Dat']['stat'].get('PhiDAB', np.pi / 2)
+        M_i = top.Mi
+        # If PhiDAB is still in degrees, convert
+        if abs(phi_base) > 2 * np.pi:
+            phi_base = math.radians(phi_base)
+        if phi_base == 0:
+            phi_base = np.pi / 2
+        phi_sign = 1 if phi_base >= 0 else -1
+        phi_span = max(abs(phi_base), 1e-3)
+        phi_i = np.linspace(1e-3, phi_span - 1e-3, W) * phi_sign
     else:
-        if Mi > Mi_max:
-            Mi = Mi_max
-        M_i = np.linspace(1e-3, Mi - 1e-3, W)
+        print("ERROR: Topology does not exist.")
 
     # ==============================================================================
     # Start and End
@@ -117,49 +121,115 @@ def calcSweep_DCDC(top, mdl, _, setup):
     # Switching Function
     # ------------------------------------------
     if setup['Top']['sourceType'] == 'DAB':
-        Mi_init = math.radians(setup['Dat']['stat'].get('Phi0', 90)) / (np.pi / 2)
+        # Use base phase shift for stationary point
+        phi_base = setup['Dat']['stat'].get('PhiDAB', np.pi / 2)
+        if abs(phi_base) > 2 * np.pi:
+            phi_base = math.radians(phi_base)
+        top.phi = phi_base
     else:
-        Mi_init = Mi
-    [xs, xsh, s, c, x, xN0] = top.calcPWM(v_ref, t_ref, Mi_init, setup)
+        print("ERROR: Topology does not exist.")
+    [xs, xsh, s, c, x, xN0] = top.calcPWM(v_ref, t_ref, M_i, setup)
 
     # ------------------------------------------
     # Time Domain
     # ------------------------------------------
-    [timeAc, timeDc, _] = top.calcTime(s, e_ref, t_ref, Mi_init, mdl, start, ende, [], 1, setup)
+    if setup['Top']['sourceType'] == 'DAB':
+        [timeAc, timeDc, _] = top.calcTime(s, None, None, e_ref, t_ref, M_i, mdl, start, ende, [], para, setup)
+    else:
+        print("ERROR: Topology does not exist.")
 
     # ==============================================================================
-    # Sweeping
+    # Sweeping DAB
     # ==============================================================================
-    for i in tqdm(range(len(M_i)), desc='Sweep'):
-        # ------------------------------------------
-        # Switching
-        # ------------------------------------------
-        if setup['Top']['sourceType'] == 'DAB':
-            Mi_i = M_i[i] / (np.pi / 2)
-        else:
-            Mi_i = M_i[i]
-        [_, _, s_i, _, _, _] = top.calcPWM(v_ref, t_ref, Mi_i, setup)
+    if setup['Top']['sourceType'] == 'DAB':
+        for i in tqdm(range(len(phi_i)), desc='Sweep'):
+            # ------------------------------------------
+            # Switching
+            # ------------------------------------------
+            top.phi = phi_i[i]
+            [_, _, s_i, _, _, _] = top.calcPWM(v_ref, t_ref, M_i, setup)
 
-        # ------------------------------------------
-        # Time
-        # ------------------------------------------
-        [tempAc, tempDc, _] = top.calcTime(s_i, e_ref, t_ref, Mi_i, mdl, start, ende, [], 1, setup)
+            # ------------------------------------------
+            # Time
+            # ------------------------------------------
+            [tempAc, tempDc, _] = top.calcTime(s_i, None, None, e_ref, t_ref, M_i, mdl, start, ende, [], para, setup)
 
-        # ------------------------------------------
-        # Distortion
-        # ------------------------------------------
-        [numDistAc, numDistDc] = calcDistNum(t_ref[start:ende], tempAc['i_a'], tempAc['v_a'], tempDc['i_dc'], tempDc['v_dc'], Vdc, fel)
-        [anaTimeAc, anaTimeDc] = top.calcDist(tempAc['i_a'], tempAc['v_a'], Mi_i, L, Z, setup)
+            # ------------------------------------------
+            # Distortion
+            # ------------------------------------------
+            # Primary
+            Vdc_sec = np.mean(tempDc['v_dc_sec'])
+            dist_map = calcDistSignals(
+                t_ref[start:ende],
+                {
+                    'i_ac_pri': tempAc['i_ac_pri'],
+                    'v_ac_pri': tempAc['v_ac_pri'],
+                    'i_ac_sec': tempAc['i_ac_sec'],
+                    'v_ac_sec': tempAc['v_ac_sec'],
+                    'i_dc_pri': tempDc['i_dc_pri'],
+                    'v_dc_pri': tempDc['v_dc_pri'],
+                    'i_dc_sec': tempDc['i_dc_sec'],
+                    'v_dc_sec': tempDc['v_dc_sec']
+                },
+                f1_map={
+                    'i_ac_pri': fel, 'v_ac_pri': fel,
+                    'i_ac_sec': fel, 'v_ac_sec': fel,
+                    'i_dc_pri': 0.0, 'v_dc_pri': 0.0,
+                    'i_dc_sec': 0.0, 'v_dc_sec': 0.0
+                },
+                dc_offset_map={'v_dc_pri': Vdc, 'v_dc_sec': Vdc_sec},
+                default_f1=fel,
+                default_dc=0.0
+            )
+            dist_i_pri = dist_map['i_ac_pri']
+            dist_v_pri = dist_map['v_ac_pri']
+            dist_i_sec = dist_map['i_ac_sec']
+            dist_v_sec = dist_map['v_ac_sec']
+            dist_i_dc_pri = dist_map['i_dc_pri']
+            dist_v_dc_pri = dist_map['v_dc_pri']
+            dist_i_dc_sec = dist_map['i_dc_sec']
+            dist_v_dc_sec = dist_map['v_dc_sec']
+            [anaAcPri, anaDcPri] = top.calcDist(tempAc['i_ac_pri'], tempAc['v_ac_pri'], M_i, L, Z, setup)
+            [anaAcSec, anaDcSec] = top.calcDist(tempAc['i_ac_sec'], tempAc['v_ac_sec'], M_i, L, Z, setup)
 
-        # ------------------------------------------
-        # Output
-        # ------------------------------------------
-        for c1 in numDistAc:
-            distAc['num'][c1][i] = numDistAc[c1]
-            distAc['ana'][c1][i] = anaTimeAc[c1]
-        for c1 in numDistDc:
-            distDc['num'][c1][i] = numDistDc[c1]
-            distDc['ana'][c1][i] = anaTimeDc[c1]
+            distAc['Pri']['num']['V_a_eff'][i] = dist_v_pri['eff']
+            distAc['Pri']['num']['V_a_v1_eff'][i] = dist_v_pri['v1_eff']
+            distAc['Pri']['num']['V_a_thd'][i] = dist_v_pri['thd']
+            distAc['Pri']['num']['I_a_eff'][i] = dist_i_pri['eff']
+            distAc['Pri']['num']['I_a_v1_eff'][i] = dist_i_pri['v1_eff']
+            distAc['Pri']['num']['I_a_thd'][i] = dist_i_pri['thd']
+
+            distDc['Pri']['num']['V_dc_eff'][i] = dist_v_dc_pri['eff']
+            distDc['Pri']['num']['V_dc_v1_eff'][i] = dist_v_dc_pri['v1_eff']
+            distDc['Pri']['num']['V_dc_thd'][i] = dist_v_dc_pri['thd']
+            distDc['Pri']['num']['I_dc_eff'][i] = dist_i_dc_pri['eff']
+            distDc['Pri']['num']['I_dc_v1_eff'][i] = dist_i_dc_pri['v1_eff']
+            distDc['Pri']['num']['I_dc_thd'][i] = dist_i_dc_pri['thd']
+
+            distAc['Sec']['num']['V_a_eff'][i] = dist_v_sec['eff']
+            distAc['Sec']['num']['V_a_v1_eff'][i] = dist_v_sec['v1_eff']
+            distAc['Sec']['num']['V_a_thd'][i] = dist_v_sec['thd']
+            distAc['Sec']['num']['I_a_eff'][i] = dist_i_sec['eff']
+            distAc['Sec']['num']['I_a_v1_eff'][i] = dist_i_sec['v1_eff']
+            distAc['Sec']['num']['I_a_thd'][i] = dist_i_sec['thd']
+
+            distDc['Sec']['num']['V_dc_eff'][i] = dist_v_dc_sec['eff']
+            distDc['Sec']['num']['V_dc_v1_eff'][i] = dist_v_dc_sec['v1_eff']
+            distDc['Sec']['num']['V_dc_thd'][i] = dist_v_dc_sec['thd']
+            distDc['Sec']['num']['I_dc_eff'][i] = dist_i_dc_sec['eff']
+            distDc['Sec']['num']['I_dc_v1_eff'][i] = dist_i_dc_sec['v1_eff']
+            distDc['Sec']['num']['I_dc_thd'][i] = dist_i_dc_sec['thd']
+
+            for c1 in anaAcPri:
+                distAc['Pri']['ana'][c1][i] = anaAcPri[c1]
+            for c1 in anaDcPri:
+                distDc['Pri']['ana'][c1][i] = anaDcPri[c1]
+            for c1 in anaAcSec:
+                distAc['Sec']['ana'][c1][i] = anaAcSec[c1]
+            for c1 in anaDcSec:
+                distDc['Sec']['ana'][c1][i] = anaDcSec[c1]
+    else:
+        print("ERROR: Topology does not exist.")
 
     ###################################################################################################################
     # Post-Processing
@@ -167,8 +237,11 @@ def calcSweep_DCDC(top, mdl, _, setup):
     # ==============================================================================
     # Frequency domain
     # ==============================================================================
-    [freqSw, freqAc, freqDc] = calcFreq(s['A'][start:ende], xs['A'][start:ende], timeAc['i_a'], timeAc['v_a'],
-                                        timeAc['v_a0'], timeDc['i_dc'], timeDc['v_dc'])
+    if setup['Top']['sourceType'] == 'DAB':
+        dictSw = {'Sa': s['A'][start:ende], 'Xas': xs['A'][start:ende], 'Sb': s['C'][start:ende]}
+        [freqSw, freqAc, freqDc] = calcFreqSpec(dictSw, timeAc, timeDc)
+    else:
+        print("ERROR: Topology does not exist.")
 
     # ==============================================================================
     # Output

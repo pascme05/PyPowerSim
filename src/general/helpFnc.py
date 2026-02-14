@@ -220,6 +220,42 @@ def wthd(x, _, cf, K):
 
 
 #######################################################################################################################
+# Distortion helper (generic signals)
+#######################################################################################################################
+def calcDistSignals(t, signals, f1_map=None, dc_offset_map=None, default_f1=None, default_dc=0.0):
+    """
+    Calculate distortion metrics for a dict of signals.
+
+    Inputs:
+    1) t:              time vector (sec)
+    2) signals:        dict of name -> signal array
+    3) f1_map:         dict of name -> fundamental frequency (Hz)
+    4) dc_offset_map:  dict of name -> dc offset to subtract for ripple THD
+    5) default_f1:     fallback fundamental frequency if name not in f1_map
+    6) default_dc:     fallback dc offset if name not in dc_offset_map
+
+    Output:
+    1) out:            dict of name -> metrics (eff, v1_eff, thd, k1)
+    """
+    # Lazy import to avoid circular dependencies
+    from src.general.calcDistNum import calcDistNum
+
+    if signals is None:
+        return {}
+
+    out = {}
+    f1_map = f1_map if isinstance(f1_map, dict) else {}
+    dc_offset_map = dc_offset_map if isinstance(dc_offset_map, dict) else {}
+
+    for key, sig in signals.items():
+        f1 = f1_map.get(key, default_f1)
+        dc_off = dc_offset_map.get(key, default_dc)
+        out[key] = calcDistNum(t, sig, f1, dc_offset=dc_off)
+
+    return out
+
+
+#######################################################################################################################
 # Dead-time
 #######################################################################################################################
 def deadTime(s, Td):

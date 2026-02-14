@@ -32,6 +32,7 @@ Outputs:    1) time:    results in the time domain
 # ==============================================================================
 from src.general.calcFreq import calcFreq
 from src.general.calcDistNum import calcDistNum
+from src.general.helpFnc import calcDistSignals
 
 # ==============================================================================
 # External
@@ -133,17 +134,45 @@ def calcSweep(top, mdl, _, setup):
         # ------------------------------------------
         # Distortion
         # ------------------------------------------
-        [numDistAc, numDistDc] = calcDistNum(t_ref[start:ende], tempAc['i_a'], tempAc['v_a'], tempDc['i_dc'], tempDc['v_dc'], Vdc, fel)
+        dist_map = calcDistSignals(
+            t_ref[start:ende],
+            {
+                'i_a': tempAc['i_a'],
+                'v_a': tempAc['v_a'],
+                'i_dc': tempDc['i_dc'],
+                'v_dc': tempDc['v_dc']
+            },
+            f1_map={'i_a': fel, 'v_a': fel, 'i_dc': 0.0, 'v_dc': 0.0},
+            dc_offset_map={'v_dc': Vdc},
+            default_f1=fel,
+            default_dc=0.0
+        )
+        dist_i_a = dist_map['i_a']
+        dist_v_a = dist_map['v_a']
+        dist_i_dc = dist_map['i_dc']
+        dist_v_dc = dist_map['v_dc']
         [anaTimeAc, anaTimeDc] = top.calcDist(tempAc['i_a'], tempAc['v_a'], M_i[i], L, Z, setup)
 
         # ------------------------------------------
         # Output
         # ------------------------------------------
-        for c1 in numDistAc:
-            distAc['num'][c1][i] = numDistAc[c1]
+        distAc['num']['V_a_eff'][i] = dist_v_a['eff']
+        distAc['num']['V_a_v1_eff'][i] = dist_v_a['v1_eff']
+        distAc['num']['V_a_thd'][i] = dist_v_a['thd']
+        distAc['num']['I_a_eff'][i] = dist_i_a['eff']
+        distAc['num']['I_a_v1_eff'][i] = dist_i_a['v1_eff']
+        distAc['num']['I_a_thd'][i] = dist_i_a['thd']
+
+        distDc['num']['V_dc_eff'][i] = dist_v_dc['eff']
+        distDc['num']['V_dc_v1_eff'][i] = dist_v_dc['v1_eff']
+        distDc['num']['V_dc_thd'][i] = dist_v_dc['thd']
+        distDc['num']['I_dc_eff'][i] = dist_i_dc['eff']
+        distDc['num']['I_dc_v1_eff'][i] = dist_i_dc['v1_eff']
+        distDc['num']['I_dc_thd'][i] = dist_i_dc['thd']
+
+        for c1 in anaTimeAc:
             distAc['ana'][c1][i] = anaTimeAc[c1]
-        for c1 in numDistDc:
-            distDc['num'][c1][i] = numDistDc[c1]
+        for c1 in anaTimeDc:
             distDc['ana'][c1][i] = anaTimeDc[c1]
 
     ###################################################################################################################

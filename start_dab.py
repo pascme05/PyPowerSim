@@ -63,8 +63,8 @@ setup['Exp']['debug'] = 0                                                       
 # ------------------------------------------
 # Operating Mode
 # ------------------------------------------
-setup['Exp']['output'] = 'V'                                                                                           # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled, (Phi): phase shift is controlled (DAB)
-setup['Exp']['type'] = 1                                                                                                 # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis, (3): closed loop analysis
+setup['Exp']['output'] = 'V'                                                                                            # (Mi): modulation index controlled, (V): voltage is controlled, (I): current is controlled, (P): active power is controlled, (Q): reactive power is controlled, (Phi): phase shift is controlled (DAB)
+setup['Exp']['type'] = 0                                                                                                # (0): sweep analysis, (1): steady-state analysis, (2): transient analysis, (3): closed loop analysis
 
 # ==============================================================================
 # Input Files

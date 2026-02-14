@@ -14,18 +14,16 @@
 # Function Description
 #######################################################################################################################
 """
-This function calculates the numerical distortion of the current and voltage waveforms.
+This function calculates generic numerical distortion metrics for any input signal.
 
 Input:
-1) t:       input time vector (sec)
-2) i_a:     phase current (A)
-3) v_a:     phase voltage (V)
-4) i_dc:    dc current (A)
-5) v_dc:    dc voltage (V)
+1) t:         input time vector (sec)
+2) x:         input signal (any unit)
+3) f1:        fundamental frequency (Hz). Use 0 for DC signals.
+4) dc_offset: optional DC offset to subtract for ripple/THD (default: 0)
 
 Output:
-1) outAc:   outputs distortion ac side
-2) outDc:   outputs distortion dc side
+1) out:       dictionary with keys: eff, v1_eff, thd, k1
 """
 
 #######################################################################################################################
@@ -45,77 +43,50 @@ from scipy.fft import fft
 #######################################################################################################################
 # Function
 #######################################################################################################################
-def calcDistNum(t, i_a, v_a, i_dc, v_dc, Vdc, fel):
+def calcDistNum(t, x, f1, dc_offset=0.0):
     # Ensure inputs are numpy arrays (prevents KeyError: 'ALIGNED' with pandas and scipy fft)
-    i_a = np.asarray(i_a)
-    v_a = np.asarray(v_a)
-    i_dc = np.asarray(i_dc)
-    v_dc = np.asarray(v_dc)
-    
+    t = np.asarray(t)
+    x = np.asarray(x)
+
     ###################################################################################################################
     # Initialisation
     ###################################################################################################################
     # ==============================================================================
     # Parameters
     # ==============================================================================
-    Tel = 1 / fel
-    dt = t[1] - t[0]
-    K = int(np.round((t[-1] - t[0]) / Tel))
-    N = int(len(v_a))
+    if len(t) < 2 or len(x) < 2:
+        return {'eff': np.nan, 'v1_eff': np.nan, 'thd': np.nan, 'k1': 0}
 
-    # ==============================================================================
-    # Variables
-    # ==============================================================================
-    distAc = {}
-    distDc = {}
+    dt = t[1] - t[0]
+    T = t[-1] - t[0]
+    N = int(len(x))
+    if T <= 0 or N < 2:
+        return {'eff': np.nan, 'v1_eff': np.nan, 'thd': np.nan, 'k1': 0}
+
+    # Fundamental index
+    if f1 is None:
+        k1 = 1
+    else:
+        k1 = int(np.round(f1 * T))
+    k1 = max(0, min(k1, N - 1))
 
     ###################################################################################################################
     # Calculation
     ###################################################################################################################
-    # ==============================================================================
-    # AC-Side
-    # ==============================================================================
-    V_a_eff = np.sqrt(1 / Tel / K * np.sum(v_a ** 2 * dt))
-    V_a_v1_eff = (1 / np.sqrt(2)) * 2 * np.abs(fft(v_a) / N)[K]
-    V_a_thd = np.sqrt(V_a_eff ** 2 - V_a_v1_eff ** 2)
-    I_a_eff = np.sqrt(1 / Tel / K * np.sum(i_a ** 2 * dt))
-    I_a_v1_eff = (1 / np.sqrt(2)) * 2 * np.abs(fft(i_a) / N)[K]
-    I_a_thd = np.sqrt(I_a_eff ** 2 - I_a_v1_eff ** 2)
+    X = np.abs(fft(x) / N)
+    x_eff = np.sqrt(1 / T * np.sum(x ** 2 * dt))
 
-    # ==============================================================================
-    # DC-Side
-    # ==============================================================================
-    V_dc_eff = np.sqrt(1 / Tel / K * np.sum(v_dc ** 2 * dt))
-    V_dc_v1_eff = np.abs(fft(v_dc) / N)[0]
-    V_dc_thd = np.sqrt((np.sqrt(1 / Tel / K * np.sum((v_dc-Vdc) ** 2 * dt))) ** 2 - (np.abs(fft(v_dc-Vdc) / N)[0]) ** 2)
-    I_dc_eff = np.sqrt(1 / Tel / K * np.sum(i_dc ** 2 * dt))
-    I_dc_v1_eff = np.abs(fft(i_dc) / N)[0]
-    I_dc_thd = np.sqrt(I_dc_eff ** 2 - I_dc_v1_eff ** 2)
-
-    ###################################################################################################################
-    # Post-Processing
-    ###################################################################################################################
-    # ==============================================================================
-    # AC-Side
-    # ==============================================================================
-    distAc['V_a_eff'] = V_a_eff
-    distAc['V_a_v1_eff'] = V_a_v1_eff
-    distAc['V_a_thd'] = V_a_thd
-    distAc['I_a_eff'] = I_a_eff
-    distAc['I_a_v1_eff'] = I_a_v1_eff
-    distAc['I_a_thd'] = I_a_thd
-
-    # ==============================================================================
-    # DC-Side
-    # ==============================================================================
-    distDc['V_dc_eff'] = V_dc_eff
-    distDc['V_dc_v1_eff'] = V_dc_v1_eff
-    distDc['V_dc_thd'] = V_dc_thd
-    distDc['I_dc_eff'] = I_dc_eff
-    distDc['I_dc_v1_eff'] = I_dc_v1_eff
-    distDc['I_dc_thd'] = I_dc_thd
+    if k1 == 0:
+        x_v1_eff = X[0]
+        x_ripple = x - dc_offset
+        x_ripple_eff = np.sqrt(1 / T * np.sum(x_ripple ** 2 * dt))
+        x_ripple_dc = np.abs(fft(x_ripple) / N)[0]
+        x_thd = np.sqrt(max(x_ripple_eff ** 2 - x_ripple_dc ** 2, 0))
+    else:
+        x_v1_eff = (1 / np.sqrt(2)) * 2 * X[k1]
+        x_thd = np.sqrt(max(x_eff ** 2 - x_v1_eff ** 2, 0))
 
     ###################################################################################################################
     # Return
     ###################################################################################################################
-    return [distAc, distDc]
+    return {'eff': x_eff, 'v1_eff': x_v1_eff, 'thd': x_thd, 'k1': k1}

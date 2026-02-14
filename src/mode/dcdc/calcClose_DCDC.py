@@ -30,7 +30,8 @@ import copy
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.general.calcFreq import calcFreq
+from src.general.calcSpec import calcFreq as calcFreqSpec
+from src.general.calcFreq import calcFreq as calcFreqStd
 from src.elec.calcElecSwi import calcElecSwi
 from src.elec.calcLossSwi import calcLossSwi
 from src.elec.calcLossCap import calcLossCap
@@ -149,8 +150,17 @@ def calcClose_DCDC(top, mdl, para, setup):
         # ------------------------------------------
         # Calculate Output
         # ------------------------------------------
-        [tempAc, _, _] = top.calcTime(outSw, e_con, t_con, Mi_con, mdl, 0, len(t_con), [], 0, setup)
-        i_act = copy.deepcopy(tempAc)
+        if setup['Top']['sourceType'] == 'DAB':
+            [tempAc, tempDc, _] = top.calcTime(outSw, None, None, e_con, t_con, Mi_con, mdl, 0, len(t_con), [], para, setup)
+            i_act = {
+                'i_ac_pri': tempAc.get('i_ac_pri', np.zeros(len(t_con))),
+                'i_ac_sec': tempAc.get('i_ac_sec', np.zeros(len(t_con))),
+                'i_dc_out': tempDc.get('i_dc_out', np.zeros(len(t_con))),
+                'i_dc_in': tempDc.get('i_dc_in', np.zeros(len(t_con)))
+            }
+        else:
+            [tempAc, _, _] = top.calcTime(outSw, e_con, t_con, Mi_con, mdl, 0, len(t_con), [], 0, setup)
+            i_act = copy.deepcopy(tempAc)
 
     ###################################################################################################################
     # Post-Processing
@@ -161,18 +171,27 @@ def calcClose_DCDC(top, mdl, para, setup):
     # ------------------------------------------
     # Phase and Source
     # ------------------------------------------
-    [outAc, outDc, _] = top.calcTime(outSw, e_tot, t_tot, Mi, mdl, 0, len(t_tot), [], 0, setup)
+    if setup['Top']['sourceType'] == 'DAB':
+        [outAc, outDc, _] = top.calcTime(outSw, None, None, e_tot, t_tot, Mi, mdl, 0, len(t_tot), [], para, setup)
+    else:
+        [outAc, outDc, _] = top.calcTime(outSw, e_tot, t_tot, Mi, mdl, 0, len(t_tot), [], 0, setup)
     outAc['i_ref'] = {key: value * t_scale for key, value in i_tot.items()}
+    # Convenience for DC side reference in DAB plots
+    if setup['Top']['sourceType'] == 'DAB' and 'i_dc_out' in i_tot:
+        outDc['i_ref'] = i_tot['i_dc_out'] * t_scale
 
     # ------------------------------------------
     # Switching Devices
     # ------------------------------------------
     for j in range(0, len(top.id2)):
         para_swi = para
+        Vdc_temp = Vdc
         if setup['Top']['sourceType'] == 'DAB' and 'SwiPri' in para and 'SwiSec' in para:
-            para_swi = {'Swi': para['SwiPri'], 'Cap': para['Cap']} if j < 4 else {'Swi': para['SwiSec'], 'Cap': para['Cap']}
+            para_swi = {'Swi': para['SwiPri'], 'Cap': para.get('CapPri', para.get('Cap', []))} if j < 4 else {'Swi': para['SwiSec'], 'Cap': para.get('CapSec', para.get('Cap', []))}
+            if 'v_dc_pri' in outDc and 'v_dc_sec' in outDc:
+                Vdc_temp = np.mean(outDc['v_dc_pri']) if j < 4 else np.mean(outDc['v_dc_sec'])
 
-        timeElec['sw'][top.id2[j]] = calcElecSwi(Vdc, top.id9[j] * outAc[top.id4[j]], (outSw[top.id3[j]] == (-1) ** j),
+        timeElec['sw'][top.id2[j]] = calcElecSwi(Vdc_temp, top.id9[j] * outAc[top.id4[j]], (outSw[top.id3[j]] == (-1) ** j),
                                                  Tj, top.id5[j], para_swi, setup)
         timeLoss['sw'][top.id2[j]] = calcLossSwi(outSw[top.id3[j]] * (-1) ** j,
                                                  timeElec['sw'][top.id2[j]]['i_T'], timeElec['sw'][top.id2[j]]['i_D'],
@@ -182,18 +201,37 @@ def calcClose_DCDC(top, mdl, para, setup):
     # ------------------------------------------
     # Capacitor
     # ------------------------------------------
-    outDc['v_dc'] = calcElecCap(t_tot, outDc['i_c'], Tj, para, setup)
-    timeLoss['cap']['C1'] = calcLossCap(t_tot, outDc['i_c'], Tj, para, setup)
-    timeElec['cap']['C1']['v_c'] = outDc['v_dc']
-    timeElec['cap']['C1']['i_c'] = outDc['i_c']
+    if setup['Top']['sourceType'] == 'DAB':
+        # Primary capacitor
+        timeLoss['cap']['C1'] = calcLossCap(t_tot, outDc['i_c_pri'], Tj, {'Cap': para.get('CapPri', para.get('Cap', []))}, setup)
+        timeElec['cap']['C1']['v_c'] = outDc['v_dc_pri']
+        timeElec['cap']['C1']['i_c'] = outDc['i_c_pri']
+
+        # Secondary capacitor
+        timeLoss['cap']['C2'] = calcLossCap(t_tot, outDc['i_c_sec'], Tj, {'Cap': para.get('CapSec', para.get('Cap', []))}, setup)
+        timeElec['cap']['C2']['v_c'] = outDc['v_dc_sec']
+        timeElec['cap']['C2']['i_c'] = outDc['i_c_sec']
+    else:
+        outDc['v_dc'] = calcElecCap(t_tot, outDc['i_c'], Tj, para, setup)
+        timeLoss['cap']['C1'] = calcLossCap(t_tot, outDc['i_c'], Tj, para, setup)
+        timeElec['cap']['C1']['v_c'] = outDc['v_dc']
+        timeElec['cap']['C1']['i_c'] = outDc['i_c']
 
     # ==============================================================================
     # Frequency domain
     # ==============================================================================
-    [freqSw, freqAc, freqDc] = calcFreq(outSw['A'][-(K * Nsim + 1):-1], xs['A'][-(K * Nsim + 1):-1],
-                                        outAc['i_a'][-(K * Nsim + 1):-1], outAc['v_a'][-(K * Nsim + 1):-1],
-                                        outAc['v_a0'][-(K * Nsim + 1):-1], outDc['i_dc'][-(K * Nsim + 1):-1],
-                                        outDc['v_dc'][-(K * Nsim + 1):-1])
+    if setup['Top']['sourceType'] == 'DAB':
+        dictSw = {
+            'Sa': outSw['A'][-(K * Nsim + 1):-1],
+            'Xas': xs['A'][-(K * Nsim + 1):-1],
+            'Sb': outSw['C'][-(K * Nsim + 1):-1]
+        }
+        [freqSw, freqAc, freqDc] = calcFreqSpec(dictSw, outAc, outDc)
+    else:
+        [freqSw, freqAc, freqDc] = calcFreqStd(outSw['A'][-(K * Nsim + 1):-1], xs['A'][-(K * Nsim + 1):-1],
+                                               outAc['i_a'][-(K * Nsim + 1):-1], outAc['v_a'][-(K * Nsim + 1):-1],
+                                               outAc['v_a0'][-(K * Nsim + 1):-1], outDc['i_dc'][-(K * Nsim + 1):-1],
+                                               outDc['v_dc'][-(K * Nsim + 1):-1])
 
     # ==============================================================================
     # Output

@@ -29,7 +29,7 @@ Outputs:    1) time:    results in the time domain
 # ==============================================================================
 # Internal
 # ==============================================================================
-from src.general.calcFreq import calcFreq
+from src.general.calcSpec import calcFreq
 from src.elec.calcElecSwi import calcElecSwi
 from src.elec.calcLossSwi import calcLossSwi
 from src.therm.calcTherRC import calcTherRC
@@ -138,10 +138,12 @@ def calcTrans_DCDC(top, mdl, para, setup):
 
     # Secondary switch thermal parameters (DAB only)
     if setup['Top']['sourceType'] == 'DAB' and 'SwiSec' in para:
-        para_sec = {'Swi': para['SwiSec'], 'Cap': para['Cap'], 'Tra': para.get('Tra', [])}
-        [Rth_JA_s, Cth_JA_s, Rth_DA_s, Cth_DA_s, Rth_CA_s, Cth_CA_s, _, _, _, _, _, _, _, _] = initRC(para_sec, setup)
+        para_sec = {'Swi': para['SwiSec'], 'Cap': para.get('CapSec', para.get('Cap', [])), 'Tra': para.get('Tra', [])}
+        [Rth_JA_s, Cth_JA_s, Rth_DA_s, Cth_DA_s, Rth_CA_s, Cth_CA_s, Rth_JA_cap_s, Cth_JA_cap_s,
+         _, _, _, _, _, _] = initRC(para_sec, setup)
     else:
         Rth_JA_s, Cth_JA_s, Rth_DA_s, Cth_DA_s, Rth_CA_s, Cth_CA_s = Rth_JA, Cth_JA, Rth_DA, Cth_DA, Rth_CA, Cth_CA
+        Rth_JA_cap_s, Cth_JA_cap_s = Rth_JA_cap, Cth_JA_cap
 
     if len(Rth_JA_s) != len(Rth_JA) or len(Rth_DA_s) != len(Rth_DA) or len(Rth_CA_s) != len(Rth_CA):
         print("WARN: DAB primary/secondary RC networks have different lengths; using primary RC lengths for both.")
@@ -165,7 +167,10 @@ def calcTrans_DCDC(top, mdl, para, setup):
     # ==============================================================================
     # Time Domain
     # ==============================================================================
-    [timeAc, timeDc, _] = top.calcTime(s, e_ref, t_ref, Mi, mdl, Nsim * (K - 1), (K * Nsim + 1), [], 1, setup)
+    if setup['Top']['sourceType'] == 'DAB':
+        [timeAc, timeDc, _] = top.calcTime(s, None, None, e_ref, t_ref, Mi, mdl, Nsim * (K - 1), (K * Nsim + 1), [], para, setup)
+    else:
+        [timeAc, timeDc, _] = top.calcTime(s, e_ref, t_ref, Mi, mdl, Nsim * (K - 1), (K * Nsim + 1), [], 1, setup)
 
     # ==============================================================================
     # Electrical cycle
@@ -179,7 +184,8 @@ def calcTrans_DCDC(top, mdl, para, setup):
         # ------------------------------------------
         # Electrical
         # ------------------------------------------
-        timeDc['v_dc'] = calcElecCap(t_ref, timeDc['i_c'], Tcap, para, setup)
+        if setup['Top']['sourceType'] != 'DAB':
+            timeDc['v_dc'] = calcElecCap(t_ref, timeDc['i_c'], Tcap, para, setup)
 
         # ------------------------------------------
         # PWM Period
@@ -196,10 +202,13 @@ def calcTrans_DCDC(top, mdl, para, setup):
             # Switch
             for j in range(0, len(top.id2)):
                 para_swi = para
+                Vdc_temp = Vdc
                 if setup['Top']['sourceType'] == 'DAB' and 'SwiPri' in para and 'SwiSec' in para:
-                    para_swi = {'Swi': para['SwiPri'], 'Cap': para['Cap']} if j < 4 else {'Swi': para['SwiSec'], 'Cap': para['Cap']}
+                    para_swi = {'Swi': para['SwiPri'], 'Cap': para.get('CapPri', para.get('Cap', []))} if j < 4 else {'Swi': para['SwiSec'], 'Cap': para.get('CapSec', para.get('Cap', []))}
+                    if 'v_dc_pri' in timeDc and 'v_dc_sec' in timeDc:
+                        Vdc_temp = np.mean(timeDc['v_dc_pri']) if j < 4 else np.mean(timeDc['v_dc_sec'])
 
-                timeElec['sw'][top.id2[j]] = calcElecSwi(Vdc, top.id9[j] * timeAc[top.id4[j]][start:ende], (s[top.id3[j]][start:ende] == (-1) ** j), Tj[j], top.id5[j], para_swi, setup)
+                timeElec['sw'][top.id2[j]] = calcElecSwi(Vdc_temp, top.id9[j] * timeAc[top.id4[j]][start:ende], (s[top.id3[j]][start:ende] == (-1) ** j), Tj[j], top.id5[j], para_swi, setup)
                 timeLoss['sw'][top.id2[j]] = calcLossSwi(s[top.id3[j]][start:ende] * (-1) ** j, timeElec['sw'][top.id2[j]]['i_T'], timeElec['sw'][top.id2[j]]['i_D'], timeElec['sw'][top.id2[j]]['v_T'], timeElec['sw'][top.id2[j]]['v_D'], Tj[j], para_swi, setup)
 
                 if setup['Par']['Ther']['Heatsink'] == 1 and setup['Par']['Ther']['Coupling'] == 1:
@@ -226,10 +235,24 @@ def calcTrans_DCDC(top, mdl, para, setup):
                     [timeTher['sw'][top.id6[j]], Tinit_T[:, j]] = calcTherRC(Tinit_T[:, j], Ta, timeLoss['sw'][top.id2[j]]['p_T'], t_ref[start:ende], rth_ja, cth_ja)
 
             # Capacitor
-            timeElec['cap']['C1']['i_c'] = timeDc['i_c'][start:ende]
-            timeElec['cap']['C1']['v_c'] = timeDc['v_dc'][start:ende]
-            timeLoss['cap']['C1'] = calcLossCap(t_ref[start:ende], timeDc['i_c'][start:ende], Tcap, para, setup)
-            [timeTher['cap']['C1'], Tinit_Cap] = calcTherRC(Tinit_Cap, Ta, timeLoss['cap']['C1']['p_L'], t_ref[start:ende], Rth_JA_cap, Cth_JA_cap)
+            if setup['Top']['sourceType'] == 'DAB':
+                # Primary capacitor
+                timeElec['cap']['C1']['i_c'] = timeDc['i_c_pri'][start:ende]
+                timeElec['cap']['C1']['v_c'] = timeDc['v_dc_pri'][start:ende]
+                timeLoss['cap']['C1'] = calcLossCap(t_ref[start:ende], timeDc['i_c_pri'][start:ende], Tcap, {'Cap': para.get('CapPri', para.get('Cap', []))}, setup)
+                [timeTher['cap']['C1'], Tinit_Cap] = calcTherRC(Tinit_Cap, Ta, timeLoss['cap']['C1']['p_L'], t_ref[start:ende], Rth_JA_cap, Cth_JA_cap)
+
+                # Secondary capacitor
+                timeElec['cap']['C2']['i_c'] = timeDc['i_c_sec'][start:ende]
+                timeElec['cap']['C2']['v_c'] = timeDc['v_dc_sec'][start:ende]
+                timeLoss['cap']['C2'] = calcLossCap(t_ref[start:ende], timeDc['i_c_sec'][start:ende], Tcap, {'Cap': para.get('CapSec', para.get('Cap', []))}, setup)
+                # Reuse same RC network if dedicated one is not available
+                [timeTher['cap']['C2'], _] = calcTherRC(Tinit_Cap, Ta, timeLoss['cap']['C2']['p_L'], t_ref[start:ende], Rth_JA_cap_s, Cth_JA_cap_s)
+            else:
+                timeElec['cap']['C1']['i_c'] = timeDc['i_c'][start:ende]
+                timeElec['cap']['C1']['v_c'] = timeDc['v_dc'][start:ende]
+                timeLoss['cap']['C1'] = calcLossCap(t_ref[start:ende], timeDc['i_c'][start:ende], Tcap, para, setup)
+                [timeTher['cap']['C1'], Tinit_Cap] = calcTherRC(Tinit_Cap, Ta, timeLoss['cap']['C1']['p_L'], t_ref[start:ende], Rth_JA_cap, Cth_JA_cap)
 
             # Appending
             dataFel = app_fs(dataFel, timeElec, timeLoss, setup)
@@ -273,6 +296,8 @@ def calcTrans_DCDC(top, mdl, para, setup):
 
     # Capacitor
     [out['ther']['cap']['C1'], _] = calcTherRC(0, Ta, out['loss']['cap']['C1']['p_L'].values, t, Rth_JA_cap, Cth_JA_cap)
+    if setup['Top']['sourceType'] == 'DAB' and 'C2' in out['loss']['cap']:
+        [out['ther']['cap']['C2'], _] = calcTherRC(0, Ta, out['loss']['cap']['C2']['p_L'].values, t, Rth_JA_cap_s, Cth_JA_cap_s)
 
     # Coupling
     for i in range(0, len(top.id2)):
@@ -298,7 +323,10 @@ def calcTrans_DCDC(top, mdl, para, setup):
     out['ther']['sw'] = pd.DataFrame(out['ther']['sw'], columns=top.id6 + top.id7 + top.id8)
 
     # Capacitor
-    out['ther']['cap'] = pd.DataFrame(out['ther']['cap'], columns=['C1'])
+    if setup['Top']['sourceType'] == 'DAB' and 'C2' in out['ther']['cap']:
+        out['ther']['cap'] = pd.DataFrame(out['ther']['cap'], columns=['C1', 'C2'])
+    else:
+        out['ther']['cap'] = pd.DataFrame(out['ther']['cap'], columns=['C1'])
 
     ###################################################################################################################
     # Post-Processing
@@ -310,6 +338,8 @@ def calcTrans_DCDC(top, mdl, para, setup):
     # Calculation
     # ------------------------------------------
     dictSw = {'Sa': s['A'][Nsim:(K * Nsim + 1)], 'Xas': xs['A'][Nsim:(K * Nsim + 1)]}
+    if setup['Top']['sourceType'] == 'DAB':
+        dictSw['Sb'] = s['C'][Nsim:(K * Nsim + 1)]
     [freqSw, freqAc, freqDc] = calcFreq(dictSw, timeAc, timeDc)
 
     # ==============================================================================
