@@ -36,7 +36,6 @@ from src.elec.calcLossSwi import calcLossSwi
 from src.elec.calcLossCap import calcLossCap
 from src.therm.calcTherRC import calcTherRC
 from src.therm.initRC import initRC
-from src.elec.calcElecCap import calcElecCap
 from src.elec.calcElecTra import calcElecTra
 from src.elec.calcLossTra import calcLossTra
 from src.general.calcAvg import calcAvg

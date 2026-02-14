@@ -14,7 +14,7 @@
 # Function Description
 #######################################################################################################################
 """
-This class initialises an object of a DAB (dual-active-bridge) converter.
+This class initializes an object of a DAB (dual-active-bridge) converter.
 Inputs:     1) fel:     electrical frequency at the output (Hz)
             2) fs:      switching frequency of the converter cell (Hz)
             3) fc:      controller frequency (Hz)
@@ -104,7 +104,7 @@ class classDAB:
         # Description
         # ==============================================================================
         """
-        This function initialises the data structure of the DAB bridge.
+        This function initializes the data structure of the DAB bridge.
 
         Input:
 
@@ -195,7 +195,7 @@ class classDAB:
         # Description
         # ==============================================================================
         """
-        This function initialises the output files of the B6 bridge
+        This function initializes the output files of the B6 bridge
 
         Input:
 
@@ -257,9 +257,9 @@ class classDAB:
         distDc['Sec']['num'] = pd.DataFrame(data=np.ones((self.W, 6)),
                                             columns=['V_dc_eff', 'V_dc_v1_eff', 'V_dc_thd', 'I_dc_eff', 'I_dc_v1_eff', 'I_dc_thd'])
         distDc['Pri']['ana'] = pd.DataFrame(data=np.ones((self.W, 6)),
-                                             columns=['V_dc_eff', 'V_dc_v1_eff', 'V_dc_thd', 'I_dc_eff', 'I_dc_v1_eff', 'I_dc_thd'])
+                                            columns=['V_dc_eff', 'V_dc_v1_eff', 'V_dc_thd', 'I_dc_eff', 'I_dc_v1_eff', 'I_dc_thd'])
         distDc['Sec']['ana'] = pd.DataFrame(data=np.ones((self.W, 6)),
-                                             columns=['V_dc_eff', 'V_dc_v1_eff', 'V_dc_thd', 'I_dc_eff', 'I_dc_v1_eff', 'I_dc_thd'])
+                                            columns=['V_dc_eff', 'V_dc_v1_eff', 'V_dc_thd', 'I_dc_eff', 'I_dc_v1_eff', 'I_dc_thd'])
 
         # ==============================================================================
         # Return
@@ -405,7 +405,7 @@ class classDAB:
         # ==============================================================================
         """
         This function calculates the switching times assuming any provided PWM method.
-        Currently only SPS is implemented. The modulation index is always 0.5.
+        Currently, only SPS is implemented. The modulation index is always 0.5.
 
         Input:
         1) v_ref:   Reference voltage (V)
@@ -559,7 +559,7 @@ class classDAB:
         # Description
         # ==============================================================================
         """
-        This function append the calculated controller outputs.
+        This function appends the calculated controller outputs.
 
         Input:
         1) s_i:     switching instances (sec)
@@ -603,7 +603,7 @@ class classDAB:
         3) vs:      voltage at the secondary bridge (V)
         2) e:       induced voltage
         3) t:       reference time (sec)
-        4) Mi:      modulation index (0 ... 4/pi)
+        4) Mi:      modulation index (0 ... 1)
         5) mdl:     transfer functions
         6) t0:      start time (sample)
         7) t1:      end time (sample)
@@ -788,9 +788,9 @@ class classDAB:
         5) setup:   file including all setup parameters
 
         Output:
-        1) v_ref:   reference voltage for given load scenario (V)
-        2) e_ref:   reference back emf for given load scenario (V)
-        3) i_ref:   reference current for given load scenario (A)
+        1) v_ref:   reference voltage for a given load scenario (V)
+        2) e_ref:   reference back emf for a given load scenario (V)
+        3) i_ref:   reference current for a given load scenario (A)
         """
 
         # ==============================================================================
