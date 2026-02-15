@@ -83,6 +83,7 @@ def saveResults(time, freq, sweep, setup, path):
     fsim = setup['Exp']['fsim']
     f = fsim * np.linspace(0, 0.5, int(len(time['Sw']['t']) / 2)) / fel
     setup['Dat']['stat']['Io'] = abs(setup['Dat']['stat']['Io'])
+    setup['Dat']['stat']['So'] = abs(setup['Dat']['stat']['So'])
 
     ###################################################################################################################
     # Directory

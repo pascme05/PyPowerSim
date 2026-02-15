@@ -34,6 +34,7 @@ Outputs:    1) setup:   extended setup variable
 # ==============================================================================
 import pandas as pd
 from os.path import join as pjoin
+import os
 
 
 #######################################################################################################################
@@ -62,6 +63,13 @@ def loadSetup(setup, path):
     name = setup['Exp']['conf'] + '.xlsx'
     path = path['conPath']
     filename = pjoin(path, name)
+    if not os.path.isfile(filename):
+        matches = []
+        for root, _, files in os.walk(path):
+            if name in files:
+                matches.append(pjoin(root, name))
+        if matches:
+            filename = sorted(matches)[0]
 
     # ==============================================================================
     # Loading Config
@@ -71,7 +79,7 @@ def loadSetup(setup, path):
         setupDatRaw = pd.read_excel(filename, sheet_name='Dat')
         setupTopRaw = pd.read_excel(filename, sheet_name='Top')
         setupParRaw = pd.read_excel(filename, sheet_name='Par')
-        print("INFO: Setup file loaded")
+        print("INFO: Setup file loaded: " + filename)
     except:
         setupExpRaw = []
         setupDatRaw = []

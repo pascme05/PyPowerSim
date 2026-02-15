@@ -279,6 +279,9 @@ The software framework is provided under the Creative Commons Attribution-NonCom
     - Optimal subcyle modulation for 3-phase converters
     - General housekeeping including function description for each file and update to Python 3.11
     - Including an extensive tutorial as PowerPoint
+7) v.1.1: (15.02.2026) Second complete version of PyPowerSim
+    - Adding a DAB architecture (steady-state and sweep)
+    - General housekeeping including function description for each file and update to Python 3.11
    
 # References
 [1] Holmes, D. Grahame, and Thomas A. Lipo. Pulse width modulation for power converters: principles and practice. 

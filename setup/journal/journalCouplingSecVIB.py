@@ -77,15 +77,23 @@ setup['Exp']['conf'] = "journalCouplingSecVIB"
 # ------------------------------------------
 # Devices
 # ------------------------------------------
+# Inverter Topologies (B6, B4, B2)
 setup['Exp']['Swi'] = "2MBI300XBE120"                                                                                    # filename of the parameter set for the switching devices
 setup['Exp']['Cap'] = "Elco"                                                                                             # filename of the parameter set for the DC link capacitor
+
+# DCDC Topologies (DAB, PSFB)
+setup['Exp']['SwiPri'] = "A2F12M12W2"                                                                                    # filename of the primary bridge switch parameter file
+setup['Exp']['SwiSec'] = "A2F06M12W2"                                                                                    # filename of the secondary bridge switch parameter file
+setup['Exp']['CapPri'] = "Cin"                                                                                           # filename of the parameter set for the Input capacitor
+setup['Exp']['CapSec'] = "Cout"                                                                                          # filename of the parameter set for the Output capacitor
+setup['Exp']['Trafo'] = "trafoDAB"                                                                                       # filename of the parameter set for the transformer
 
 # ==============================================================================
 # Plotting and Saving
 # ==============================================================================
 setup['Exp']['plot'] = 2                                                                                                 # (0): no results are plotted, (1): results are plotted, (2): analytic results are plotted
 setup['Exp']['plotGen'] = 0                                                                                              # (0): no generic plots, (1): loss and thermal models are plotted
-setup['Exp']['save'] = 1                                                                                                 # (0): no results are saved, (1): results are saved
+setup['Exp']['save'] = 0                                                                                                 # (0): no results are saved, (1): results are saved
 
 #######################################################################################################################
 # Calculations
