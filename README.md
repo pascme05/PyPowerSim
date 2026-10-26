@@ -157,6 +157,22 @@ defined in the start script:
 2) PlotGen: Generic plots for thermal and electrical models as well as transfer functions
 3) Save:    Option for saving results to \results
 
+## Graphical User Interface
+As an alternative to the start scripts PyPowerSim includes a local browser GUI (Streamlit). All parameters of the
+configuration file and the settings of the start scripts are edited in the browser, with help texts, an expert mode and
+only the parameters that are active for the selected topology and operating mode. Simulations are started per operating
+mode and the results are shown interactively (waveforms, losses, temperatures, spectra, sweeps). The device workbooks
+are shown as charts (characteristics, thermal networks) and can be edited and saved, every mode has a theory section
+with interactive examples, and tutorials guide through the operating modes. The GUI runs locally
+(http://localhost:8501) and does not change the toolkit, i.e. the start scripts keep working as before.
+
+```
+pip install -r gui/requirements.txt
+python start_gui.py
+```
+
+The user guide is provided in docu/GUI.md (also shown on the help page of the GUI).
+
 # Results
 In the following chapter a set of reference results is provided using the B6 converter 
 architecture and the default setup file. For the default operation an IFX switch is chosen (

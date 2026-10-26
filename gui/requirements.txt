@@ -1,0 +1,4 @@
+# GUI of the toolkit (in addition to the packages of the toolkit)
+streamlit>=1.50
+plotly>=6.0
+openpyxl>=3.1

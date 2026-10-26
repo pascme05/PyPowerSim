@@ -20,3 +20,7 @@ __pycache__
 venv
 !/setup/journal/
 !/setup/journal/**
+
+# GUI
+config/_gui_run.xlsx
+results/**/gui_run.*

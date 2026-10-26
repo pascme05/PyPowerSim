@@ -194,8 +194,11 @@ def calcClose(top, mdl, para, setup):
     # ==============================================================================
     # Output
     # ==============================================================================
+    # switching functions shorter than one fundamental period (tmax*fc*Ncon < Nsim + 1) are padded with their last
+    # value, as out() stores one period of the switching signals
+    outSwPer = {key: np.pad(value, (0, max(0, Nsim + 1 - len(value))), mode='edge') for key, value in outSw.items()}
     [time, freq, _] = top.out(timeElec, timeLoss, [], outAc, outDc, freqSw, freqAc, freqDc, [], [], t_ref,
-                              v_ref, e_ref, outSw, c, xs, xsh, x, xN0, [], 0, Nsim + 1, 1)
+                              v_ref, e_ref, outSwPer, c, xs, xsh, x, xN0, [], 0, Nsim + 1, 1)
 
     ###################################################################################################################
     # MSG Out
