@@ -1,3 +1,5 @@
+<img src="docu/images/logo.png" alt="PyPowerSim" height="64">
+
 # PyPowerSim
 PyPowerSim is a Python toolkit for evaluating standard power converter topologies with
 clear, inspectable models. It includes half‑bridge (B2), full‑bridge (B4), three‑phase

@@ -27,7 +27,7 @@ the configuration.
 #######################################################################################################################
 from gui.core import devices as D
 from gui.core import toolkit as TK
-from gui.core.style import show, line, color, fmt, table
+from gui.core.style import show, line, color, fmt, table, stem
 
 import numpy as np
 import pandas as pd
@@ -143,8 +143,9 @@ def _pwm(cfg, key):
                 help="RMS of the harmonics / RMS of the fundamental (src/general/helpFnc.thd)")
     k[3].metric("THD v_a0", fmt(100 * _thd(d['ac']['v_a0'], d['t']), '%'))
     m = (h >= 1) & (h <= 4 * q)
-    fig = go.Figure(go.Bar(x=h[m], y=Va[m], marker_color=color(1), name="v_a0", width=0.7,
-                           hovertemplate="h = %{x}<br>%{y:.4g} V<extra></extra>"))
+    base = 1e-4 * max(V1, 1e-9)                                       # below: numerical noise, not drawn
+    s = m & (Va >= base)
+    fig = go.Figure(stem(h[s], Va[s], "v_a0", 1, "h = %{x}<br>%{y:.4g} V", base=base))
     fig.update_layout(xaxis_title="harmonic order h = f / fel [–]", yaxis_title="amplitude of v_a0 [V]",
                       showlegend=False)
     fig.update_yaxes(type='log')

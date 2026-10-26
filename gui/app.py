@@ -48,9 +48,12 @@ from gui.views.registry import PAGES
 #######################################################################################################################
 # Page
 #######################################################################################################################
-st.set_page_config(page_title=A.NAME, layout='wide', initial_sidebar_state='expanded')
-if A.LOGO and os.path.isfile(os.path.join(ROOT, A.LOGO)):
-    st.logo(os.path.join(ROOT, A.LOGO), size='large')
+_logo = os.path.join(ROOT, A.LOGO) if A.LOGO else ''
+_icon = '_icon'.join(os.path.splitext(_logo)) if _logo else ''
+_icon = _icon if os.path.isfile(_icon) else None
+st.set_page_config(page_title=A.NAME, page_icon=_icon, layout='wide', initial_sidebar_state='expanded')
+if os.path.isfile(_logo):
+    st.logo(_logo, size='large', icon_image=_icon)
 forms.cfg()
 st.session_state.setdefault('runs', {})
 

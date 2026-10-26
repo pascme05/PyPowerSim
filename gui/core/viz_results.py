@@ -23,7 +23,7 @@ of the results folder and the console log.
 # Import libs
 #######################################################################################################################
 from gui.core import files
-from gui.core.style import fmt, table, show, line, color, downsample
+from gui.core.style import fmt, table, show, line, color, downsample, stem
 
 import os
 
@@ -464,9 +464,11 @@ def _spectrum(freq, setup, key):
     y = np.abs(np.asarray(groups[g][n], dtype=float))
     h = fsim * np.linspace(0, 0.5, len(y)) / fel                    # harmonic order, as in the toolkit plots
     m = h <= H
-    fig = go.Figure(go.Bar(x=h[m], y=y[m], marker_color=color(0), name=n, width=0.6,
-                           hovertemplate=f"order %{{x:.2f}}<br>%{{y:.4g}} {u}<extra></extra>"))
     log = st.toggle("Logarithmic amplitude", value=True, key=f"{key}|flog")
+    ys = y[m]
+    base = max(np.nanmax(ys) * 1e-6, np.nanmin(ys[ys > 0])) if log and np.any(ys > 0) else 0.0
+    keep = ys >= base if log else ys > 0                              # skip empty bins (dots on the axis)
+    fig = go.Figure(stem(h[m][keep], ys[keep], n, 0, f"order %{{x:.2f}}<br>%{{y:.4g}} {u}", base=base))
     fig.update_layout(xaxis_title="harmonic order h = f / fel", yaxis_title=f"amplitude [{u}]", showlegend=False)
     if log:
         fig.update_yaxes(type='log')

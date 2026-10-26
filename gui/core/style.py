@@ -102,6 +102,18 @@ def line(x, y, name, i=0, dash=None, width=2, **kw):
                       line=dict(color=kw.pop('c', color(i)), width=width, dash=dash), **kw)
 
 
+def stem(x, y, name, i=0, hover='%{x:.2f}<br>%{y:.4g}', base=0.0):
+    """Stem plot (vertical line from base with a dot on top) as two traces; base > 0 for log axes."""
+    x, y = np.asarray(x, dtype=float), np.asarray(y, dtype=float)
+    xs = np.column_stack([x, x, np.full_like(x, np.nan)]).ravel()
+    ys = np.column_stack([np.full_like(y, base), y, np.full_like(y, np.nan)]).ravel()
+    c = color(i)
+    return [go.Scatter(x=xs, y=ys, mode='lines', line=dict(color=c, width=1.2), hoverinfo='skip',
+                       showlegend=False, connectgaps=False),
+            go.Scatter(x=x, y=y, mode='markers', name=name, marker=dict(color=c, size=6),
+                       hovertemplate=hover + '<extra></extra>')]
+
+
 def band(x, lo, hi, name, c, opacity=0.18, showlegend=True):
     """Filled confidence band between lo and hi (two traces)."""
     rgba = _rgba(c, opacity)

@@ -37,7 +37,7 @@ TAGLINE = "Simulation of inverters (B2, B4, B6) and DC-DC converters (DAB): PWM,
           "spectra. Set up the run here, then open an operating mode in the sidebar. All parameters are edited in the " \
           "GUI and stored as JSON config (sidebar); the device parameters are read from the workbooks in para/."
 SRC_PATHS = ['', 'src']                                               # added to sys.path (relative to ROOT)
-LOGO = None                                                           # e.g. 'docu/logo.png' (optional)
+LOGO = 'docu/images/logo.png'                                          # sidebar logo; icon: same name with _icon
 DOC = 'docu/GUI.md'                                                   # user guide shown on the Documentation page
 
 #######################################################################################################################
